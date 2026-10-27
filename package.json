@@ -1,0 +1,47 @@
+{
+  "name": "echo-holographic-brain",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "next dev --hostname 0.0.0.0",
+    "build": "next build",
+    "start": "next start --hostname 0.0.0.0",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "test:production": "tsx scripts/production-smoke.ts",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "assets:verify": "python3 scripts/anatomy.py --verify",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "format": "prettier --write app components lib tests scripts/*.ts docs/*.md *.json *.ts *.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "0.5.12",
+    "@electric-sql/pglite-pgvector": "^0.0.13",
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "@tailwindcss/postcss": "^4.1.0",
+    "fflate": "^0.8.2",
+    "lucide-react": "^0.468.0",
+    "next": "16.4.3",
+    "postgres": "^3.4.7",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "tailwindcss": "^4.1.0",
+    "three": "0.186.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.183.0",
+    "prettier": "^3.9.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

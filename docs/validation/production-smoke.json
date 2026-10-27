@@ -1,0 +1,11 @@
+{
+  "timestamp": "2026-10-27T15:04:12.584Z",
+  "checks": [
+    "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+    "Production HTML, static assets and anatomical geometry",
+    "Production-mode account, session, original persistence, graph and export",
+    "Session revocation"
+  ],
+  "result": "passed",
+  "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+}

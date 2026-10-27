@@ -1,0 +1,10 @@
+node_modules
+.next*
+.data
+package-lock.json
+public/anatomy
+public/licenses
+test-results
+playwright-report
+docs/screenshots
+next-env.d.ts

@@ -1,0 +1,48 @@
+{
+  "timestamp": "2026-10-27T14:50:53.962Z",
+  "runtime": "v24.19.0",
+  "storage": "PGlite in-memory isolated synthetic fixtures",
+  "limitations": "Server data-path benchmark only. No hardware GPU FPS claim. Records are not retained in any user workspace.",
+  "results": [
+    {
+      "records": 100,
+      "insertBatchMs": 27,
+      "graphMs": 10,
+      "returnedNodes": 100,
+      "aggregated": false,
+      "searchMs": 3,
+      "libraryMs": 5,
+      "graphBytes": 19466
+    },
+    {
+      "records": 1000,
+      "insertBatchMs": 77,
+      "graphMs": 18,
+      "returnedNodes": 1000,
+      "aggregated": false,
+      "searchMs": 4,
+      "libraryMs": 4,
+      "graphBytes": 194499
+    },
+    {
+      "records": 10000,
+      "insertBatchMs": 612,
+      "graphMs": 107,
+      "returnedNodes": 639,
+      "aggregated": true,
+      "searchMs": 25,
+      "libraryMs": 13,
+      "graphBytes": 110983
+    },
+    {
+      "records": 100000,
+      "insertBatchMs": 6893,
+      "graphMs": 1002,
+      "returnedNodes": 1272,
+      "aggregated": true,
+      "searchMs": 238,
+      "libraryMs": 97,
+      "graphBytes": 221152
+    }
+  ]
+}

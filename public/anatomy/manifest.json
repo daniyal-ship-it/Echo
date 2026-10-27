@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "name": "FreeSurfer fsaverage5",
+  "atlas": "Desikan\u2013Killiany (aparc)",
+  "sourceCommit": "634f676630929a71297852d01dd92a287103e861",
+  "sourceBase": "https://raw.githubusercontent.com/ThomasYeoLab/CBIG/634f676630929a71297852d01dd92a287103e861/stable_projects/brain_parcellation/Schaefer2018_LocalGlobal/Parcellations/FreeSurfer5.3/fsaverage5",
+  "sourceSha256": {
+    "lh.pial": "d3e772b74f39ed7a979d78dab5b98d1fe5916f1354b52d05c23b85a8080b72bd",
+    "rh.pial": "64440462e8d1cec650d100c0fb16cb4704937e19e0bc42f58997a6a09e5e536b",
+    "lh.annot": "74d1c2fd5e6b7ca193f06fee45a86f5638f347e38cea5ba27fce9fd69c0056be",
+    "rh.annot": "ca86b3b0bd5b74e367519dd94157154ae7c61ad128680fcc7b52e1a799e34e9f"
+  },
+  "sha256": "37d7dc91bc381ba64653126586b903962f1eb0e5748a6c1bcb121b651c1e414b",
+  "vertices": 20484,
+  "triangles": 40960,
+  "hemisphereVertices": 10242,
+  "lobes": [
+    "Other cortex",
+    "Frontal",
+    "Parietal",
+    "Temporal",
+    "Occipital"
+  ],
+  "parcels": {
+    "0": "unknown",
+    "1": "bankssts",
+    "2": "caudalanteriorcingulate",
+    "3": "caudalmiddlefrontal",
+    "4": "corpuscallosum",
+    "5": "cuneus",
+    "6": "entorhinal",
+    "7": "fusiform",
+    "8": "inferiorparietal",
+    "9": "inferiortemporal",
+    "10": "isthmuscingulate",
+    "11": "lateraloccipital",
+    "12": "lateralorbitofrontal",
+    "13": "lingual",
+    "14": "medialorbitofrontal",
+    "15": "middletemporal",
+    "16": "parahippocampal",
+    "17": "paracentral",
+    "18": "parsopercularis",
+    "19": "parsorbitalis",
+    "20": "parstriangularis",
+    "21": "pericalcarine",
+    "22": "postcentral",
+    "23": "posteriorcingulate",
+    "24": "precentral",
+    "25": "precuneus",
+    "26": "rostralanteriorcingulate",
+    "27": "rostralmiddlefrontal",
+    "28": "superiorfrontal",
+    "29": "superiorparietal",
+    "30": "superiortemporal",
+    "31": "supramarginal",
+    "32": "frontalpole",
+    "33": "temporalpole",
+    "34": "transversetemporal",
+    "35": "insula"
+  },
+  "lobeParcels": {
+    "1": [
+      "caudalmiddlefrontal",
+      "lateralorbitofrontal",
+      "medialorbitofrontal",
+      "parsopercularis",
+      "parsorbitalis",
+      "parstriangularis",
+      "precentral",
+      "rostralmiddlefrontal",
+      "superiorfrontal",
+      "frontalpole"
+    ],
+    "2": [
+      "inferiorparietal",
+      "paracentral",
+      "postcentral",
+      "precuneus",
+      "superiorparietal",
+      "supramarginal"
+    ],
+    "3": [
+      "bankssts",
+      "entorhinal",
+      "fusiform",
+      "inferiortemporal",
+      "middletemporal",
+      "parahippocampal",
+      "superiortemporal",
+      "temporalpole",
+      "transversetemporal"
+    ],
+    "4": [
+      "cuneus",
+      "lateraloccipital",
+      "lingual",
+      "pericalcarine"
+    ]
+  },
+  "regionCounts": {
+    "Other cortex": 3564,
+    "Frontal": 5853,
+    "Parietal": 5994,
+    "Temporal": 3374,
+    "Occipital": 1699
+  },
+  "transform": {
+    "source": "FreeSurfer surface RAS, mm",
+    "center": [
+      0.5288162231445312,
+      -17.767963409423828,
+      15.40934944152832
+    ],
+    "scale": 0.016666666666666666,
+    "axes": "[x, z, -y]"
+  },
+  "limitations": [
+    "Group-average cortical surfaces; not an individual brain or clinical tool.",
+    "No cerebellum or brainstem.",
+    "Cingulate, insula and medial-wall regions stay neutral.",
+    "Paracentral parcel assigned to parietal; coarse anatomical grouping, not a clinical lobar atlas.",
+    "Knowledge categories are a software metaphor, not a biological memory-localisation claim."
+  ],
+  "licenses": [
+    "/licenses/FREESURFER.txt",
+    "/licenses/CBIG.txt"
+  ],
+  "modified": "Binary format conversion, rigid coordinate transform and uniform scale only; original vertex order and topology preserved."
+}
