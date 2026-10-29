@@ -1,48 +1,48 @@
 {
-  "timestamp": "2026-10-27T14:50:53.962Z",
+  "timestamp": "2026-10-29T04:09:53.747Z",
   "runtime": "v24.19.0",
   "storage": "PGlite in-memory isolated synthetic fixtures",
   "limitations": "Server data-path benchmark only. No hardware GPU FPS claim. Records are not retained in any user workspace.",
   "results": [
     {
       "records": 100,
-      "insertBatchMs": 27,
-      "graphMs": 10,
+      "insertBatchMs": 64,
+      "graphMs": 33,
       "returnedNodes": 100,
       "aggregated": false,
-      "searchMs": 3,
-      "libraryMs": 5,
-      "graphBytes": 19466
+      "searchMs": 6,
+      "libraryMs": 11,
+      "graphBytes": 21084
     },
     {
       "records": 1000,
-      "insertBatchMs": 77,
-      "graphMs": 18,
+      "insertBatchMs": 275,
+      "graphMs": 78,
       "returnedNodes": 1000,
       "aggregated": false,
-      "searchMs": 4,
-      "libraryMs": 4,
-      "graphBytes": 194499
+      "searchMs": 8,
+      "libraryMs": 13,
+      "graphBytes": 210517
     },
     {
       "records": 10000,
-      "insertBatchMs": 612,
-      "graphMs": 107,
+      "insertBatchMs": 1371,
+      "graphMs": 180,
       "returnedNodes": 639,
       "aggregated": true,
-      "searchMs": 25,
-      "libraryMs": 13,
-      "graphBytes": 110983
+      "searchMs": 41,
+      "libraryMs": 24,
+      "graphBytes": 121864
     },
     {
       "records": 100000,
-      "insertBatchMs": 6893,
-      "graphMs": 1002,
+      "insertBatchMs": 22425,
+      "graphMs": 2126,
       "returnedNodes": 1272,
       "aggregated": true,
-      "searchMs": 238,
-      "libraryMs": 97,
-      "graphBytes": 221152
+      "searchMs": 468,
+      "libraryMs": 209,
+      "graphBytes": 242794
     }
   ]
 }

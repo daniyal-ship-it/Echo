@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { PerspectiveCamera, Vector3 } from 'three';
 import { mkdir } from 'node:fs/promises';
+import { getAnatomy } from '../../lib/anatomy';
+import { cameraFov, fitAnatomy } from '../../lib/brain-camera';
 
 test('real workspace: anatomy, persistence, archive import, citations, data isolation and mobile', async ({
   page,
@@ -36,8 +38,11 @@ test('real workspace: anatomy, persistence, archive import, citations, data isol
   await page.getByRole('button', { name: 'Reset brain view', exact: true }).click();
   await page.waitForTimeout(1400);
   const box = (await page.locator('canvas').boundingBox())!;
-  const camera = new PerspectiveCamera(32, box.width / box.height, 0.01, 50);
-  camera.position.set(-4.8, 1.1, -2.8);
+  const aspect = box.width / box.height;
+  const camera = new PerspectiveCamera(cameraFov(aspect), aspect, 0.01, 50);
+  camera.position.set(
+    ...fitAnatomy((await getAnatomy()).positions, [-4.8, 1.1, -2.8], [0, 0, 0], camera.fov, aspect),
+  );
   camera.lookAt(0, 0, 0);
   camera.updateMatrixWorld();
   const projected = new Vector3(...(position as [number, number, number])).project(camera);
@@ -113,23 +118,19 @@ test('real workspace: anatomy, persistence, archive import, citations, data isol
     },
   ];
   await page.getByRole('button', { name: 'Import history', exact: true }).click();
-  await page
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'conversations.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(originalArchive)),
-    });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'conversations.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(originalArchive)),
+  });
   await expect(
     page.getByText('1 records added · 0 duplicates skipped', { exact: true }),
   ).toBeVisible();
-  await page
-    .locator('input[type=file]')
-    .setInputFiles({
-      name: 'conversations.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(originalArchive)),
-    });
+  await page.locator('input[type=file]').setInputFiles({
+    name: 'conversations.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(JSON.stringify(originalArchive)),
+  });
   await expect(
     page.getByText('This exact archive is already imported. No records were duplicated.'),
   ).toBeVisible();

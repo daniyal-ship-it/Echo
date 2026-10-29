@@ -53,6 +53,7 @@ import {
   type Settings,
 } from './panels';
 import type { ViewCommand } from './brain';
+import TopicPanel from './topic-panel';
 const Brain = dynamic(() => import('./brain'), {
   ssr: false,
   loading: () => (
@@ -82,6 +83,8 @@ export default function Workspace() {
   const [firstUser, setFirstUser] = useState(false);
   const [graph, setGraph] = useState<Graph>(EMPTY);
   const [memories, setMemories] = useState<Memory[]>([]);
+  const [libraryLoading, setLibraryLoading] = useState(false);
+  const [libraryError, setLibraryError] = useState('');
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [selected, setSelected] = useState<MemoryDetail | null>(null);
@@ -96,6 +99,12 @@ export default function Workspace() {
   const [query, setQuery] = useState('');
   const [source, setSource] = useState('');
   const [tag, setTag] = useState('');
+  const [untagged, setUntagged] = useState(false);
+  const [topicPage, setTopicPage] = useState(0);
+  const [topicSearch, setTopicSearch] = useState('');
+  const [topicPosition, setTopicPosition] = useState<[number, number, number] | null>(null);
+  const [graphLoading, setGraphLoading] = useState(false);
+  const [graphError, setGraphError] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [filters, setFilters] = useState(false);
@@ -157,25 +166,48 @@ export default function Workspace() {
   const refreshGraph = useCallback(async () => {
     if (!user) return;
     const request = ++graphRequest.current;
+    setGraphLoading(true);
+    setGraphError('');
     try {
       const result = await api<Graph>(
-        `graph?${new URLSearchParams({ region: region || '', q: query, source, tag, from, to })}`,
+        `graph?${new URLSearchParams({
+          region: region || '',
+          q: query,
+          source,
+          tag,
+          from,
+          to,
+          untagged: untagged ? '1' : '',
+          focus: selected?.id || '',
+          view: region && !tag && !untagged ? 'topics' : 'memories',
+          topicPage: String(topicPage),
+          topicQ: topicSearch,
+        })}`,
       );
       if (request === graphRequest.current && activeWorkspace.current === user.workspaceId)
         setGraph(result);
     } catch (e) {
-      notify((e as Error).message);
+      if (request === graphRequest.current && activeWorkspace.current === user.workspaceId) {
+        setGraphError((e as Error).message);
+        setGraph((previous) => ({ ...previous, nodes: [], edges: [] }));
+      }
+    } finally {
+      if (request === graphRequest.current && activeWorkspace.current === user.workspaceId)
+        setGraphLoading(false);
     }
-  }, [user, region, query, source, tag, from, to, notify]);
+  }, [user, region, query, source, tag, from, to, untagged, selected?.id, topicPage, topicSearch]);
   const refreshLibrary = useCallback(async () => {
     if (!user) return;
     const request = ++libraryRequest.current;
+    setLibraryLoading(true);
+    setLibraryError('');
     const params = new URLSearchParams({
       q: query,
       page: String(page),
       region: region || '',
       source,
       tag,
+      untagged: untagged ? '1' : '',
       from,
       to,
     });
@@ -186,9 +218,16 @@ export default function Workspace() {
       setMemories(r.memories);
       setTotal(r.total);
     } catch (e) {
-      notify((e as Error).message);
+      if (request === libraryRequest.current && activeWorkspace.current === user.workspaceId) {
+        setMemories([]);
+        setTotal(0);
+        setLibraryError((e as Error).message);
+      }
+    } finally {
+      if (request === libraryRequest.current && activeWorkspace.current === user.workspaceId)
+        setLibraryLoading(false);
     }
-  }, [user, query, page, region, source, tag, from, to, notify]);
+  }, [user, query, page, region, source, tag, from, to, untagged, notify]);
   useEffect(() => {
     void refreshGraph();
   }, [refreshGraph]);
@@ -221,12 +260,61 @@ export default function Workspace() {
     }
   }
   function focusRegion(value: Region | null) {
+    selectedRequest.current++;
+    setSelected(null);
+    setRetrieval(null);
     setRegion(value);
+    setTag('');
+    setUntagged(false);
+    setTopicPosition(null);
+    setTopicPage(0);
+    setTopicSearch('');
     setPage(0);
+    setMobileNav(false);
+    setMobilePanel(Boolean(value));
     move(value ? { type: 'region', region: value } : { type: 'reset' });
   }
+  function wholeBrain() {
+    setSearch('');
+    setQuery('');
+    setSource('');
+    setFrom('');
+    setTo('');
+    focusRegion(null);
+  }
+  function closeMemory() {
+    selectedRequest.current++;
+    setSelected(null);
+    setRetrieval(null);
+    setMobilePanel(Boolean(region));
+    move(
+      topicPosition
+        ? { type: 'topic', position: topicPosition }
+        : region
+          ? { type: 'region', region }
+          : { type: 'reset' },
+    );
+  }
+  function changeFilter() {
+    selectedRequest.current++;
+    setSelected(null);
+    setRetrieval(null);
+    setPage(0);
+    setTopicPage(0);
+  }
   function chooseNode(node: GraphNode) {
-    if (node.count > 1) {
+    if (node.kind === 'topic') {
+      selectedRequest.current++;
+      setSelected(null);
+      setRetrieval(null);
+      setRegion(node.region);
+      setTag(node.topic || '');
+      setUntagged(node.topic === null);
+      setTopicPosition(node.position);
+      setPage(0);
+      setMobilePanel(true);
+      move({ type: 'topic', position: node.position });
+    } else if (node.kind === 'spatial' || node.count > 1) {
       focusRegion(node.region);
       setTab('library');
       notify(
@@ -269,6 +357,8 @@ export default function Workspace() {
     setUser(null);
     setGraph(EMPTY);
     setMemories([]);
+    setLibraryLoading(false);
+    setLibraryError('');
     setTotal(0);
     setSelected(null);
     setRetrieval(null);
@@ -284,6 +374,12 @@ export default function Workspace() {
     setPage(0);
     setSource('');
     setTag('');
+    setUntagged(false);
+    setTopicPage(0);
+    setTopicSearch('');
+    setTopicPosition(null);
+    setGraphLoading(false);
+    setGraphError('');
     setFrom('');
     setTo('');
     setFilters(false);
@@ -308,6 +404,7 @@ export default function Workspace() {
   async function runQuestion(value: string, providerConsent = false) {
     setBusy(true);
     setQuestion('');
+    selectedRequest.current++;
     setSelected(null);
     setMobilePanel(true);
     const requestController = new AbortController();
@@ -358,6 +455,9 @@ export default function Workspace() {
     localStorage.setItem('echo-reduced-motion', String(v));
   }
   const selectedId = selected?.id ?? retrieval?.citations[0]?.id ?? null;
+  const activeRegion = selected?.region ?? region;
+  const topicLabel = untagged ? 'Untagged memories' : tag ? `#${tag}` : '';
+  const topicView = Boolean(region && !tag && !untagged && !selected && !retrieval);
   const hasProvider = settings?.providers.some((p) => p.configured);
 
   return (
@@ -491,7 +591,10 @@ export default function Workspace() {
                 aria-label="Search memory library"
                 placeholder="Find a memory…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  changeFilter();
+                }}
               />
               <button
                 className={`icon-button ${filters ? 'selected' : ''}`}
@@ -510,7 +613,7 @@ export default function Workspace() {
                   value={source}
                   onChange={(e) => {
                     setSource(e.target.value);
-                    setPage(0);
+                    changeFilter();
                   }}
                 >
                   <option value="">All sources</option>
@@ -525,7 +628,9 @@ export default function Workspace() {
                   value={tag}
                   onChange={(e) => {
                     setTag(e.target.value);
-                    setPage(0);
+                    setUntagged(false);
+                    setTopicPosition(null);
+                    changeFilter();
                   }}
                   placeholder="Exact tag"
                 />
@@ -537,7 +642,7 @@ export default function Workspace() {
                   value={from}
                   onChange={(e) => {
                     setFrom(e.target.value);
-                    setPage(0);
+                    changeFilter();
                   }}
                 />
               </label>
@@ -548,7 +653,7 @@ export default function Workspace() {
                   value={to}
                   onChange={(e) => {
                     setTo(e.target.value);
-                    setPage(0);
+                    changeFilter();
                   }}
                 />
               </label>
@@ -568,30 +673,43 @@ export default function Workspace() {
             </div>
           )}
           <div className="memory-list">
-            {memories.slice(0, tab === 'brain' ? 7 : 50).map((m) => (
-              <button
-                className={`memory-item ${selected?.id === m.id ? 'selected' : ''}`}
-                onClick={() => {
-                  void openMemory(m.id);
-                  setMobileNav(false);
-                }}
-                key={m.id}
-              >
-                <FileText size={15} style={{ color: REGION_INFO[m.region].color }} />
-                <div>
-                  <strong>{m.title}</strong>
-                  <span>
-                    {m.is_demo ? 'Demonstration' : m.source} ·{' '}
-                    {new Date(m.source_at || m.created_at).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </div>
-                <ArrowUpRight size={12} />
-              </button>
-            ))}
-            {!memories.length && (
+            {libraryLoading ? (
+              <p role="status" className="fine-print">
+                Loading originals…
+              </p>
+            ) : libraryError ? (
+              <div role="alert">
+                <p>{libraryError}</p>
+                <button className="text-button" onClick={() => void refreshLibrary()}>
+                  Retry originals
+                </button>
+              </div>
+            ) : (
+              memories.slice(0, tab === 'brain' ? 7 : 50).map((m) => (
+                <button
+                  className={`memory-item ${selected?.id === m.id ? 'selected' : ''}`}
+                  onClick={() => {
+                    void openMemory(m.id);
+                    setMobileNav(false);
+                  }}
+                  key={m.id}
+                >
+                  <FileText size={15} style={{ color: REGION_INFO[m.region].color }} />
+                  <div>
+                    <strong>{m.title}</strong>
+                    <span>
+                      {m.is_demo ? 'Demonstration' : m.source} ·{' '}
+                      {new Date(m.source_at || m.created_at).toLocaleDateString(undefined, {
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <ArrowUpRight size={12} />
+                </button>
+              ))
+            )}
+            {!libraryLoading && !libraryError && !memories.length && (
               <div className="sidebar-empty">
                 <div className="empty-glyph">
                   <FileText size={22} strokeWidth={1} />
@@ -665,25 +783,32 @@ export default function Workspace() {
       </aside>
       <main className="viewport">
         <div className="viewport-top">
-          <div className="breadcrumb">
-            <button
-              onClick={() => {
-                focusRegion(null);
-                setSelected(null);
-                setRetrieval(null);
-              }}
-            >
-              Memory atlas
-            </button>
-            <ChevronRight size={12} />
-            <span>
-              {selected
-                ? 'Individual memory'
-                : region
-                  ? `${REGION_INFO[region].name} region`
-                  : 'Whole brain'}
-            </span>
-          </div>
+          <nav className="breadcrumb" aria-label="Brain navigation">
+            <button onClick={wholeBrain}>Whole brain</button>
+            {activeRegion && (
+              <>
+                <ChevronRight size={12} />
+                <button onClick={() => focusRegion(activeRegion)}>
+                  {REGION_INFO[activeRegion].name}
+                </button>
+              </>
+            )}
+            {topicLabel &&
+              (!selected ||
+                (selected.region === region &&
+                  (untagged ? !selected.tags.length : selected.tags.includes(tag)))) && (
+                <>
+                  <ChevronRight size={12} />
+                  <button onClick={closeMemory}>{topicLabel}</button>
+                </>
+              )}
+            {selected && (
+              <>
+                <ChevronRight size={12} />
+                <span aria-current="page">Memory</span>
+              </>
+            )}
+          </nav>
           <div className="view-status">
             <span className={ready ? 'live-dot active' : 'live-dot'} />
             {ready ? '3D ANATOMICAL VIEW' : 'LOADING GEOMETRY'}
@@ -691,14 +816,26 @@ export default function Workspace() {
         </div>
         <div className="scene-title">
           <span className="eyebrow">YOUR KNOWLEDGE, IN PERSPECTIVE</span>
-          <h1>{region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas'}</h1>
-          <p>{region ? REGION_INFO[region].meaning : 'A living archive. An anatomical canvas.'}</p>
+          <h1>
+            {selected
+              ? 'A memory in context'
+              : topicLabel || (region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas')}
+          </h1>
+          <p>
+            {selected
+              ? 'Selected original + confirmed neighbours'
+              : topicLabel
+                ? 'Individual records · grouped by explicit tags'
+                : region
+                  ? 'Explore the topics and projects in this lobe.'
+                  : 'A living archive. An anatomical canvas.'}
+          </p>
         </div>
         <div className="brain-canvas" data-testid="brain-viewport">
           <Brain
-            graph={graph}
+            graph={graphLoading ? { ...graph, nodes: [], edges: [] } : graph}
             selected={selectedId}
-            region={region}
+            region={activeRegion}
             command={command}
             quality={quality}
             reducedMotion={reducedMotion}
@@ -712,10 +849,7 @@ export default function Workspace() {
             className="icon-button"
             aria-label="Reset brain view"
             title="Reset view"
-            onClick={() => {
-              move({ type: 'reset' });
-              setRegion(null);
-            }}
+            onClick={wholeBrain}
           >
             <RotateCcw size={17} />
           </button>
@@ -751,6 +885,12 @@ export default function Workspace() {
             ANATOMICAL SCAFFOLD
             <span className="memory-key" />
             STORED MEMORIES
+            {graph.mode === 'topics' && (
+              <>
+                <span className="topic-key" />
+                TAG GROUPS
+              </>
+            )}
           </div>
           <p>
             Drag to rotate <span>·</span> Scroll to zoom <span>·</span> Double-click a region
@@ -833,8 +973,22 @@ export default function Workspace() {
               {graph.total.toLocaleString()} {graph.total === 1 ? 'memory' : 'memories'}{' '}
               <span>·</span> {graph.edges.length} confirmed{' '}
               {graph.edges.length === 1 ? 'connection' : 'connections'}
-              {graph.aggregated ? ' · clustered view' : ''}
+              {graph.mode === 'topics'
+                ? ' · explicit tag groups'
+                : graph.mode === 'neighborhood'
+                  ? ' · selected neighbourhood (up to 100 links)'
+                  : graph.aggregated
+                    ? ' · spatially clustered view'
+                    : ''}
             </p>
+            {graphError && !topicView && (
+              <div role="alert" className="fine-print">
+                {graphError}{' '}
+                <button className="text-button" onClick={() => void refreshGraph()}>
+                  Retry brain loading
+                </button>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -865,11 +1019,7 @@ export default function Workspace() {
         ) : selected ? (
           <MemoryPanel
             memory={selected}
-            onClose={() => {
-              setSelected(null);
-              setMobilePanel(false);
-              move(region ? { type: 'region', region } : { type: 'reset' });
-            }}
+            onClose={closeMemory}
             onNavigate={(id, v) => void openMemory(id, v)}
             onChanged={refresh}
             onError={notify}
@@ -937,6 +1087,101 @@ export default function Workspace() {
               </p>
             </div>
           </>
+        ) : topicView && region ? (
+          <TopicPanel
+            graph={graph.mode === 'topics' ? graph : EMPTY}
+            region={region}
+            query={topicSearch}
+            loading={graphLoading}
+            error={graphError}
+            onQuery={(value) => {
+              setTopicSearch(value);
+              setTopicPage(0);
+            }}
+            onPage={setTopicPage}
+            onSelect={chooseNode}
+            onRetry={() => void refreshGraph()}
+          />
+        ) : topicLabel ? (
+          <section className="topic-panel" aria-label="Memories in topic">
+            <div className="inspector-heading">
+              <span className="eyebrow">03 / TOPIC → MEMORY</span>
+              <Layers size={16} />
+            </div>
+            <div className="topic-intro">
+              {region && (
+                <button className="text-button" onClick={() => focusRegion(region)}>
+                  <ArrowLeft size={14} />
+                  Back to lobe
+                </button>
+              )}
+              <h2>{topicLabel}</h2>
+              <p>
+                {total} stored {total === 1 ? 'original' : 'originals'} in this view. Select a point
+                or a record below to read its source.
+              </p>
+              <p className="fine-print">
+                {untagged
+                  ? 'These records have no explicit tags yet.'
+                  : 'Membership comes from a shared tag, not inferred semantic similarity.'}
+              </p>
+            </div>
+            <div className="topic-list">
+              {libraryLoading ? (
+                <p role="status">Loading originals…</p>
+              ) : libraryError ? (
+                <div role="alert">
+                  <p>{libraryError}</p>
+                  <button className="text-button" onClick={() => void refreshLibrary()}>
+                    Retry originals
+                  </button>
+                </div>
+              ) : (
+                memories.map((memory) => (
+                  <button
+                    key={memory.id}
+                    className="topic-card"
+                    onClick={() => void openMemory(memory.id)}
+                  >
+                    <FileText size={16} />
+                    <span>
+                      <strong>{memory.title}</strong>
+                      <small>{memory.source} · Open original</small>
+                    </span>
+                    <ArrowUpRight size={14} />
+                  </button>
+                ))
+              )}
+            </div>
+            {!libraryLoading && !libraryError && !memories.length && (
+              <p className="topic-intro">
+                No matching originals. Adjust your library filters or return to the lobe.
+              </p>
+            )}
+            {total > 50 && (
+              <div className="topic-pagination">
+                <button
+                  className="icon-button"
+                  aria-label="Previous topic memories"
+                  disabled={!page}
+                  onClick={() => setPage((p) => p - 1)}
+                >
+                  <ArrowLeft size={16} />
+                </button>
+                <span>
+                  {page * 50 + 1}–{Math.min((page + 1) * 50, total)} / {total}
+                </span>
+                <button
+                  className="icon-button"
+                  aria-label="Next topic memories"
+                  disabled={(page + 1) * 50 >= total}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            )}
+          </section>
         ) : (
           <div className="field-guide">
             <div className="inspector-heading">

@@ -1,6 +1,7 @@
 import type { Database } from './db';
 import { audit, hash, HttpError, uuid } from './security';
 import { placeMemory } from './anatomy';
+import { memoryFilter, memoryNeighborhood, topicNodes } from './exploration';
 import type {
   Citation,
   Edge,
@@ -150,20 +151,10 @@ export async function discoverEdges(db: Database, workspace: string, id: string)
 }
 
 export async function listMemories(db: Database, workspace: string, params: URLSearchParams) {
-  const query = (params.get('q') || '').slice(0, 500);
-  const region = params.get('region') || '';
-  const source = params.get('source') || '';
-  const tag = params.get('tag') || '';
-  const from = params.get('from') || '';
-  const to = params.get('to') || '';
-  for (const d of [from, to])
-    if (d && !/^\d{4}-\d{2}-\d{2}$/.test(d))
-      throw new HttpError(400, 'Use ISO dates for date filters.');
-  const page = Math.max(0, Math.min(20000, Number(params.get('page')) || 0));
-  const where = `workspace_id=$1 AND ($2='' OR search_vector @@ websearch_to_tsquery('english',$2) OR title ILIKE '%' || $2 || '%') AND ($3='' OR region=$3) AND ($4='' OR source=$4) AND ($5='' OR $5=ANY(tags)) AND ($6='' OR coalesce(source_at,created_at)>=nullif($6,'')::date) AND ($7='' OR coalesce(source_at,created_at)<nullif($7,'')::date+interval '1 day')`;
-  const args = [workspace, query, region, source, tag, from, to];
+  const { where, args } = memoryFilter(workspace, params);
+  const page = Math.max(0, Math.min(20000, Math.floor(Number(params.get('page')) || 0)));
   const rows = await db.query<Memory>(
-    `SELECT id,title,summary,region,source,kind,tags,created_at,source_at,importance,position,anchor,version,is_demo,indexing_status FROM memory_nodes WHERE ${where} ORDER BY created_at DESC,id LIMIT 50 OFFSET $8`,
+    `SELECT id,title,summary,region,source,kind,tags,created_at,source_at,importance,position,anchor,version,is_demo,indexing_status FROM memory_nodes WHERE ${where} ORDER BY created_at DESC,id LIMIT 50 OFFSET $9`,
     [...args, page * 50],
   );
   const count = await db.query<{ total: number }>(
@@ -225,36 +216,44 @@ export async function getGraph(
     [workspace],
   );
   const total = counts.reduce((sum, c) => sum + c.count, 0);
-  const query = (filters.get('q') || '').slice(0, 500),
-    source = filters.get('source') || '',
-    tag = filters.get('tag') || '',
-    from = filters.get('from') || '',
-    to = filters.get('to') || '';
-  for (const date of [from, to])
-    if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date))
-      throw new HttpError(400, 'Use ISO dates for date filters.');
-  const args = [workspace, region, query, source, tag, from, to];
-  const where = `workspace_id=$1 AND ($2='' OR region=$2) AND ($3='' OR search_vector @@ websearch_to_tsquery('english',$3) OR title ILIKE '%' || $3 || '%') AND ($4='' OR source=$4) AND ($5='' OR $5=ANY(tags)) AND ($6='' OR coalesce(source_at,created_at)>=nullif($6,'')::date) AND ($7='' OR coalesce(source_at,created_at)<nullif($7,'')::date+interval '1 day')`;
+  const scoped = new URLSearchParams(filters);
+  scoped.set('region', region);
+  const { where, args } = memoryFilter(workspace, scoped);
+  const base = { total, counts: Object.fromEntries(counts.map((c) => [c.region, c.count])) };
+  if (filters.get('focus')) {
+    const focused = await memoryNeighborhood(db, workspace, filters.get('focus')!);
+    return {
+      ...base,
+      ...focused,
+      filteredTotal: focused.nodes.length,
+      aggregated: false,
+      mode: 'neighborhood',
+    };
+  }
   const [{ count: filteredTotal }] = await db.query<{ count: number }>(
     `SELECT count(*)::int AS count FROM memory_nodes WHERE ${where}`,
     args,
   );
+  if (filters.get('view') === 'topics') {
+    const topics = await topicNodes(db, workspace, scoped);
+    return { ...base, ...topics, edges: [], filteredTotal, aggregated: true, mode: 'topics' };
+  }
   let nodes: GraphNode[] = [];
   const aggregated = filteredTotal > 1500;
   if (aggregated) {
     // Coarsen until every cluster fits the draw budget. Never truncate clusters.
     for (const grid of [5, 4, 3, 2, 1]) {
       nodes = await db.query<GraphNode>(
-        `SELECT 'cluster:'||region||':'||floor((position->>0)::real*$8)||':'||floor((position->>1)::real*$8)||':'||floor((position->>2)::real*$8) AS id,
-        count(*)::text||' memories' AS title,region,jsonb_build_array(avg((position->>0)::real),avg((position->>1)::real),avg((position->>2)::real)) AS position,count(*)::int AS count,bool_and(is_demo) AS is_demo
-        FROM memory_nodes WHERE ${where} GROUP BY region,floor((position->>0)::real*$8),floor((position->>1)::real*$8),floor((position->>2)::real*$8) ORDER BY count(*) DESC`,
+        `SELECT 'cluster:'||region||':'||floor((position->>0)::real*$9)||':'||floor((position->>1)::real*$9)||':'||floor((position->>2)::real*$9) AS id,
+        count(*)::text||' memories' AS title,region,jsonb_build_array(avg((position->>0)::real),avg((position->>1)::real),avg((position->>2)::real)) AS position,count(*)::int AS count,bool_and(is_demo) AS is_demo,'spatial' AS kind
+        FROM memory_nodes WHERE ${where} GROUP BY region,floor((position->>0)::real*$9),floor((position->>1)::real*$9),floor((position->>2)::real*$9) ORDER BY count(*) DESC`,
         [...args, grid],
       );
       if (nodes.length <= 1500) break;
     }
   } else {
     nodes = await db.query<GraphNode>(
-      `SELECT id,title,region,position,1 AS count,is_demo FROM memory_nodes WHERE ${where} ORDER BY created_at,id LIMIT 1500`,
+      `SELECT id,title,region,position,1 AS count,is_demo,'memory' AS kind FROM memory_nodes WHERE ${where} ORDER BY created_at,id LIMIT 1500`,
       args,
     );
   }
@@ -273,6 +272,7 @@ export async function getGraph(
     filteredTotal,
     counts: Object.fromEntries(counts.map((c) => [c.region, c.count])),
     aggregated,
+    mode: 'memories',
   };
 }
 const STOPWORDS = new Set(

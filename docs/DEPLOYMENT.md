@@ -62,11 +62,29 @@ single-server evaluation only, `ECHO_ALLOW_LOCAL_DB=1` permits production-mode
 PGlite with a durable `ECHO_DATA_DIR` volume and one process. Production still
 requires `APP_ORIGIN`.
 
-No deployment has been published. A deployment provider, domain, database,
-credentials, backups and initial restricted-access account setup must be supplied
-before cloud/cross-device readiness can be demonstrated. See SECURITY.md before
-making the service public. Long-running comparisons and future media jobs also
-need execution limits that fit the selected host.
+The existing Vercel project is `daniyal-1415s-projects/echo`, linked to
+`daniyal-ship-it/Echo`. The foundation preview at
+https://echo-git-main-daniyal-1415s-projects.vercel.app was reported READY for
+commit `6f19c18`; the user subsequently confirmed it launches. This is historical
+deployment evidence, not verification that later feature commits are hosted there.
+No production promotion is part of the exploration increment.
+
+Previous Vercel metadata checks found `DATABASE_URL`, `ECHO_OPENAI_API_KEY` and
+`ECHO_ANTHROPIC_API_KEY` in Preview and Production. Provider keys are absent from
+the current Codex process. Their absence here is not a reason to replace the saved
+Vercel keys: use that runtime or securely bind the existing secrets to this one.
+The API model names previously configured for Preview are `gpt-6.1-sol` and
+`claude-sonnet-5-5`; live account access still needs a bounded real request for
+each provider. Never infer API availability from a Codex model label.
+
+Preview and Production must be checked separately. A new feature-branch preview
+needs its own exact application `APP_ORIGIN` (not a Vercel dashboard URL), because
+mutations enforce same-origin checks. Keep existing provider/database secrets;
+do not copy their values into documentation. Codex runtime templates for database
+and origin are not proof of usable production configuration. Hosted smoke checks
+were previously blocked by the network proxy, so remote database health and
+cross-device persistence remain unverified here. Long-running comparisons and
+future media jobs also need execution limits that fit the existing hosting plan.
 
 ## Backup and recovery
 

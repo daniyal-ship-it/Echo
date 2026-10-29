@@ -289,24 +289,31 @@ test('password hashing, opaque sessions, expiry and same-origin mutation rules',
     hash(token),
   ]);
   assert.equal(await findSession(db, token), null);
-  assert.throws(
-    () =>
+  const previousOrigin = process.env.APP_ORIGIN;
+  process.env.APP_ORIGIN = 'http://localhost:3000';
+  try {
+    assert.throws(
+      () =>
+        assertOrigin(
+          new Request('http://localhost:3000/api/memories', {
+            method: 'POST',
+            headers: { origin: 'https://evil.test' },
+          }),
+        ),
+      /must come from/,
+    );
+    assert.doesNotThrow(() =>
       assertOrigin(
         new Request('http://localhost:3000/api/memories', {
           method: 'POST',
-          headers: { origin: 'https://evil.test' },
+          headers: { origin: 'http://localhost:3000' },
         }),
       ),
-    /must come from/,
-  );
-  assert.doesNotThrow(() =>
-    assertOrigin(
-      new Request('http://localhost:3000/api/memories', {
-        method: 'POST',
-        headers: { origin: 'http://localhost:3000' },
-      }),
-    ),
-  );
+    );
+  } finally {
+    if (previousOrigin === undefined) delete process.env.APP_ORIGIN;
+    else process.env.APP_ORIGIN = previousOrigin;
+  }
 });
 test('PostgreSQL data survives a real database close and reopen', async () => {
   const dir = await mkdtemp(path.join(tmpdir(), 'echo-persistence-'));

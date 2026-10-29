@@ -3,7 +3,8 @@
 A working first implementation of the Holographic Brain brief: an MRI-derived,
 interactive cortical atlas connected to an authenticated, persistent memory
 workspace. **The full product vision is not complete.** See the precise status in
-[IMPLEMENTATION.md](docs/IMPLEMENTATION.md).
+[IMPLEMENTATION.md](docs/IMPLEMENTATION.md) and the complete
+[requirement roadmap](docs/ROADMAP.md).
 
 ![Anatomical workspace with a stored demonstration memory](docs/screenshots/three-quarter.png)
 
@@ -33,9 +34,13 @@ Git worktree unless explicitly requested.
 ## What works
 
 - FreeSurfer fsaverage5 geometry: both hemispheres, preserved cortical folds,
-  four atlas-derived lobe colours, transparent surface and anatomical dots.
+  four atlas-derived lobe colours and a point-led holographic scaffold.
 - Rotate, zoom, pan, regional focus, front/side views, memory raycasting,
   immersive view, reduced motion and graphics presets; responsive mobile layout.
+- Whole brain → lobe → explicit-tag topic/project group → original, with back
+  navigation, untagged records, topic search and pagination. Tag groups are not
+  inferred semantic clusters. Selected sources show their actual glyph and
+  confirmed neighbours even outside earlier filters.
 - Accounts, opaque sessions, per-workspace access checks, persistent notes,
   immutable source versions, stable anatomical anchors and private originals.
 - Official ChatGPT and Claude export imports; Markdown/text and Obsidian ZIPs.
@@ -48,8 +53,9 @@ Git worktree unless explicitly requested.
   and password-confirmed account/workspace deletion.
 - OpenAI Responses and Anthropic Messages adapters, explicit context consent,
   configurable model IDs, finite comparison/synthesis, usage reporting and
-  saving resulting conversations. **Live API calls remain unverified** without
-  credentials. Adapter tests use labelled mocks.
+  saving resulting conversations. **Live API calls remain unverified**; saved
+  Vercel credentials alone do not establish account/model access or answer quality.
+  Adapter tests use labelled mocks.
 
 The fine anatomical dots are not stored memories. Original source content is
 never replaced by summaries. Current previews are extractive opening text,
@@ -85,8 +91,9 @@ credentials and an available model ID; consumer subscriptions do not grant API
 credits or access to past consumer conversations.
 
 The local data directory is not suitable for ephemeral serverless storage.
-The Dockerfile and standalone build prepare a deployment artifact; they do not
-publish the application or establish a live cloud database.
+The foundation has an existing Vercel preview; see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+for its verified scope. A build or READY deployment does not certify live AI,
+cloud database recovery or the full product acceptance journey.
 
 ## Design and provenance
 
@@ -95,6 +102,7 @@ publish the application or establish a live cloud database.
 - [Current schema and planned entities](docs/SCHEMA.md)
 - [Security and data ownership](docs/SECURITY.md)
 - [Implementation checkpoint and remaining work](docs/IMPLEMENTATION.md)
+- [Every original requirement and its evidence](docs/ROADMAP.md)
 
 All or portions of this licensed product (such portions are the "Software") have
 been obtained under license from The General Hospital Corporation "MGH" and are

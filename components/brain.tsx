@@ -1,7 +1,7 @@
 'use client';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Line } from '@react-three/drei';
+import { OrbitControls, Line, Billboard } from '@react-three/drei';
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -11,14 +11,16 @@ import {
   InstancedMesh,
   Object3D,
   PerspectiveCamera,
+  Spherical,
   Vector3,
 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { REGION_INFO, type Graph, type GraphNode, type Region } from '@/lib/types';
+import { cameraFov, fitAnatomy } from '@/lib/brain-camera';
 
 export type ViewCommand = {
   key: number;
-  type: 'reset' | 'region' | 'memory' | 'front' | 'side' | 'quarter';
+  type: 'reset' | 'region' | 'topic' | 'memory' | 'front' | 'side' | 'quarter';
   region?: Region;
   position?: [number, number, number];
 };
@@ -74,18 +76,25 @@ function Cortex({
   onRegion: Props['onRegion'];
   region: Region | null;
 }) {
+  const { gl } = useThree();
   const points = useMemo(() => {
-    const stride = quality === 'low' ? 4 : 1;
+    // Keep enough genuine vertices to read sulci on a phone; low still uses half
+    // the points and a single device pixel ratio instead of the desktop preset.
+    const stride = quality === 'low' ? 2 : 1;
     const p: number[] = [],
+      n: number[] = [],
       c: number[] = [];
+    const normals = asset.geometry.getAttribute('normal');
     for (let i = 0; i < asset.regions.length; i += stride) {
       p.push(...asset.positions.slice(i * 3, i * 3 + 3));
-      const emphasis = !region || asset.regions[i] === REGION_INFO[region].index ? 1 : 0.22;
+      n.push(normals.getX(i), normals.getY(i), normals.getZ(i));
+      const emphasis = !region || asset.regions[i] === REGION_INFO[region].index ? 1 : 0.32;
       c.push(...Array.from(asset.colors.slice(i * 3, i * 3 + 3), (x) => x * emphasis));
     }
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(new Float32Array(p), 3));
     geo.setAttribute('color', new BufferAttribute(new Float32Array(c), 3));
+    geo.setAttribute('normal', new BufferAttribute(new Float32Array(n), 3));
     return geo;
   }, [asset, quality, region]);
   useEffect(() => () => points.dispose(), [points]);
@@ -99,12 +108,16 @@ function Cortex({
   };
   return (
     <group>
-      <mesh geometry={asset.geometry} onDoubleClick={focus} renderOrder={0}>
+      {/* Depth-only anatomy hides far-side colour bleed while the visible layer stays point-led. */}
+      <mesh geometry={asset.geometry} onDoubleClick={focus} renderOrder={-1}>
+        <meshBasicMaterial colorWrite={false} depthWrite side={FrontSide} />
+      </mesh>
+      <mesh geometry={asset.geometry} raycast={() => null} renderOrder={0}>
         <meshPhongMaterial
-          vertexColors
+          color="#7891a7"
           transparent
-          opacity={0.18}
-          shininess={45}
+          opacity={0.028}
+          shininess={8}
           side={FrontSide}
           depthWrite={false}
           specular="#7d9eb0"
@@ -118,7 +131,7 @@ function Cortex({
           blending={AdditiveBlending}
           vertexColors
           vertexShader={`varying vec3 vColor; varying vec3 vNormal; varying vec3 vView; void main(){vColor=color; vec4 mv=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`}
-          fragmentShader={`varying vec3 vColor; varying vec3 vNormal; varying vec3 vView; void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.);gl_FragColor=vec4(vColor,0.025+rim*0.09);}`}
+          fragmentShader={`varying vec3 vColor; varying vec3 vNormal; varying vec3 vView; void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.);gl_FragColor=vec4(vColor,rim*0.025);}`}
         />
       </mesh>
       <points geometry={points} raycast={() => null} renderOrder={2}>
@@ -127,9 +140,11 @@ function Cortex({
           depthWrite={false}
           blending={AdditiveBlending}
           vertexColors
-          uniforms={{ size: { value: quality === 'low' ? 1.8 : 2.3 } }}
-          vertexShader={`uniform float size; varying vec3 vColor; void main(){vColor=color;vec4 mv=modelViewMatrix*vec4(position,1.);gl_PointSize=clamp(size*3.8/-mv.z,0.9,3.8);gl_Position=projectionMatrix*mv;}`}
-          fragmentShader={`varying vec3 vColor;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float a=smoothstep(.5,.08,d);gl_FragColor=vec4(vColor,a*.72);}`}
+          uniforms={{ size: { value: 2.9 }, pixelRatio: { value: gl.getPixelRatio() } }}
+          vertexShader={`uniform float size; uniform float pixelRatio; varying vec3 vColor; varying float vFacing; void main(){vColor=color;vec4 mv=modelViewMatrix*vec4(position,1.);vFacing=abs(dot(normalize(normalMatrix*normal),normalize(-mv.xyz)));gl_PointSize=clamp(size*pixelRatio*5.5/-mv.z,1.2,5.);gl_Position=projectionMatrix*mv;gl_Position.z-=0.00008*gl_Position.w;}`}
+          fragmentShader={`varying vec3 vColor;varying float vFacing;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float a=smoothstep(.24,.04,d)*.72+exp(-d*d*16.)*.25;gl_FragColor=vec4(vColor*(.55+.75*vFacing),min(.95,a));
+          #include <colorspace_fragment>
+          }`}
         />
       </points>
     </group>
@@ -146,11 +161,12 @@ function Memories({
 }) {
   const ref = useRef<InstancedMesh>(null);
   const halo = useRef<InstancedMesh>(null);
+  const nodes = useMemo(() => graph.nodes.filter((n) => n.kind !== 'topic'), [graph.nodes]);
   const { invalidate } = useThree();
   useEffect(() => {
     if (!ref.current || !halo.current) return;
     const dummy = new Object3D();
-    graph.nodes.forEach((node, i) => {
+    nodes.forEach((node, i) => {
       const size =
         node.count > 1
           ? Math.min(0.075, 0.025 + Math.log10(node.count) * 0.014)
@@ -177,17 +193,17 @@ function Memories({
     ref.current.computeBoundingSphere();
     halo.current.computeBoundingSphere();
     invalidate();
-  }, [graph.nodes, selected, invalidate]);
-  if (!graph.nodes.length) return null;
+  }, [nodes, selected, invalidate]);
+  if (!nodes.length) return null;
   return (
     <group>
       <instancedMesh
         ref={ref}
-        args={[undefined, undefined, graph.nodes.length]}
+        args={[undefined, undefined, nodes.length]}
         renderOrder={5}
         onClick={(e) => {
           e.stopPropagation();
-          if (e.instanceId !== undefined) onSelect(graph.nodes[e.instanceId]);
+          if (e.instanceId !== undefined) onSelect(nodes[e.instanceId]);
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
@@ -202,7 +218,7 @@ function Memories({
       </instancedMesh>
       <instancedMesh
         ref={halo}
-        args={[undefined, undefined, graph.nodes.length]}
+        args={[undefined, undefined, nodes.length]}
         raycast={() => null}
         renderOrder={4}
       >
@@ -215,6 +231,47 @@ function Memories({
           depthTest={false}
         />
       </instancedMesh>
+    </group>
+  );
+}
+function TopicGlyphs({ graph, onSelect }: { graph: Graph; onSelect: Props['onSelect'] }) {
+  return (
+    <group>
+      {graph.nodes
+        .filter((n) => n.kind === 'topic')
+        .map((node) => {
+          const radius = 0.055 + Math.min(0.045, Math.log2(node.count + 1) * 0.009);
+          return (
+            <Billboard key={node.id} position={node.position}>
+              <mesh
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(node);
+                }}
+                renderOrder={7}
+              >
+                <circleGeometry args={[radius * 1.3, 32]} />
+                <meshBasicMaterial
+                  color={REGION_INFO[node.region].color}
+                  transparent
+                  opacity={0.09}
+                  depthTest={false}
+                  depthWrite={false}
+                />
+              </mesh>
+              <mesh raycast={() => null} renderOrder={8}>
+                <ringGeometry args={[radius * 0.82, radius, 40]} />
+                <meshBasicMaterial
+                  color={REGION_INFO[node.region].color}
+                  transparent
+                  opacity={0.85}
+                  depthTest={false}
+                  depthWrite={false}
+                />
+              </mesh>
+            </Billboard>
+          );
+        })}
     </group>
   );
 }
@@ -247,6 +304,9 @@ function Pathways({ graph, selected }: { graph: Graph; selected: string | null }
               transparent
               opacity={selected ? 0.65 : 0.22}
               lineWidth={selected ? 1.2 : 0.65}
+              depthTest={false}
+              depthWrite={false}
+              renderOrder={3}
               raycast={() => null}
             />
           );
@@ -254,13 +314,21 @@ function Pathways({ graph, selected }: { graph: Graph; selected: string | null }
     </group>
   );
 }
-function Controls({ command, reducedMotion }: { command: ViewCommand; reducedMotion: boolean }) {
+function Controls({
+  command,
+  reducedMotion,
+  positions,
+}: {
+  command: ViewCommand;
+  reducedMotion: boolean;
+  positions: Float32Array;
+}) {
   const ref = useRef<OrbitControlsImpl>(null);
   const { camera, invalidate, size } = useThree();
   const destination = useRef<{ position: Vector3; target: Vector3 } | null>(null);
   useEffect(() => {
     if (camera instanceof PerspectiveCamera) {
-      camera.fov = 32 + Math.max(0, 1.25 - size.width / size.height) * 22;
+      camera.fov = cameraFov(size.width / size.height);
       camera.updateProjectionMatrix();
       invalidate();
     }
@@ -280,10 +348,19 @@ function Controls({ command, reducedMotion }: { command: ViewCommand; reducedMot
       position = new Vector3(...locations[command.region!]);
       target = position.clone().multiplyScalar(0.17);
     }
-    if (command.type === 'memory' && command.position) {
-      target = new Vector3(...command.position);
-      position = target.clone().normalize().multiplyScalar(2.2).add(target);
+    if ((command.type === 'memory' || command.type === 'topic') && command.position) {
+      const anchor = new Vector3(...command.position);
+      target = anchor.clone().multiplyScalar(0.22);
+      position = anchor.length() > 0.1 ? anchor.normalize().multiplyScalar(4.6) : position;
     }
+    const framed = fitAnatomy(
+      positions,
+      position.toArray(),
+      target.toArray(),
+      cameraFov(size.width / size.height),
+      size.width / size.height,
+    );
+    position.set(...framed);
     destination.current = { position, target };
     if (reducedMotion) {
       camera.position.copy(position);
@@ -292,13 +369,23 @@ function Controls({ command, reducedMotion }: { command: ViewCommand; reducedMot
       destination.current = null;
     }
     invalidate();
-  }, [command, reducedMotion, camera, invalidate]);
+  }, [command, reducedMotion, camera, invalidate, positions, size.width, size.height]);
   useFrame((_, dt) => {
     if (!destination.current || !ref.current) return;
     const { position, target } = destination.current;
     const alpha = 1 - Math.exp(-dt * 5);
-    camera.position.lerp(position, alpha);
+    // Orbit around the cortex rather than crossing through it on opposite-side selections.
+    const current = new Spherical().setFromVector3(camera.position.clone().sub(ref.current.target));
+    const next = new Spherical().setFromVector3(position.clone().sub(target));
+    const turn = Math.atan2(
+      Math.sin(next.theta - current.theta),
+      Math.cos(next.theta - current.theta),
+    );
+    current.theta += turn * alpha;
+    current.phi += (next.phi - current.phi) * alpha;
+    current.radius += (next.radius - current.radius) * alpha;
     ref.current.target.lerp(target, alpha);
+    camera.position.setFromSpherical(current).add(ref.current.target);
     ref.current.update();
     if (camera.position.distanceTo(position) < 0.008) {
       destination.current = null;
@@ -394,9 +481,14 @@ export default function Brain(props: Props) {
             region={props.region}
           />
           <Memories graph={props.graph} selected={props.selected} onSelect={props.onSelect} />
+          <TopicGlyphs graph={props.graph} onSelect={props.onSelect} />
           <Pathways graph={props.graph} selected={props.selected} />
         </Suspense>
-        <Controls command={props.command} reducedMotion={props.reducedMotion} />
+        <Controls
+          command={props.command}
+          reducedMotion={props.reducedMotion}
+          positions={asset.positions}
+        />
       </Canvas>
     </SceneBoundary>
   );

@@ -1,58 +1,78 @@
-# Implementation checkpoint
+# Implementation checkpoint — 29 October 2026
 
-This is a completed first product foundation, not the completed master brief.
-The interruption audit found the original unborn `work` branch, intact uncommitted
-source and assets, one long-lived development server and separate ignored test
-outputs. No second application checkout or copied implementation was created.
+The foundation remains intact at `6f19c18` on GitHub `main`. The resumed increment
+uses the same checkout on `feat/core-memory-exploration`. Nothing was rebuilt from
+a template; no anatomy, original records, migrations, credentials or hosting plan
+were replaced. The full core milestone is **Partially implemented**.
 
-## Implemented and exercised
+The complete [roadmap](ROADMAP.md) maps the original brief to four explicit
+statuses. The newer [milestone brief](CORE_MILESTONE_BRIEF.md) is preserved too.
 
-- [x] Architecture, versioned migration and anatomical provenance.
-- [x] MRI-derived hemispheres and preserved pial topology; atlas-derived lobe colours.
-- [x] Transparent cortex, noninteractive anatomical dots, distinct real memory glyphs.
-- [x] Camera rotation/pan/zoom, regional focus, raycast selection, reset and immersive view.
-- [x] Responsive layout, low/balanced/high settings, reduced motion, text library fallback.
-- [x] Local persistent PostgreSQL/pgvector foundation, accounts and scoped sessions.
-- [x] Notes, immutable original versions, stable coordinates, import source IDs and hashes.
-- [x] Real labelled demonstration record created only on user request; idempotent.
-- [x] Official ChatGPT and Claude JSON/ZIP import, Markdown/text and Obsidian vault import.
-- [x] Chat branches, roles, source timestamps, original metadata and attachment references.
-- [x] Retryable, bounded import batches and original archive download/retention.
-- [x] Keyword retrieval, source citations, filters and source inspection.
-- [x] Evidence-bearing candidate links, user confirmation, manual links and disconnection.
-- [x] Source/workspace export, record/archive deletion, password-confirmed account deletion.
-- [x] Separate OpenAI/Anthropic adapters, explicit transmission consent and bounded comparison.
-- [x] Isolated tests, desktop/mobile screenshots and 100–100,000-record data-path benchmark.
+## This increment
 
-## Implemented but not externally certified
+- Point-led cortex built from the same MRI-derived vertices, normal-sensitive
+  luminosity and a subdued neutral surface. A depth pass suppresses far-side lobe
+  colour bleed; genuine memory glyphs and confirmed connections remain distinct.
+- Camera fitting checks all anatomical vertices for each automatic focus and
+  viewport. Camera transitions orbit around the cortex instead of crossing it.
+  Manual zoom/pan remains freely controlled by the user.
+- Whole brain → lobe → explicit-tag topic/project group → individual original.
+  Rings represent actual groups, not additional memories. Topics have search,
+  stable pagination (24 per page), counts and an explicit untagged group. A record
+  can belong to several groups; group counts are not an exclusive partition.
+- Memory selection loads the actual node plus up to 100 confirmed neighbours,
+  including cross-lobe links outside previous filters. Search citations open the
+  same original and glyph. Back navigation restores the previous scope; Whole
+  brain resets the scope. Source text remains in the inspector.
+- Shared library/graph predicates, date validation, loading/error/retry states,
+  workspace guards, mobile layout and isolated tests. No database migration.
 
-- Managed PostgreSQL adapter and TLS configuration: no database credential supplied.
-- Live OpenAI/Anthropic responses, comparison and synthesis: no API credentials/models supplied.
-- Standalone deployment artifact and Docker recipe: no hosting deployment published.
-- Persisted local sessions: browser/database restart tested; real cross-device cloud access untested.
+## Preserved foundation
 
-## Remaining product work
+Authentication and opaque sessions; scoped persistent storage; immutable original
+versions and stable anatomical anchors; idempotent demonstration record; official
+ChatGPT/Claude JSON/ZIP and Markdown/Obsidian imports; roles/branches/metadata;
+bounded retryable imports and retained archives; full-text citations and filters;
+tag/reference link candidates with explanations, confirmation and manual links;
+export/delete/revocation; independent OpenAI/Anthropic adapters with context
+consent and bounded comparison/synthesis.
 
-- Semantic embedding generation, hybrid ranking, reranking and semantic topic clusters.
-- AI consolidation, factual claims/entities, contradiction handling and cited action extraction.
-- Background workers independent of browser requests, durable leases and automatic retry scheduling.
-- Voice input/output, live transcription, diarisation, recordings and meeting summaries.
-- Reminder scheduling, notifications, Google Calendar and approval-bound external actions.
-- Notion, Drive and Gmail OAuth; supported URL extraction; PDFs, Word, images and recordings.
-- Private media object storage, malware scanning and recording retention.
-- Configurable lobe palette, more detailed LOD, richer graph immersion and adaptive GPU telemetry.
-- Additional anatomy such as cerebellum/brainstem, with separately verified licences.
-- Production identity hardening, strict cost reservations, RLS defence in depth,
-  robust streaming exports, security review, restore exercise and managed deployment.
+See [VALIDATION.md](VALIDATION.md) for actual test results and screenshot links.
+Tests use isolated databases and no live provider calls. The anatomical surface
+is genuine FreeSurfer fsaverage5 cortex, not a procedural approximation; cerebellum
+and brainstem are absent, and this is not medical-grade certification.
 
-No button claims a meeting or OAuth connection exists. Unavailable integrations
-are explicitly identified in Settings. Extractive previews are not called AI
-summaries; full-text search is not called semantic retrieval. No historical
-consumer chat account access is inferred from a provider API key.
+## Current limits and next task
 
-## Next milestone
+Explicit-tag groups are useful progressive navigation, not semantic clustering
+or a first-class project model. Current previews are opening source text, not
+AI-generated summaries. Search remains full-text. Automatic links cover explicit
+references/shared tags, not semantic/entity evidence. Live GPT/Claude grounding,
+citations, account/model access and cloud persistence are not yet verified.
 
-Add provider-backed embeddings and source-grounded consolidation with explicit
-consent, durable jobs and versioned citations, then validate against configured
-provider accounts. After that, implement the meeting journey with a real
-transcription service and evaluated browser capture limitations.
+Next implement **durable semantic indexing and source-grounded consolidation**:
+
+1. Versioned derived summaries/insights and chunk citations stored separately from
+   immutable originals. Preserve source hashes and version provenance.
+2. Consent-bound bounded indexing jobs, durable status/leases, cancellation and
+   recovery; select a real embedding provider/model supported by the existing
+   account. Do not silently add paid worker infrastructure.
+3. Hybrid keyword/vector retrieval with a transparent ranking explanation and
+   evidence-bearing connection candidates. Similarity is not factual truth.
+4. Reuse existing Vercel provider keys for one small authorised source-grounded
+   verification per provider, then run the entire acceptance gate in ROADMAP.md.
+
+The current Codex process lacks the provider keys; this does not invalidate or
+require replacement of the existing Vercel credentials. See DEPLOYMENT.md for the
+exact distinction. Voice/meetings, calendar/reminders, remaining connectors and
+production hardening follow the core acceptance gate.
+
+## Resume safely
+
+Read this file, ROADMAP.md and VALIDATION.md; inspect `git status` and recent
+commits. Continue the feature branch unless a later checkpoint supersedes it.
+Keep `main` history intact. Do not reimport fixtures into a user's database.
+Run only one app process per local PGlite directory. Browser tests explicitly
+override inherited database/origin settings and disable live provider keys.
+For deployment, check branch-specific Preview origin before a Git preview build;
+do not assume the existing main preview already contains this increment.

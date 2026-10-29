@@ -79,6 +79,9 @@ export type GraphNode = {
   position: [number, number, number];
   count: number;
   is_demo: boolean;
+  kind?: 'memory' | 'spatial' | 'topic';
+  /** A null topic is the explicit untagged group, never an inferred topic. */
+  topic?: string | null;
 };
 export type Graph = {
   nodes: GraphNode[];
@@ -87,6 +90,9 @@ export type Graph = {
   filteredTotal?: number;
   counts: Record<string, number>;
   aggregated: boolean;
+  mode?: 'memories' | 'topics' | 'neighborhood';
+  topicTotal?: number;
+  topicPage?: number;
 };
 export type Session = { userId: string; workspaceId: string; email: string; name: string };
 export type ImportItem = {
