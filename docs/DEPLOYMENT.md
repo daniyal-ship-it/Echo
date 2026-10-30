@@ -16,16 +16,17 @@ PGlite data directory while its application process is running.
 
 Set these in the hosting platform's secure configuration, never in a committed file:
 
-| Variable                 | Purpose                                                            |
-| ------------------------ | ------------------------------------------------------------------ |
-| `DATABASE_URL`           | Private PostgreSQL connection string; use a database with pgvector |
-| `APP_ORIGIN`             | Exact HTTPS application origin, with no trailing slash             |
-| `ALLOW_REGISTRATION`     | Keep `false` after controlled initial account creation             |
-| `ECHO_OPENAI_API_KEY`    | Optional OpenAI API credential                                     |
-| `ECHO_OPENAI_MODEL`      | An actual model ID available to that API account                   |
-| `ECHO_ANTHROPIC_API_KEY` | Optional Anthropic API credential                                  |
-| `ECHO_ANTHROPIC_MODEL`   | An actual model ID available to that API account                   |
-| `DAILY_TOKEN_LIMIT`      | Reported-usage guard, default 100,000; see security limitations    |
+| Variable                 | Purpose                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | Private PostgreSQL connection string; use a database with pgvector                              |
+| `APP_ORIGIN`             | Exact HTTPS application origin, with no trailing slash                                          |
+| `ALLOW_REGISTRATION`     | Keep `false` after controlled initial account creation                                          |
+| `ECHO_OPENAI_API_KEY`    | Optional OpenAI API credential                                                                  |
+| `ECHO_OPENAI_MODEL`      | An actual model ID available to that API account                                                |
+| `ECHO_ANTHROPIC_API_KEY` | Optional Anthropic API credential                                                               |
+| `ECHO_ANTHROPIC_MODEL`   | An actual model ID available to that API account                                                |
+| `ECHO_EMBEDDING_MODEL`   | Optional; defaults to `text-embedding-3-small`, 1,536 dimensions                                |
+| `DAILY_TOKEN_LIMIT`      | Default 100,000; separate intelligence reservations and assistant usage guard, not a dollar cap |
 
 Conventional `OPENAI_API_KEY` / `OPENAI_MODEL` and `ANTHROPIC_API_KEY` /
 `ANTHROPIC_MODEL` aliases also work. In Codex cloud configuration, the `OPENAI_`
@@ -62,29 +63,100 @@ single-server evaluation only, `ECHO_ALLOW_LOCAL_DB=1` permits production-mode
 PGlite with a durable `ECHO_DATA_DIR` volume and one process. Production still
 requires `APP_ORIGIN`.
 
-The existing Vercel project is `daniyal-1415s-projects/echo`, linked to
-`daniyal-ship-it/Echo`. The foundation preview at
-https://echo-git-main-daniyal-1415s-projects.vercel.app was reported READY for
-commit `6f19c18`; the user subsequently confirmed it launches. This is historical
-deployment evidence, not verification that later feature commits are hosted there.
-No production promotion is part of the exploration increment.
+## Feature preview and saved configuration
 
-Previous Vercel metadata checks found `DATABASE_URL`, `ECHO_OPENAI_API_KEY` and
-`ECHO_ANTHROPIC_API_KEY` in Preview and Production. Provider keys are absent from
-the current Codex process. Their absence here is not a reason to replace the saved
-Vercel keys: use that runtime or securely bind the existing secrets to this one.
-The API model names previously configured for Preview are `gpt-6.1-sol` and
-`claude-sonnet-5-5`; live account access still needs a bounded real request for
-each provider. Never infer API availability from a Codex model label.
+The existing project is [daniyal-1415s-projects/echo](https://vercel.com/daniyal-1415s-projects/echo),
+linked to GitHub `daniyal-ship-it/Echo`; `main` remains its production branch.
+Use the actual feature alias for this increment:
 
-Preview and Production must be checked separately. A new feature-branch preview
-needs its own exact application `APP_ORIGIN` (not a Vercel dashboard URL), because
-mutations enforce same-origin checks. Keep existing provider/database secrets;
-do not copy their values into documentation. Codex runtime templates for database
-and origin are not proof of usable production configuration. Hosted smoke checks
-were previously blocked by the network proxy, so remote database health and
-cross-device persistence remain unverified here. Long-running comparisons and
-future media jobs also need execution limits that fit the existing hosting plan.
+**https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app**
+
+On 29–30 October the API verified a READY Preview for source commit `4b19901`,
+deployment `dpl_Du2CEyRYkR7iNBdtz83SXvcURopf` (immutable host
+`echo-ours6c9pb-daniyal-1415s-projects.vercel.app`). This applied the corrected
+**Preview-only, branch-specific APP_ORIGIN**, exactly the feature alias above.
+Global main-origin configuration was preserved. Subsequent feature pushes update
+that alias; consult the delivery report / Vercel Source metadata for the latest SHA.
+Use the alias for authenticated mutations: arbitrary immutable URLs are not the
+configured application origin and should correctly fail origin checks.
+
+Protection remains `all_except_custom_domains`; sign in to the owning Vercel team
+when prompted. No protection bypass, public deployment or main merge is required.
+The project uses its existing Fluid compute/basic build configuration; no plan or
+paid service was added. API calls are bounded, but combined comparison requests
+can still exceed runtime limits; verify the existing project's timeout in Vercel.
+Durable intelligence steps can resume without repeating journalled success.
+
+The Vercel metadata API verifies `DATABASE_URL`, `ECHO_OPENAI_API_KEY` and
+`ECHO_ANTHROPIC_API_KEY` have sensitive **Preview and Production** bindings. Their
+values were not printed, extracted or replaced. Preview and Production currently
+share the DATABASE_URL binding, so Preview is not an isolated database. Migration
+002 is additive and tested against a migration-001 fixture; managed execution is
+still unverified. Do not put fixtures into the owner's workspace.
+
+Preview model IDs are `gpt-6.1-sol` and `claude-sonnet-5-5`. The official SDK type
+lists were inspected on 29 October 2026:
+
+- [OpenAI model IDs](https://github.com/openai/openai-python/blob/main/src/openai/types/shared/chat_model.py)
+- [Anthropic model IDs](https://github.com/anthropics/anthropic-sdk-python/blob/main/src/anthropic/types/model.py)
+- [Embedding model IDs](https://github.com/openai/openai-python/blob/main/src/openai/types/embedding_model.py)
+
+A listed model is not proof of this account's entitlement. Settings → **Check model
+access** performs each provider's authenticated metadata lookup without memory
+content. Indexing also verifies the embedding model. Real answer/embedding calls
+must be checked separately. The app reuses the saved ECHO-prefixed keys.
+
+The current Codex process has VERCEL_TOKEN, but **no OpenAI or Anthropic runtime
+key**. That does not mean Vercel's keys are missing. No replacement keys are
+requested. To run calls from Codex later, securely bind the existing secrets here,
+or run the tiny test through the existing Vercel runtime. Do not paste keys into
+chat, files or public client variables. Local DATABASE_URL/APP_ORIGIN templates
+are not evidence of usable local configuration; tests override them.
+
+## Hosted verification / dashboard fallback
+
+The proxy currently refuses the feature host with
+`Tunnel connection failed: 403 Forbidden`, before an app response. This is not
+an ECHO authentication failure. The Vercel management API is reachable, so build
+state/source SHA can be checked, but hosted login, database health, embeddings,
+answers and new-session persistence cannot yet be certified here.
+
+1. Open the project dashboard → **Deployments**, filter to Preview and
+   `feat/core-memory-exploration`. Confirm the Source SHA matches the delivered
+   Git commit. If the push did not trigger a build, choose **Create Deployment**
+   from that Git branch, or redeploy its latest Preview. Never promote to Production.
+2. In Settings → Environment Variables, confirm the branch-specific Preview
+   APP_ORIGIN equals the feature alias above. Keep the saved sensitive keys and
+   database binding; do not enter them again. Keep deployment protection enabled.
+   Configuration changes need a new Preview deployment.
+3. Open the feature alias, pass Vercel team authentication and sign in to a
+   **separate authorised test workspace**. Do not use a full archive or the owner's
+   existing memories. If no isolated test account exists, arrange controlled account
+   creation behind protection; do not enable unrestricted public signup.
+4. In Settings check OpenAI and Anthropic model access independently. Record only
+   status and returned model IDs. The check sends no memory and generates no answer.
+5. Import a tiny supported export with a clearly labelled synthetic statement,
+   for example “TEST FIXTURE: Store the access codes in a sealed envelope inside
+   the desk.” Verify the original roles/timestamps/raw JSON. In Intelligence,
+   consent to this original only, run summary/index, inspect progress and open
+   each summary's exact original passage. Repeating enqueue should reuse the job.
+6. Filter Source to the imported provider and check **Use these filters for
+   questions**. Search “Where were the credentials secured?” using Hybrid, then
+   OpenAI and Anthropic independently. Approve only that tiny context. Verify the
+   answer is supported, the citation opens the matching version/message/passage,
+   and the corresponding brain node is selected. Ask an unrelated question and
+   verify an honest insufficient-evidence response; relevant-looking citations
+   alone do not establish grounding.
+7. Sign out/in and retrieve again. Close/reopen a processing panel to check saved
+   progress. Delete only the fixture and its retained import archive when done;
+   source deletion should remove its active index and derived analyses.
+8. Record HTTP/app results, model IDs, source/deployment SHA, job completion and
+   new-session persistence without secrets. Until these live checks pass, keep the
+   core milestone marked incomplete even if Vercel reports READY.
+
+For automated hosted checks from Codex, the network policy must permit the feature
+host and an authenticated isolated test session must be available. This calls for
+runtime access, **not replacement API keys or disabled origin/protection checks**.
 
 ## Backup and recovery
 

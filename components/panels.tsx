@@ -16,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, post } from '@/lib/client';
+import MemoryIntelligence from './memory-intelligence';
 import {
   REGION_INFO,
   REGIONS,
@@ -472,11 +473,14 @@ export function MemoryPanel({
 }: {
   memory: MemoryDetail;
   onClose: () => void;
-  onNavigate: (id: string, version?: number) => void;
+  onNavigate: (id: string, version?: number, passage?: string) => void;
   onChanged: () => void;
   onError: (message: string) => void;
 }) {
-  const [tab, setTab] = useState<'original' | 'connections' | 'versions'>('original');
+  const [tab, setTab] = useState<'original' | 'intelligence' | 'connections' | 'versions'>(
+    'original',
+  );
+  const scroll = useRef<HTMLDivElement>(null);
   const [branch, setBranch] = useState(false);
   const [link, setLink] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -484,7 +488,8 @@ export function MemoryPanel({
   useEffect(() => {
     setTab('original');
     setBranch(false);
-  }, [memory.id]);
+    scroll.current?.scrollTo({ top: 0 });
+  }, [memory.id, memory.passage?.id]);
   async function remove() {
     if (
       !confirm(
@@ -569,7 +574,7 @@ export function MemoryPanel({
         </div>
       </div>
       <div className="panel-tabs">
-        {(['original', 'connections', 'versions'] as const).map((t) => (
+        {(['original', 'intelligence', 'connections', 'versions'] as const).map((t) => (
           <button className={tab === t ? 'active' : ''} key={t} onClick={() => setTab(t)}>
             {t === 'connections'
               ? `Links (${memory.edges.length})`
@@ -577,7 +582,7 @@ export function MemoryPanel({
           </button>
         ))}
       </div>
-      <div className="inspector-scroll">
+      <div className="inspector-scroll" ref={scroll}>
         {memory.viewed_version !== memory.version && (
           <p className="version-notice">
             Viewing source version {memory.viewed_version} of {memory.version}.{' '}
@@ -588,6 +593,22 @@ export function MemoryPanel({
         )}
         {tab === 'original' && (
           <>
+            {memory.passage && (
+              <section className="source-passage" aria-label="Cited original passage">
+                <span className="eyebrow">
+                  CITED ORIGINAL · VERSION {memory.passage.source_version}
+                </span>
+                <blockquote>{memory.passage.content}</blockquote>
+                <small>
+                  {memory.passage.role || 'Original text'}
+                  {memory.passage.source_timestamp
+                    ? ` · ${new Date(memory.passage.source_timestamp).toLocaleString()}`
+                    : ''}{' '}
+                  · characters {memory.passage.start_offset}–{memory.passage.end_offset}
+                  {!memory.passage.active ? ' · alternate branch' : ''}
+                </small>
+              </section>
+            )}
             <div className="extract">
               <span className="eyebrow">EXTRACTIVE PREVIEW</span>
               <p>{memory.summary}</p>
@@ -640,6 +661,17 @@ export function MemoryPanel({
             </button>
           </>
         )}
+        {tab === 'intelligence' && (
+          <MemoryIntelligence
+            key={`${memory.id}:${memory.viewed_version}`}
+            memory={memory}
+            onChanged={onChanged}
+            onOpen={(id, version, passage) => {
+              setTab('original');
+              onNavigate(id, version, passage);
+            }}
+          />
+        )}
         {tab === 'connections' && (
           <>
             <p className="fine-print">
@@ -660,7 +692,11 @@ export function MemoryPanel({
               <article className="edge-card" key={e.id}>
                 <div className="row">
                   <span className="status-label">{e.status}</span>
-                  <span className="fine-print">{Math.round(e.confidence * 100)}% confidence</span>
+                  <span className="fine-print">
+                    {e.method === 'semantic'
+                      ? `Cosine ${e.confidence.toFixed(3)}`
+                      : `${Math.round(e.confidence * 100)}% confidence`}
+                  </span>
                 </div>
                 <button
                   className="text-button link-title"
@@ -671,6 +707,26 @@ export function MemoryPanel({
                 </button>
                 <strong>{e.relationship}</strong>
                 <p>{e.evidence}</p>
+                {e.semantic_evidence && (
+                  <div className="semantic-evidence">
+                    <p className="fine-print">
+                      Embedding similarity {e.semantic_evidence.similarity.toFixed(3)} ·{' '}
+                      {e.semantic_evidence.model}.{' '}
+                      {e.semantic_evidence.stale
+                        ? 'Source changed since this comparison; inspect the historical evidence.'
+                        : 'This is an inferred association, not an explicit tag or a truth assessment.'}
+                    </p>
+                    {e.semantic_evidence.passages.map((p) => (
+                      <button
+                        className="text-button"
+                        key={p.chunkId}
+                        onClick={() => onNavigate(p.memoryId, p.version, p.chunkId)}
+                      >
+                        Source v{p.version}: {p.quote.slice(0, 65)}…<ArrowUpRight size={12} />
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="row">
                   {e.status === 'candidate' && (
                     <button className="button small" onClick={() => void edge(e.id, 'confirmed')}>
@@ -814,6 +870,22 @@ export function SettingsDialog({
 }) {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  const [checks, setChecks] = useState<Record<string, string>>({});
+  async function checkProvider(provider: string) {
+    setChecks((current) => ({ ...current, [provider]: 'Checking model access…' }));
+    try {
+      const result = await api<{ model: string }>('providers/verify', {
+        method: 'POST',
+        body: JSON.stringify({ provider }),
+      });
+      setChecks((current) => ({
+        ...current,
+        [provider]: `Model access confirmed: ${result.model}. Live answers still need testing.`,
+      }));
+    } catch (e) {
+      setChecks((current) => ({ ...current, [provider]: (e as Error).message }));
+    }
+  }
   async function remove(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const d = new FormData(e.currentTarget);
@@ -867,22 +939,32 @@ export function SettingsDialog({
             <div>
               <strong>{p.name}</strong>
               <p>{p.model || 'No model configured'}</p>
+              {checks[p.id] && <p role="status">{checks[p.id]}</p>}
             </div>
-            <span className={`status-pill ${p.configured ? 'connected' : ''}`}>
-              {p.configured ? 'Configured · not yet verified' : 'Not connected'}
-            </span>
+            {p.configured ? (
+              <button
+                className="button secondary"
+                disabled={checks[p.id] === 'Checking model access…'}
+                onClick={() => checkProvider(p.id)}
+              >
+                Check {p.name} model access
+              </button>
+            ) : (
+              <span className="status-pill">Not connected</span>
+            )}
           </div>
         ))}
         <p className="fine-print">
           Configure server-side API credentials and model IDs using the deployment guide. Consumer
-          subscriptions do not include API access. No credentials are entered into this page.
+          subscriptions do not include API access. No credentials are entered into this page. Model
+          access checks send no memory content and do not generate an answer.
         </p>
       </div>
       <div className="settings-section">
         <h3>Data & ownership</h3>
         <p className="muted">
-          {settings?.storage}. This development instance has no external storage or accounts
-          connected.
+          {settings?.storage}. Originals and generated analyses remain separate records in your
+          private workspace.
         </p>
         <a href="/api/export" className="button secondary">
           <ArrowDownToLine size={15} />

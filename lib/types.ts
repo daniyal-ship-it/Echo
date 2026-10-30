@@ -51,6 +51,7 @@ export type Message = {
   model?: string;
 };
 export type MemoryDetail = Memory & {
+  passage?: import('./intelligence-types').Passage;
   viewed_version: number;
   content: string;
   raw: unknown;
@@ -71,6 +72,12 @@ export type Edge = {
   pinned: boolean;
   source_title?: string;
   target_title?: string;
+  semantic_evidence?: {
+    model: string;
+    similarity: number;
+    stale: boolean;
+    passages: { memoryId: string; chunkId: string; version: number; quote: string }[];
+  };
 };
 export type GraphNode = {
   id: string;
@@ -125,4 +132,12 @@ export type Citation = {
   source: string;
   region: Region;
   rank: number;
+  version?: number;
+  chunkId?: string;
+  messageId?: string | null;
+  timestamp?: string | null;
+  startOffset?: number;
+  endOffset?: number;
+  keywordRank?: number;
+  similarity?: number;
 };

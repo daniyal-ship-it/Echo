@@ -1,44 +1,67 @@
-# Validation record — 29 October 2026
+# Validation record — 30 October 2026
 
-## Current increment
+## Memory intelligence increment
 
-| Check                              | Result                                                                                                                                                                                     |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run assets:verify`            | Passed: 20,484 vertices, 40,960 triangles; both source hemispheres, annotations and binary checksums unchanged                                                                             |
-| `npm run typecheck`                | Passed; production build also completed TypeScript validation                                                                                                                              |
-| `npm test`                         | 17 passed, 0 failed, 0 skipped; isolated databases and mocked provider calls                                                                                                               |
-| Existing workspace browser journey | Passed after final rendering changes: actual 3D memory raycast, rotation/zoom, imports, original branches, dedupe, confirmed edges, citations, workspace isolation, new session and mobile |
-| New exploration browser journey    | Passed: actual 3D topic ring click, lobe/tag/untagged navigation, original inspection, cross-lobe links, source focus outside filters, retry, mobile source selection and immersive view   |
-| Existing integrity browser journey | Passed: immutable edit versions, filters, confirmed deletion, account deletion and revoked sessions                                                                                        |
-| No-WebGL browser journey           | Passed: deliberate renderer failure shows truthful fallback and working auth UI                                                                                                            |
-| Delayed-response browser journey   | Passed: stale authenticated library response cannot restore records after logout                                                                                                           |
-| `npm run build`                    | Passed: optimised standalone Next.js build                                                                                                                                                 |
-| `npm run test:production`          | Passed: all 4 production-mode smoke groups; temporary database removed                                                                                                                     |
-| `npm run benchmark`                | Passed: 100, 1,000, 10,000 and 100,000 isolated synthetic records; aggregate counts preserved, <=1,500 draw objects and 50-row library pages                                               |
+| Check                                  | Result                                                                                             |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `npm run assets:verify`                | Passed: 20,484 vertices, 40,960 triangles; original anatomy and source checksums unchanged         |
+| `npm run typecheck`                    | Passed                                                                                             |
+| `npm test`                             | 30 passed, 0 failed/skipped; isolated databases and explicit provider mocks                        |
+| `npm run test:e2e`                     | 6 passed in one final run (2.3 minutes), including the complete labelled mock intelligence journey |
+| `npm run build`                        | Passed: optimised standalone Next.js build, TypeScript and route tracing                           |
+| `npm run test:production`              | All 4 standalone production-mode smoke groups passed; isolated PGlite database removed             |
+| Live provider calls                    | Not run: provider keys are absent from Codex; existing saved Vercel keys remain configured         |
+| Hosted smoke / new-session persistence | Blocked before the app: proxy tunnel HTTP 403 for the feature alias                                |
 
-All five browser scenarios have passing runs. The new exploration scenario first
-caught inherited column styling on navigation and small title/caption overlaps.
-Those were fixed; the exploration and workspace journeys were rerun against the
-final render. The final mobile exploration run reloads at phone size so it uses
-the actual default low graphics preset, rather than merely resizing a desktop
-canvas. The complete suite initially reported four passes and one layout failure;
-that failure is resolved by the targeted reruns, not ignored.
+The new `tests/intelligence.test.ts` tests exact Unicode/message boundaries,
+versioned references and inactive branches; real database close/reopen; unchanged
+originals; duplicate processing and chunk cache reuse; recorded-result replay;
+lease concurrency; rate-limit backoff; unknown billing acknowledgement; cancel;
+source invalidation/deletion (including during a call); semantic candidate evidence
+and dismissed links; question-cache reuse; invalid quotes/citation numbers; and
+workspace checks before provider egress. `tests/migration.test.ts` upgrades a
+migration-001 database without changing original content, versions or anchors.
 
-New database tests check topic pagination/clamping, duplicate tag membership,
-untagged records, case-insensitive topic lookup, shared date/source/tag filters,
-workspace isolation, confirmed-only cross-lobe neighbourhoods and invalid input.
-The camera test projects **every original anatomical vertex** for 40 combinations
-of view, aspect ratio and asymmetric target, asserting a margin inside the frustum.
-This verifies automatic destination framing; deliberate manual zoom can crop.
+`tests/browser/intelligence.spec.ts` imports a tiny supported ChatGPT archive,
+verifies original roles/raw metadata, separately generates and saves a cited
+summary, indexes two messages, retrieves a paraphrase, answers with each provider
+independently, opens the exact passage and brain node, then signs out/in and
+retrieves the same saved material. It also verifies duplicate enqueue and a
+no-evidence answer path. **Every provider response/vector in this test is a labelled
+mock**. Settings model-access checks are mocked too, not evidence of entitlement.
 
-Browser tests explicitly clear DATABASE_URL and live provider keys, use a fresh
-`/tmp/echo-browser-*` database and set their own APP_ORIGIN. The origin unit test
-also isolates inherited configuration. No fixture was added to the user's account
-or remote database. No paid provider experiment was run.
+The browser mock transport is loaded explicitly by Playwright only; it refuses
+nonlocal database/origin settings or live credentials. Production adapters use
+fixed official provider APIs with no mock fallback. Mock output visibly says
+`[MOCK PROVIDER]`, and the isolated account is labelled. No fixtures were added
+to the owner's workspace or remote database, and no provider charges were incurred.
+
+The existing five browser journeys continue to cover anatomical raycasting,
+rotation/zoom, topics and back navigation, cross-lobe confirmed connections,
+original imports/versions, source focus, logout races, workspace isolation,
+new sessions, WebGL fallback, and mobile/immersive layouts. The new journey caught
+an incorrect test selector, expanded filter controls overlapping the sidebar
+footer, and a test click before authentication hydration; those are corrected.
+The no-WebGL scenario intentionally logs a renderer error. Three.js Clock/CommonJS
+and Node colour-environment deprecation warnings remain.
+
+Thirty core tests and local browser persistence are not managed PostgreSQL or
+live-model acceptance. Citation validation checks references/exact quotes, not
+whether a generated claim is semantically entailed. The one-hot mock vectors
+exercise search/caching/access logic, not embedding quality or threshold calibration.
 
 ## Actual rendered visual evidence
 
-Screenshots show only isolated, labelled demonstration/test records:
+Screenshots show only isolated, labelled demonstration/test records. New UI
+renders were visually inspected for readable summary metadata, exact source text,
+provider separation and original brain-node focus:
+
+- [Generated summary and index status — MOCK](screenshots/intelligence-mock-summary.png).
+- [Exact original passage and source version — MOCK journey](screenshots/intelligence-mock-passage.png).
+- [Independent OpenAI answer — MOCK](screenshots/intelligence-mock-openai.png).
+- [Independent Anthropic answer — MOCK](screenshots/intelligence-mock-anthropic.png).
+
+Preserved anatomical and navigation views:
 
 - [Front](screenshots/front.png): separate hemispheres and fissure, point scaffold.
 - [Side](screenshots/side.png): preserved cortical folds and atlas lobe boundaries.
@@ -66,7 +89,8 @@ review is not a medical certification, hardware GPU test or specialist review.
 
 ## Performance evidence and limits
 
-Current machine-readable results: [benchmark.json](validation/benchmark.json).
+Historical foundation/exploration measurements: [benchmark.json](validation/benchmark.json).
+The benchmark was not rerun for this increment and does not measure vector retrieval.
 
 | Records |         Draw objects |    Graph | Full-text search | Library |
 | ------: | -------------------: | -------: | ---------------: | ------: |
@@ -85,19 +109,35 @@ journeys. The no-WebGL scenario intentionally produces a renderer error.
 
 ## Preservation and live scope
 
-Resumption found the original foundation and eight unfinished files intact on
-`feat/core-memory-exploration`. Remote `main` was checked at `6f19c18`; it contains
-the ECHO application. The increment changes no migrations, original data, anatomy
-assets or dependency versions. There is no second implementation checkout.
+Resumption began at committed feature checkpoint `4b19901`; `main` remains
+`6f19c18`, and both contain the actual ECHO application. No renderer, anatomy,
+dependency versions or original schema were replaced. Migration 002 adds derived
+records and source-update invalidation. Its upgrade fixture preserves all original
+content and anatomical anchors. An external Git bundle preserves the prior checkpoint.
 
-The existing foundation Vercel preview was previously READY and the user confirmed
-it launches. No claim is made that this proves hosted database recovery, live AI
-or cross-device acceptance. Existing provider keys are saved in Vercel under the
-correct ECHO-prefixed names but absent from this Codex runtime; they were neither
-replaced nor requested again. See [DEPLOYMENT.md](DEPLOYMENT.md).
+The Vercel API confirms the correct team/project/GitHub link and enabled deployment
+protection. The previous feature preview was rebuilt READY at `4b19901` with its
+correct branch-specific APP_ORIGIN. New feature deployment SHA/state is recorded
+in the delivery report; the main preview must not be substituted for this branch:
 
-The **complete core milestone has not passed**: semantic indexing/hybrid retrieval,
-separate generated summaries/insights and live GPT/Claude grounded citations remain
-unfinished or unverified. Voice/meetings, reminders/calendar, remaining connectors,
-production security/recovery and comprehensive accessibility testing are also
-outstanding. [ROADMAP.md](ROADMAP.md) records every original requirement's status.
+https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
+
+The API confirms sensitive Preview bindings for DATABASE_URL and both existing
+ECHO-prefixed provider keys. The keys are absent from this Codex runtime and were
+not requested again, replaced or printed. Preview and Production share the database
+binding; no isolated cloud fixture or managed migration check was performed.
+
+Official SDK model lists were checked for `gpt-6.1-sol`, `claude-sonnet-5-5` and
+`text-embedding-3-small`; SDK support does not verify account access. The network
+proxy rejects the feature auth endpoint with `Tunnel connection failed: 403 Forbidden`.
+No authentication bypass or weakened protection was attempted. The existing saved
+keys must be reused through that runtime once it is accessible. See the exact
+live checklist and dashboard fallback in [DEPLOYMENT.md](DEPLOYMENT.md).
+
+The **complete core milestone has not passed**. Live embeddings, summary fidelity,
+each provider's grounded answer/citation, managed schema/runtime persistence and
+new-session hosted retrieval remain unverified. Request-driven processing, the
+64-passage bound, approximate ranking thresholds, lack of an independent worker
+and unified dollar budget are documented in [IMPLEMENTATION.md](IMPLEMENTATION.md).
+Voice/meetings, reminders/calendar, connectors and production hardening remain
+on the [roadmap](ROADMAP.md), outside this increment.

@@ -17,7 +17,7 @@ export default defineConfig({
     },
   },
   webServer: {
-    command: `DATABASE_URL= APP_ORIGIN=http://127.0.0.1:3100 ECHO_OPENAI_API_KEY= OPENAI_API_KEY= ECHO_ANTHROPIC_API_KEY= ANTHROPIC_API_KEY= ECHO_DIST_DIR=.next-e2e ECHO_DATA_DIR=/tmp/echo-browser-${process.pid} ALLOW_REGISTRATION=true npm run dev -- --port 3100`,
+    command: `DATABASE_URL= APP_ORIGIN=http://127.0.0.1:3100 ECHO_OPENAI_API_KEY= OPENAI_API_KEY= ECHO_ANTHROPIC_API_KEY= ANTHROPIC_API_KEY= ECHO_MOCK_PROVIDER_TRANSPORT=isolated-browser-tests NODE_OPTIONS='--import ./tests/fixtures/provider-transport.mjs' ECHO_DIST_DIR=.next-e2e ECHO_DATA_DIR=/tmp/echo-browser-${process.pid} ALLOW_REGISTRATION=true npm run dev -- --port 3100`,
     url: 'http://127.0.0.1:3100/api/health',
     reuseExistingServer: false,
     timeout: 120_000,

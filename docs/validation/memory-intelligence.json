@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-30",
+  "branch": "feat/core-memory-exploration",
+  "parent_checkpoint": "4b199016da0cc19211b3fd37f4a0e44c63be8a0d",
+  "core_tests": {
+    "passed": 30,
+    "failed": 0
+  },
+  "browser_tests": {
+    "passed": 6,
+    "failed": 0,
+    "provider_transport": "explicit labelled mocks, isolated local database, no live keys"
+  },
+  "typecheck": "passed",
+  "production_build": "passed",
+  "standalone_smoke_groups": 4,
+  "anatomy_checksums": "passed, unchanged fsaverage5 geometry",
+  "live_openai": "not run",
+  "live_anthropic": "not run",
+  "live_embeddings": "not run",
+  "managed_database_and_hosted_auth": "unverified; proxy tunnel rejects feature host with HTTP 403",
+  "saved_vercel_credential_bindings": "both ECHO-prefixed keys and DATABASE_URL apply to Preview; values not exposed or replaced",
+  "branch_origin": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+  "core_milestone_complete": false
+}

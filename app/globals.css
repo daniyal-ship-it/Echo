@@ -1960,6 +1960,10 @@ nav {
   min-height: 0;
   flex: 1;
 }
+/* Expanded controls contribute their full height to the scrollable sidebar. */
+.memory-list-section:has(.filters) {
+  flex: 1 0 auto;
+}
 /* Reserve real layout space for navigation, anatomy and source controls. */
 .breadcrumb {
   min-width: 0;
@@ -2141,4 +2145,61 @@ nav {
   .sidebar-bottom {
     padding-bottom: 8px;
   }
+}
+
+.intelligence-panel h3 {
+  margin-bottom: 12px;
+}
+.intelligence-status,
+.intelligence-consent,
+.generated-analysis {
+  padding: 16px;
+  margin: 14px 0;
+  border: 1px solid #2a3c53;
+  border-radius: 8px;
+  background: #101a28;
+}
+.intelligence-panel p {
+  line-height: 1.8;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.intelligence-panel progress {
+  width: 100%;
+  margin: 14px 0 6px;
+  accent-color: #88b7f5;
+}
+.intelligence-panel label {
+  margin: 12px 0;
+}
+.intelligence-panel .row {
+  flex-wrap: wrap;
+}
+.analysis-claim {
+  padding: 14px 0;
+  border-bottom: 1px solid #26374b;
+}
+.analysis-claim .text-button {
+  margin-right: 12px;
+}
+.source-passage {
+  border-left: 2px solid #9ec7f6;
+  background: #152337;
+  padding: 16px;
+  margin-bottom: 22px;
+}
+.source-passage blockquote {
+  margin: 12px 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+}
+.semantic-evidence {
+  padding: 10px;
+  background: #111e2e;
+  margin-bottom: 12px;
+}
+.semantic-evidence button {
+  white-space: normal;
+  overflow-wrap: anywhere;
 }

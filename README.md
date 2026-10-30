@@ -47,8 +47,11 @@ Git worktree unless explicitly requested.
   Conversation roles, ordering, branches and original export metadata are retained.
 - Bounded, resumable import batches, archive retention/download, duplicate
   detection and retry. An identical record never creates another memory.
-- Full-text source retrieval; source, region, tag and date filters; inspectable
-  relationship candidates and manual connections; confirmed links in the brain.
+- Keyword and opt-in hybrid retrieval; source, region, tag and date filters;
+  versioned passage citations and actual brain-node selection.
+- Consent-bound embedding/summary jobs, durable progress and recovery, separate
+  generated analyses, evidence-bearing semantic candidates and manual connections.
+  This pipeline passes isolated mock tests; live provider quality is unverified.
 - Original/source export, individual memory deletion, retained archive deletion,
   and password-confirmed account/workspace deletion.
 - OpenAI Responses and Anthropic Messages adapters, explicit context consent,
@@ -58,9 +61,10 @@ Git worktree unless explicitly requested.
   Adapter tests use labelled mocks.
 
 The fine anatomical dots are not stored memories. Original source content is
-never replaced by summaries. Current previews are extractive opening text,
-clearly distinguished from AI-generated analysis. Current retrieval is full-text,
-not vector semantic search; the pgvector schema is present for the next phase.
+never replaced by summaries. Opening previews remain extractive text,
+clearly distinguished from separately stored generated analysis in the Intelligence
+tab. Processing is bounded to 64 passages per original and advances while the
+panel is open; it can resume later. No independent background worker is installed.
 
 ## Validate
 
@@ -91,8 +95,9 @@ credentials and an available model ID; consumer subscriptions do not grant API
 credits or access to past consumer conversations.
 
 The local data directory is not suitable for ephemeral serverless storage.
-The foundation has an existing Vercel preview; see [DEPLOYMENT.md](docs/DEPLOYMENT.md)
-for its verified scope. A build or READY deployment does not certify live AI,
+The feature-branch preview is
+https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app.
+See [DEPLOYMENT.md](docs/DEPLOYMENT.md) for its verified scope. A build or READY deployment does not certify live AI,
 cloud database recovery or the full product acceptance journey.
 
 ## Design and provenance

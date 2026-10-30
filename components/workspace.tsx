@@ -64,6 +64,8 @@ const Brain = dynamic(() => import('./brain'), {
 });
 const EMPTY: Graph = { nodes: [], edges: [], total: 0, counts: {}, aggregated: false };
 type Retrieval = {
+  mode?: string;
+  notice?: string;
   question: string;
   citations: Citation[];
   outputs?: {
@@ -108,6 +110,7 @@ export default function Workspace() {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [filters, setFilters] = useState(false);
+  const [questionFilters, setQuestionFilters] = useState(false);
   const [quality, setQuality] = useState<'low' | 'balanced' | 'high'>('balanced');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [ready, setReady] = useState(false);
@@ -246,10 +249,13 @@ export default function Workspace() {
     void refreshGraph();
     void refreshLibrary();
   }
-  async function openMemory(id: string, version?: number) {
+  async function openMemory(id: string, version?: number, passage?: string) {
     const req = ++selectedRequest.current;
     try {
-      const m = await api<MemoryDetail>(`memories/${id}${version ? `?version=${version}` : ''}`);
+      const params = new URLSearchParams();
+      if (version) params.set('version', String(version));
+      if (passage) params.set('passage', passage);
+      const m = await api<MemoryDetail>(`memories/${id}?${params}`);
       if (req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId) return;
       setSelected(m);
       setRetrieval(null);
@@ -383,6 +389,7 @@ export default function Workspace() {
     setFrom('');
     setTo('');
     setFilters(false);
+    setQuestionFilters(false);
     setToast('');
     move({ type: 'reset' });
   }
@@ -410,11 +417,16 @@ export default function Workspace() {
     const requestController = new AbortController();
     controller.current = requestController;
     try {
-      if (providerConsent) {
+      const scope = questionFilters
+        ? { region: region || '', q: query, source, tag, from, to, untagged: untagged ? '1' : '' }
+        : {};
+      if (providerConsent && model !== 'hybrid') {
         const r = await api<{
           citations: Citation[];
           outputs: NonNullable<Retrieval['outputs']>;
           tokens: number;
+          mode?: string;
+          notice?: string;
         }>('assistant', {
           method: 'POST',
           body: JSON.stringify({
@@ -422,6 +434,8 @@ export default function Workspace() {
             providers: model === 'compare' ? ['openai', 'anthropic'] : [model],
             consent: true,
             synthesise: model === 'compare',
+            semantic: Boolean(settings?.embeddingConfigured),
+            filters: scope,
           }),
           signal: requestController.signal,
         });
@@ -429,9 +443,18 @@ export default function Workspace() {
         setRetrieval({ question: value, ...r });
         refresh();
       } else {
-        const r = await post<{ citations: Citation[] }>('retrieve', { question: value });
+        const r = await api<{ citations: Citation[]; mode: string }>('retrieve', {
+          method: 'POST',
+          body: JSON.stringify({
+            question: value,
+            mode: model === 'hybrid' ? 'hybrid' : 'keyword',
+            consent: providerConsent,
+            filters: scope,
+          }),
+          signal: requestController.signal,
+        });
         if (activeWorkspace.current !== user?.workspaceId) return;
-        setRetrieval({ question: value, citations: r.citations });
+        setRetrieval({ question: value, ...r });
         if (r.citations[0]) {
           const node = graph.nodes.find((n) => n.id === r.citations[0].id);
           if (node) move({ type: 'memory', position: node.position });
@@ -670,6 +693,14 @@ export default function Workspace() {
               >
                 Clear filters
               </button>
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={questionFilters}
+                  onChange={(e) => setQuestionFilters(e.target.checked)}
+                />
+                Use these filters for questions
+              </label>
             </div>
           )}
           <div className="memory-list">
@@ -941,6 +972,9 @@ export default function Workspace() {
                   onChange={(e) => setModel(e.target.value)}
                 >
                   <option value="search">Source search</option>
+                  {settings?.embeddingConfigured && (
+                    <option value="hybrid">Hybrid source search</option>
+                  )}
                   {settings?.providers
                     .filter((p) => p.configured)
                     .map((p) => (
@@ -1020,7 +1054,7 @@ export default function Workspace() {
           <MemoryPanel
             memory={selected}
             onClose={closeMemory}
-            onNavigate={(id, v) => void openMemory(id, v)}
+            onNavigate={(id, v, passage) => void openMemory(id, v, passage)}
             onChanged={refresh}
             onError={notify}
           />
@@ -1038,6 +1072,7 @@ export default function Workspace() {
             </div>
             <div className="retrieval-panel">
               <h2>{retrieval.question}</h2>
+              {retrieval.notice && <p>{retrieval.notice}</p>}
               {retrieval.outputs?.map((output, i) => (
                 <article className="ai-output" key={i}>
                   <span className="eyebrow">
@@ -1051,8 +1086,8 @@ export default function Workspace() {
               ))}
               {retrieval.tokens !== undefined && (
                 <p className="fine-print">
-                  {retrieval.tokens.toLocaleString()} tokens total. Monetary cost depends on your
-                  provider pricing; no price estimate configured.
+                  {retrieval.tokens.toLocaleString()} answer tokens. Query embeddings are billed
+                  separately when used. Monetary cost depends on your provider pricing.
                 </p>
               )}
               <span className="status-label">
@@ -1062,7 +1097,11 @@ export default function Workspace() {
               </span>
               {retrieval.citations.length ? (
                 retrieval.citations.map((c, i) => (
-                  <button className="citation" key={c.id} onClick={() => void openMemory(c.id)}>
+                  <button
+                    className="citation"
+                    key={c.chunkId || c.id}
+                    onClick={() => void openMemory(c.id, c.version, c.chunkId)}
+                  >
                     <div>
                       <span className="citation-number">{i + 1}</span>
                       <strong>{c.title}</strong>
@@ -1070,6 +1109,14 @@ export default function Workspace() {
                     </div>
                     <p>{c.excerpt}</p>
                     <span>{c.source} · Open original</span>
+                    {c.version && (
+                      <small>
+                        {' '}
+                        · Version {c.version}
+                        {c.chunkId ? ' · Exact passage' : ''}
+                        {c.similarity !== undefined ? ` · cosine ${c.similarity.toFixed(3)}` : ''}
+                      </small>
+                    )}
                   </button>
                 ))
               ) : (
@@ -1083,7 +1130,9 @@ export default function Workspace() {
                 </div>
               )}
               <p className="fine-print">
-                Ranked full-text search. Semantic embedding retrieval is not enabled.
+                {retrieval.mode === 'hybrid-retrieval'
+                  ? 'Keyword and semantic matches combined by reciprocal rank. Similarity is relevance evidence, not proof of truth.'
+                  : 'Ranked full-text source retrieval. No query embedding was used.'}
               </p>
             </div>
           </>
@@ -1298,22 +1347,39 @@ export default function Workspace() {
       )}
       {consent && (
         <Modal title="Send context to your AI provider?" onClose={() => setConsent(false)}>
-          <p className="muted">
-            Your question and up to six matching source excerpts will be sent to{' '}
-            {model === 'compare'
-              ? 'OpenAI and Anthropic'
-              : model === 'openai'
-                ? 'OpenAI'
-                : 'Anthropic'}
-            . The generated conversation will be saved as a memory.
-          </p>
+          {model === 'hybrid' ? (
+            <p className="muted">
+              Your question will be sent to OpenAI to find semantically related passages in this
+              workspace. No answer will be generated. Previously indexed originals stay in the
+              database.
+            </p>
+          ) : (
+            <p className="muted">
+              Your question and up to six matching source excerpts will be sent to{' '}
+              {model === 'compare'
+                ? 'OpenAI and Anthropic'
+                : model === 'openai'
+                  ? 'OpenAI'
+                  : 'Anthropic'}
+              . The generated conversation will be saved as a memory.
+            </p>
+          )}
+          {model !== 'hybrid' && settings?.embeddingConfigured && (
+            <p className="fine-print">
+              Your question may also be sent to OpenAI for semantic retrieval. Only indexed passages
+              in {questionFilters ? 'the selected library scope' : 'your workspace'} can be
+              retrieved. The sources themselves are sent only to the answer providers named above.
+            </p>
+          )}
           <blockquote>{pendingQuestion}</blockquote>
           <p className="fine-print">
-            {model === 'compare'
-              ? 'At most three calls: two independent responses and one synthesis.'
-              : 'One provider request.'}{' '}
-            Each response is capped at 1,200 output tokens. API charges apply. You can cancel an
-            active request; already processed tokens may still be billed.
+            {model === 'hybrid'
+              ? 'At most one query embedding request; a saved result can be reused.'
+              : model === 'compare'
+                ? 'At most three calls: two independent responses and one synthesis.'
+                : 'One provider request.'}{' '}
+            {model !== 'hybrid' && 'Each response is capped at 1,200 output tokens. '}API charges
+            apply. You can cancel an active request; already processed tokens may still be billed.
           </p>
           <div className="row">
             <button className="button secondary" onClick={() => setConsent(false)}>

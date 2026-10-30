@@ -71,15 +71,17 @@ export async function createDatabase(directory?: string): Promise<Database> {
     await tx.exec(
       'CREATE TABLE IF NOT EXISTS schema_migrations (version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
     );
-    const exists = await tx.query('SELECT version FROM schema_migrations WHERE version=$1', [
-      '001_foundation',
-    ]);
-    if (!exists.length) {
-      const migration = await readFile(
-        path.join(process.cwd(), 'db/migrations/001_foundation.sql'),
-        'utf8',
-      );
-      await tx.exec(migration);
+    for (const version of ['001_foundation', '002_memory_intelligence']) {
+      const exists = await tx.query('SELECT version FROM schema_migrations WHERE version=$1', [
+        version,
+      ]);
+      if (!exists.length) {
+        const migration = await readFile(
+          path.join(process.cwd(), `db/migrations/${version}.sql`),
+          'utf8',
+        );
+        await tx.exec(migration);
+      }
     }
   });
   return db;

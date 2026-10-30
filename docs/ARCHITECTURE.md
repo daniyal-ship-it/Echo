@@ -39,16 +39,20 @@ Only actual stored edges draw pathways. Reduced motion disables transitions.
 
 ## Memory / graph
 
-Original sources are versioned, never replaced with summaries. The first
-consolidation pipeline produces explicitly labelled extractive summaries and
-keyword metadata without requiring an AI credential. Automatic relationships
-are candidates, with shared-tag evidence; users confirm or dismiss them. Manual
-relationships require an explanation. Strength is relevance, not truth.
+Original sources are versioned, never replaced with summaries. Opening previews
+are explicitly extractive. With consent and configured API access, durable bounded
+jobs create versioned message passages, real embeddings and separately stored
+generated summaries/insights. A provider operation journal supports recovery and
+pauses unknown billing outcomes. Steps are request-driven, not an independent worker.
+Shared-tag/reference and semantic-passage relationships are candidates; users
+confirm or dismiss them. Manual relationships require an explanation. Cosine
+similarity is relevance evidence, not proof of factual truth.
 
-Full-text retrieval is immediately available with filters and source citations.
-Provider-backed embeddings and hybrid retrieval still need implementation and a
-configured embedding model. Responses without a provider are source excerpts,
-not invented AI answers.
+Full-text retrieval works without a provider. Opt-in hybrid retrieval combines
+keyword and vector rankings within the authorised filtered workspace. Exact
+passage citations open immutable source versions and their actual brain nodes.
+Live semantic quality and provider-grounded acceptance remain unverified;
+isolated tests use explicitly labelled mocks. See IMPLEMENTATION.md for bounds.
 Provider adapters use fixed official HTTPS endpoints and configurable model IDs.
 Retrieved text is untrusted data; models receive no action tools. The UI requires
 explicit consent before transmitting context to a provider.
@@ -78,7 +82,7 @@ meeting transcription and OAuth cannot be certified without those services.
 1. Anatomy and provenance; camera, surface, point layers, regional selection.
 2. Authenticated persistent notes, versions, graph, export and deletion.
 3. ChatGPT / Claude exports and Markdown/Obsidian imports, deduplication, jobs.
-4. Provider adapters, cited retrieval, bounded comparison; credentials required.
+4. Durable indexing/analysis, hybrid citations and independent providers; live acceptance required.
 5. Consent-based meetings and real transcription; not a simulated recorder.
 6. OAuth integrations, reminders with reliable scheduling, large-file storage.
 7. Security hardening, GPU benchmarks, managed deployment and recovery exercise.

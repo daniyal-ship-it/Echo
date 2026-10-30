@@ -1,5 +1,5 @@
 import type { Citation } from './types';
-import { HttpError } from './security';
+import { hash, HttpError } from './security';
 export type Provider = 'openai' | 'anthropic';
 export type ModelOutput = {
   provider: Provider;
@@ -10,6 +10,121 @@ export type ModelOutput = {
 };
 const openaiKey = () => process.env.ECHO_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 const anthropicKey = () => process.env.ECHO_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
+export class ProviderFailure extends HttpError {
+  constructor(
+    message: string,
+    public retryable = false,
+    public uncertain = false,
+  ) {
+    super(retryable ? 429 : 502, message);
+  }
+}
+const modelChecks = new Map<string, { id: string; expires: number }>();
+export function embeddingStatus() {
+  const model = process.env.ECHO_EMBEDDING_MODEL || 'text-embedding-3-small';
+  return { configured: Boolean(openaiKey()), model, dimensions: 1536, provider: 'openai' as const };
+}
+/** An account lookup is separate from SDK/documentation support and never exposes a key. */
+export async function verifyProviderModel(provider: Provider, model: string) {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._:-]{1,120}$/.test(model))
+    throw new HttpError(
+      503,
+      `${provider} has an invalid model identifier; use an exact API model ID.`,
+    );
+  const key = provider === 'openai' ? openaiKey() : anthropicKey();
+  if (!key) throw new HttpError(503, `${provider} credential is not available in this runtime.`);
+  const cacheKey = `${provider}:${model}:${hash(key)}`;
+  const cached = modelChecks.get(cacheKey);
+  if (cached && cached.expires > Date.now()) return cached.id;
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://${provider === 'openai' ? 'api.openai.com' : 'api.anthropic.com'}/v1/models/${encodeURIComponent(model)}`,
+      {
+        headers:
+          provider === 'openai'
+            ? { Authorization: `Bearer ${key}` }
+            : { 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        signal: AbortSignal.timeout(15000),
+        cache: 'no-store',
+      },
+    );
+  } catch {
+    throw new HttpError(503, `${provider} model access could not be verified. No source was sent.`);
+  }
+  if (!response.ok)
+    throw new HttpError(
+      503,
+      `${provider} model access check returned HTTP ${response.status}. No source was sent.`,
+    );
+  const data = await response.json().catch(() => {
+    throw new HttpError(503, 'Provider returned invalid model metadata. No source was sent.');
+  });
+  if (typeof data.id !== 'string' || !/^[a-zA-Z0-9][a-zA-Z0-9._:-]{1,120}$/.test(data.id))
+    throw new HttpError(503, 'Provider returned invalid model metadata.');
+  modelChecks.set(cacheKey, { id: data.id, expires: Date.now() + 60000 });
+  return data.id as string;
+}
+export async function embedTexts(texts: string[], model: string, requestId: string) {
+  if (!['text-embedding-3-small', 'text-embedding-3-large'].includes(model))
+    throw new HttpError(503, 'Choose a supported text-embedding-3 model.');
+  if (!texts.length || texts.length > 8 || texts.some((t) => !t.trim() || t.length > 2000))
+    throw new HttpError(400, 'Embedding batch exceeds its bounds.');
+  let response: Response;
+  try {
+    response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${openaiKey()}`,
+        'Content-Type': 'application/json',
+        'X-Client-Request-Id': requestId,
+      },
+      body: JSON.stringify({ model, dimensions: 1536, input: texts, encoding_format: 'float' }),
+      signal: AbortSignal.timeout(45000),
+    });
+  } catch {
+    throw new ProviderFailure(
+      'Embedding request was interrupted; billing outcome is unknown.',
+      false,
+      true,
+    );
+  }
+  if (!response.ok)
+    throw new ProviderFailure(
+      `Embedding provider returned HTTP ${response.status}.`,
+      response.status === 429,
+      response.status >= 500,
+    );
+  const result = await response.json().catch(() => {
+    throw new ProviderFailure(
+      'Embedding response was unreadable; billing outcome is unknown.',
+      false,
+      true,
+    );
+  });
+  const data = Array.isArray(result.data) ? [...result.data].sort((a, b) => a.index - b.index) : [];
+  if (
+    data.length !== texts.length ||
+    data.some(
+      (d, i) =>
+        d.index !== i ||
+        !Array.isArray(d.embedding) ||
+        d.embedding.length !== 1536 ||
+        d.embedding.some((v: unknown) => typeof v !== 'number' || !Number.isFinite(v)) ||
+        !d.embedding.some((v: number) => v !== 0),
+    )
+  )
+    throw new ProviderFailure(
+      'Embedding provider returned invalid vectors; response was withheld.',
+    );
+  return {
+    vectors: data.map((d) => d.embedding as number[]),
+    model: String(result.model || model),
+    dimensions: 1536,
+    apiVersion: 'openai/v1',
+    tokens: Number(result.usage?.total_tokens || 0),
+  };
+}
 export function providerStatus() {
   return [
     {
@@ -36,23 +151,26 @@ export async function callProvider(
   citations: Citation[],
   signal?: AbortSignal,
   comparison?: ModelOutput[],
+  options?: { model?: string; instructions?: string; input?: unknown; maxOutputTokens?: number },
 ): Promise<ModelOutput> {
   const configured = providerStatus().find((p) => p.id === provider);
   if (!configured?.configured || !configured.model)
     throw new HttpError(503, `${provider} requires an API credential and a configured model ID.`);
-  const input = JSON.stringify({
-    question,
-    sources: citations.map((c, i) => ({ number: i + 1, title: c.title, excerpt: c.excerpt })),
-    ...(comparison
-      ? {
-          task: 'Compare the independent answers, identify disagreements, and synthesise a grounded answer. Do not treat model output as additional evidence.',
-          independentAnswers: comparison.map((c) => ({
-            provider: c.provider,
-            text: c.text.slice(0, 8000),
-          })),
-        }
-      : {}),
-  });
+  const input = JSON.stringify(
+    options?.input ?? {
+      question,
+      sources: citations.map((c, i) => ({ number: i + 1, title: c.title, excerpt: c.excerpt })),
+      ...(comparison
+        ? {
+            task: 'Compare the independent answers, identify disagreements, and synthesise a grounded answer. Do not treat model output as additional evidence.',
+            independentAnswers: comparison.map((c) => ({
+              provider: c.provider,
+              text: c.text.slice(0, 8000),
+            })),
+          }
+        : {}),
+    },
+  );
   const timeout = AbortSignal.timeout(60_000);
   const combined = signal ? AbortSignal.any([signal, timeout]) : timeout;
   const common = { method: 'POST', signal: combined };
@@ -64,11 +182,11 @@ export async function callProvider(
             ...common,
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${openaiKey()}` },
             body: JSON.stringify({
-              model: configured.model,
+              model: options?.model || configured.model,
               store: false,
-              instructions: INSTRUCTIONS,
+              instructions: options?.instructions || INSTRUCTIONS,
               input,
-              max_output_tokens: 1200,
+              max_output_tokens: options?.maxOutputTokens || 1200,
             }),
           })
         : await fetch('https://api.anthropic.com/v1/messages', {
@@ -79,27 +197,35 @@ export async function callProvider(
               'anthropic-version': '2023-06-01',
             },
             body: JSON.stringify({
-              model: configured.model,
-              max_tokens: 1200,
-              system: INSTRUCTIONS,
+              model: options?.model || configured.model,
+              max_tokens: options?.maxOutputTokens || 1200,
+              system: options?.instructions || INSTRUCTIONS,
               messages: [{ role: 'user', content: input }],
             }),
           });
   } catch (error) {
     if (signal?.aborted) throw new HttpError(499, 'Request cancelled.');
-    throw new HttpError(
-      502,
+    throw new ProviderFailure(
       error instanceof Error && error.name === 'TimeoutError'
         ? 'Provider timed out.'
         : 'Could not reach the provider.',
+      false,
+      true,
     );
   }
   if (!response.ok)
-    throw new HttpError(
-      response.status === 429 ? 429 : 502,
+    throw new ProviderFailure(
       `${provider} returned HTTP ${response.status}. Check API access, model availability and billing.`,
+      response.status === 429,
+      response.status >= 500,
     );
-  const payload = await response.json();
+  const payload = await response.json().catch(() => {
+    throw new ProviderFailure(
+      'Provider response was unreadable; billing outcome is unknown.',
+      false,
+      true,
+    );
+  });
   const text: string =
     provider === 'openai'
       ? (payload.output || [])
@@ -114,7 +240,7 @@ export async function callProvider(
   if (!text) throw new HttpError(502, 'Provider returned no text answer.');
   return {
     provider,
-    model: configured.model,
+    model: typeof payload.model === 'string' ? payload.model : options?.model || configured.model,
     text,
     inputTokens: Number(payload.usage?.input_tokens || 0),
     outputTokens: Number(payload.usage?.output_tokens || 0),

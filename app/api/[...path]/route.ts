@@ -19,16 +19,49 @@ import {
   getGraph,
   listMemories,
   memoryDetail,
-  retrieve,
   runImportBatch,
   storeMemory,
 } from '@/lib/memories';
 import { extractTags, parseImport } from '@/lib/importers';
-import { callProvider, providerStatus, type ModelOutput, type Provider } from '@/lib/providers';
+import {
+  callProvider,
+  embeddingStatus,
+  providerStatus,
+  verifyProviderModel,
+  type ModelOutput,
+  type Provider,
+} from '@/lib/providers';
+import {
+  controlIntelligence,
+  enqueueIntelligence,
+  getIntelligenceJob,
+  intelligenceStatus,
+  publicJob,
+  runIntelligenceStep,
+} from '@/lib/intelligence';
+import { getPassage, validateAnswerCitations } from '@/lib/chunks';
+import { assertCitationAccess, hybridRetrieve } from '@/lib/retrieval';
 import { REGIONS, type ImportItem, type Job } from '@/lib/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+const filtersSchema = z
+  .object({
+    region: z.string().max(20).optional(),
+    source: z.string().max(40).optional(),
+    tag: z.string().max(80).optional(),
+    from: z.string().max(10).optional(),
+    to: z.string().max(10).optional(),
+    q: z.string().max(500).optional(),
+    untagged: z.string().max(1).optional(),
+  })
+  .default({});
+const filterParams = (value: z.infer<typeof filtersSchema>) =>
+  new URLSearchParams(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === 'string',
+    ),
+  );
 const emailSchema = z.string().trim().toLowerCase().email().max(254);
 const passwordSchema = z.string().min(12, 'Use at least 12 characters.').max(200);
 const noteSchema = z.object({
@@ -173,9 +206,65 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
         storage: process.env.DATABASE_URL
           ? 'Managed PostgreSQL'
           : 'Local PostgreSQL · persistent disk',
-        embeddingConfigured: false,
+        embeddingConfigured: embeddingStatus().configured,
+        embedding: embeddingStatus(),
         limits: { uploadMiB: 20, memoriesPerImport: 1000 },
       });
+    if (route === 'intelligence' && method === 'GET') {
+      const memory = validId(request.nextUrl.searchParams.get('memoryId') || '');
+      const version = request.nextUrl.searchParams.has('version')
+        ? z.coerce.number().int().positive().parse(request.nextUrl.searchParams.get('version'))
+        : undefined;
+      return json(await intelligenceStatus(db, workspace, memory, version));
+    }
+    if (route === 'intelligence' && method === 'POST') {
+      const input = z
+        .object({
+          memoryId: z.uuid(),
+          summaryProvider: z.enum(['openai', 'anthropic']).default('openai'),
+          consent: z.literal(true),
+        })
+        .parse(await body(request));
+      await rateLimit(db, `intelligence-enqueue:${workspace}`, 20);
+      return json(
+        publicJob(await enqueueIntelligence(db, workspace, input.memoryId, input.summaryProvider)),
+        201,
+      );
+    }
+    const intelligenceMatch = route.match(/^intelligence\/([^/]+)(?:\/(run|control))?$/);
+    if (intelligenceMatch) {
+      const id = validId(intelligenceMatch[1]);
+      if (method === 'GET') return json(publicJob(await getIntelligenceJob(db, workspace, id)));
+      if (method === 'POST' && intelligenceMatch[2] === 'run') {
+        await rateLimit(db, `intelligence-run:${workspace}`, 120);
+        return json(await runIntelligenceStep(db, workspace, id));
+      }
+      if (method === 'POST' && intelligenceMatch[2] === 'control') {
+        const input = z
+          .object({
+            action: z.enum(['cancel', 'resume', 'retry']),
+            acknowledgeCharge: z.boolean().default(false),
+          })
+          .parse(await body(request));
+        return json(
+          await controlIntelligence(db, workspace, id, input.action, input.acknowledgeCharge),
+        );
+      }
+    }
+    if (route === 'providers/verify' && method === 'POST') {
+      await rateLimit(db, `models:${workspace}`, 10);
+      const input = z
+        .object({ provider: z.enum(['openai', 'anthropic']) })
+        .parse(await body(request));
+      const configured = providerStatus().find((p) => p.id === input.provider);
+      if (!configured?.model) throw new HttpError(503, 'No API model configured in this runtime.');
+      return json({
+        provider: input.provider,
+        model: await verifyProviderModel(input.provider, configured.model),
+        accountAccess: true,
+        liveAnswerVerified: false,
+      });
+    }
     if (route === 'memories' && method === 'GET')
       return json(await listMemories(db, workspace, request.nextUrl.searchParams));
     if (route === 'memories' && method === 'POST') {
@@ -221,21 +310,27 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
     const memoryMatch = route.match(/^memories\/([^/]+)$/);
     if (memoryMatch) {
       const id = validId(memoryMatch[1]);
-      if (method === 'GET')
-        return json(
-          await memoryDetail(
-            db,
-            workspace,
-            id,
-            request.nextUrl.searchParams.has('version')
-              ? z.coerce
-                  .number()
-                  .int()
-                  .positive()
-                  .parse(request.nextUrl.searchParams.get('version'))
-              : undefined,
-          ),
+      if (method === 'GET') {
+        const passage = request.nextUrl.searchParams.has('passage')
+          ? await getPassage(
+              db,
+              workspace,
+              id,
+              validId(request.nextUrl.searchParams.get('passage')!),
+            )
+          : undefined;
+        const detail = await memoryDetail(
+          db,
+          workspace,
+          id,
+          request.nextUrl.searchParams.has('version')
+            ? z.coerce.number().int().positive().parse(request.nextUrl.searchParams.get('version'))
+            : passage?.source_version,
         );
+        if (passage && passage.source_version !== detail.viewed_version)
+          throw new HttpError(400, 'Passage does not belong to the requested source version.');
+        return json({ ...detail, ...(passage ? { passage } : {}) });
+      }
       if (method === 'DELETE') {
         const input = z.object({ confirm: z.literal('DELETE') }).parse(await body(request));
         void input;
@@ -421,12 +516,28 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
     }
     if (route === 'retrieve' && method === 'POST') {
       const input = z
-        .object({ question: z.string().trim().min(2).max(2000) })
+        .object({
+          question: z.string().trim().min(2).max(2000),
+          mode: z.enum(['keyword', 'hybrid']).default('keyword'),
+          consent: z.boolean().default(false),
+          filters: filtersSchema,
+        })
         .parse(await body(request));
-      return json({
-        mode: 'keyword-retrieval',
-        citations: await retrieve(db, workspace, input.question),
-      });
+      if (input.mode === 'hybrid' && !input.consent)
+        throw new HttpError(
+          400,
+          'Semantic retrieval needs consent to send your question to the embedding provider.',
+        );
+      await rateLimit(db, `retrieval:${workspace}`, 60);
+      return json(
+        await hybridRetrieve(
+          db,
+          workspace,
+          input.question,
+          filterParams(input.filters),
+          input.mode === 'hybrid',
+        ),
+      );
     }
     if (route === 'assistant' && method === 'POST') {
       const input = z
@@ -438,6 +549,8 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
             .max(2),
           consent: z.literal(true),
           synthesise: z.boolean().default(false),
+          semantic: z.boolean().default(false),
+          filters: filtersSchema,
         })
         .parse(await body(request));
       const providers = [...new Set(input.providers)];
@@ -453,7 +566,22 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
       );
       if (budget[0].tokens > Number(process.env.DAILY_TOKEN_LIMIT || 100000))
         throw new HttpError(429, 'Daily token budget reached.');
-      const citations = await retrieve(db, workspace, input.question);
+      const retrieval = await hybridRetrieve(
+        db,
+        workspace,
+        input.question,
+        filterParams(input.filters),
+        input.semantic,
+      );
+      const citations = retrieval.citations;
+      if (!citations.length)
+        return json({
+          outputs: [],
+          citations: [],
+          tokens: 0,
+          mode: retrieval.mode,
+          notice: 'Insufficient retrieved evidence. No answer-provider call was made.',
+        });
       const id = uuid();
       await db.query(
         "INSERT INTO agent_runs(id,workspace_id,question,status) VALUES($1,$2,$3,'running')",
@@ -462,18 +590,45 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
       const outputs: ModelOutput[] = [];
       try {
         // Finite sequence: two independent calls at most, then one optional synthesis.
-        for (const provider of providers)
-          outputs.push(await callProvider(provider, input.question, citations, request.signal));
-        if (input.synthesise && outputs.length === 2)
-          outputs.push(
-            await callProvider(
-              providers[0] as Provider,
-              input.question,
-              citations,
-              request.signal,
-              outputs,
-            ),
+        for (const provider of providers) {
+          await verifyProviderModel(
+            provider,
+            providerStatus().find((p) => p.id === provider)!.model!,
           );
+          await assertCitationAccess(db, workspace, citations);
+          const output = await callProvider(provider, input.question, citations, request.signal);
+          try {
+            validateAnswerCitations(output.text, citations.length);
+          } catch (error) {
+            outputs.push({
+              ...output,
+              text: 'Response withheld because source citations were invalid.',
+            });
+            throw error;
+          }
+          outputs.push(output);
+        }
+        if (input.synthesise && outputs.length === 2) {
+          await assertCitationAccess(db, workspace, citations);
+          const synthesis = await callProvider(
+            providers[0] as Provider,
+            input.question,
+            citations,
+            request.signal,
+            outputs,
+          );
+          try {
+            validateAnswerCitations(synthesis.text, citations.length);
+          } catch (error) {
+            outputs.push({
+              ...synthesis,
+              text: 'Response withheld because source citations were invalid.',
+            });
+            throw error;
+          }
+          outputs.push(synthesis);
+        }
+        await assertCitationAccess(db, workspace, citations);
         const tokens = outputs.reduce((n, o) => n + o.inputTokens + o.outputTokens, 0);
         await db.transaction(async (tx) => {
           await tx.query(
@@ -482,8 +637,16 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
           );
           for (const citation of citations)
             await tx.query(
-              'INSERT INTO retrieval_citations(id,workspace_id,run_id,memory_id,excerpt,version) SELECT $1,$2,$3,id,$4,version FROM memory_nodes WHERE id=$5 AND workspace_id=$2',
-              [uuid(), workspace, id, citation.excerpt, citation.id],
+              'INSERT INTO retrieval_citations(id,workspace_id,run_id,memory_id,excerpt,version,chunk_id) VALUES($1,$2,$3,$4,$5,$6,$7)',
+              [
+                uuid(),
+                workspace,
+                id,
+                citation.id,
+                citation.excerpt,
+                citation.version,
+                citation.chunkId || null,
+              ],
             );
           const content = `user: ${input.question}\n\n${outputs.map((o) => `${o.provider} (${o.model}): ${o.text}`).join('\n\n')}`;
           await storeMemory(tx, workspace, {
@@ -500,7 +663,7 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
           });
           await audit(tx, workspace, 'provider.context_sent', id);
         });
-        return json({ id, outputs, citations, tokens });
+        return json({ id, outputs, citations, tokens, mode: retrieval.mode });
       } catch (error) {
         await db.query('UPDATE agent_runs SET status=$1,outputs=$2,tokens=$3 WHERE id=$4', [
           request.signal.aborted ? 'cancelled' : 'failed',
@@ -512,13 +675,32 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
       }
     }
     if (route === 'export' && method === 'GET') {
-      const [memories, versions, edges, runs, citations, sources] = await Promise.all([
+      const [
+        memories,
+        versions,
+        edges,
+        runs,
+        citations,
+        sources,
+        analyses,
+        passages,
+        intelligenceJobs,
+      ] = await Promise.all([
         db.query('SELECT * FROM memory_nodes WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM memory_versions WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM memory_edges WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM agent_runs WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM retrieval_citations WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM data_sources WHERE workspace_id=$1', [workspace]),
+        db.query('SELECT * FROM memory_analyses WHERE workspace_id=$1', [workspace]),
+        db.query(
+          'SELECT id,memory_id,source_version,ordinal,message_id,message_index,role,source_timestamp,active,start_offset,end_offset,content,chunker_version FROM memory_chunks WHERE workspace_id=$1',
+          [workspace],
+        ),
+        db.query(
+          'SELECT id,memory_id,source_version,config,status,total_chunks,embedded,analysed,error,created_at FROM intelligence_jobs WHERE workspace_id=$1',
+          [workspace],
+        ),
       ]);
       await audit(db, workspace, 'workspace.exported');
       return new NextResponse(
@@ -532,6 +714,9 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
             runs,
             citations,
             sources,
+            analyses,
+            passages,
+            intelligenceJobs,
           },
           null,
           2,

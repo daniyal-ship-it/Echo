@@ -54,10 +54,22 @@ Uploaded supported text/JSON is parsed without executing source code. ZIP expans
 and entry sizes are checked before decompression. This is not an antivirus service;
 PDF, Word, image and media execution/parsing is deliberately not implemented yet.
 
-The daily token guard uses reported completed usage. It is not a strict financial
-cap, and simultaneous requests or a cancelled request may incur costs before usage
-is recorded. Configure provider-side billing limits. A reservation ledger and
-verified pricing registry are needed before describing monetary budgets as enforced.
+Intelligence jobs reserve a conservative byte-based token allowance before each
+bounded call under a workspace lock. Successful operations persist usage/results;
+unknown outcomes pause for explicit acknowledgement rather than automatic replay.
+Assistant requests retain the existing reported-usage guard, and question vectors
+have a scoped cache/rate limit. These are separate controls, not a unified financial
+cap. Cancelled or interrupted calls can still be billed, including the window
+between a provider response and its durable journal write. Provider-side billing
+limits and a verified pricing ledger are needed for strict monetary budgets.
+
+New derived records enforce workspace/source foreign keys. The authenticated
+workspace and current original version are checked before sending source context.
+Generated summaries require exact quotes in active source passages; answers reject
+invalid numbered citations. These structural checks do not prove entailment or
+prevent every model hallucination. Empty retrieval returns insufficient evidence
+without asking an answer provider. Production adapters have no mock fallback;
+Playwright's labelled transport requires an isolated local database and no live keys.
 
 Workspace export is currently an in-memory JSON response; very large exports need
 a streaming job/object-store implementation. Historical archive bytes can also
