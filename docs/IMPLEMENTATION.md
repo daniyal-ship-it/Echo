@@ -57,18 +57,25 @@ import → separate summary/index → paraphrase → each provider → exact pas
 See VALIDATION.md for final browser/build results and rendered screenshots.
 
 Existing Vercel project `daniyal-1415s-projects/echo` is linked to the correct Echo
-repository. The prior `4b19901` feature preview is READY. Its branch-specific
+repository. The `30a337e` feature preview is READY. Its branch-specific
 Preview-only APP_ORIGIN was corrected to:
 
 https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
 
 Deployment protection remains enabled. Saved provider keys and DATABASE_URL have
-Preview bindings; no credentials were replaced or disclosed. Provider keys are
-absent from this Codex process. The proxy rejects connections to the preview with
-`Tunnel connection failed: 403 Forbidden`, so hosted authentication, the managed
-migration, live embeddings, account/model access, GPT/Claude grounded answers and
-hosted new-session persistence remain **unverified**. Consult the latest delivery
-report for the SHA served by the new feature preview; do not substitute main.
+Preview bindings; no credentials were replaced or disclosed. After environment
+republication, the exact feature host is reachable: `/api/auth/status` redirects
+302 → Vercel SSO 307 → Vercel login 200. The old proxy tunnel denial for this host
+is resolved. Existing VERCEL_TOKEN authenticates management API reads, but this
+runner has no existing Vercel browser session or project automation credential.
+ECHO authentication and the isolated hosted journey remain blocked behind that
+separate protection layer. Chromium also fails certificate validation before
+rendering; no hosted browser UI acceptance passed.
+
+No recorded numeric API-test budget was found and no billable call was made.
+The separate [hosted verification handoff](HOSTED_VERIFICATION.md) records every
+passed/failed/blocked check and a conditional cost proposal requiring approval.
+Local tests from `30a337e` remain historical evidence, not live-provider results.
 
 ## Deliberate limits / continuation
 

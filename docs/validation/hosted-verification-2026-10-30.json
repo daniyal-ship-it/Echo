@@ -1,0 +1,87 @@
+{
+  "date": "2026-10-30",
+  "checked_application_commit": "30a337e04f1939af06d2f2392d8281c5e7ecdf25",
+  "branch": "feat/core-memory-exploration",
+  "main_unchanged": "6f19c18bab3656e90de77f168cda88fe409f126a",
+  "deployment_id": "dpl_HT5SRLLB4P2pBafuX7ieEn7N2q5q",
+  "deployment_state": "READY",
+  "preview_origin": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+  "checks": {
+    "git_fetch_and_ancestry": "passed",
+    "exact_feature_host_network": "passed",
+    "vercel_management_authentication": "passed",
+    "deployed_source_sha": "passed",
+    "preview_app_origin_binding": "passed",
+    "saved_provider_and_database_binding_metadata": "passed",
+    "vercel_deployment_authentication": "blocked: no authorised browser session or existing automation access credential",
+    "echo_application_authentication": "blocked: not reached through deployment protection",
+    "isolated_hosted_import_and_original": "blocked",
+    "live_generated_summary": "blocked",
+    "live_embedding_and_paraphrase_retrieval": "blocked",
+    "live_openai_grounded_answer": "blocked",
+    "live_anthropic_grounded_answer": "blocked",
+    "hosted_citation_navigation": "blocked",
+    "hosted_signout_signin_persistence": "blocked",
+    "chromium_navigation": "failed: certificate validation before page rendering",
+    "billable_budget": "blocked: no recorded numeric approval; no paid calls made"
+  },
+  "http": {
+    "timestamp": "2026-10-30T15:25:05.380957+00:00",
+    "method": "HTTP requests with normal certificate verification; no credentials attached; redirect queries omitted",
+    "chain": [
+      {
+        "host": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+        "path": "/api/auth/status",
+        "http_status": 302,
+        "server": "envoy"
+      },
+      {
+        "host": "vercel.com",
+        "path": "/sso-api",
+        "http_status": 307,
+        "server": "envoy"
+      },
+      {
+        "host": "vercel.com",
+        "path": "/login",
+        "http_status": 200,
+        "content_type": "text/html; charset=utf-8",
+        "title": null
+      }
+    ]
+  },
+  "browser_attempt": {
+    "timestamp": "2026-10-30T15:22:19.065Z",
+    "browser": "Playwright with system Chromium; fresh context; no saved authentication",
+    "requestedHost": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+    "redirects": [],
+    "finalHost": "",
+    "finalPath": "blank",
+    "title": "",
+    "failure": {
+      "name": "Error",
+      "certificateError": true,
+      "proxyError": false
+    }
+  },
+  "local_mock_tests": "previous 30 core / 6 browser results at 30a337e retained; not rerun or counted as hosted acceptance",
+  "provider_spend_this_run_usd": 0,
+  "production_or_secret_changes": false,
+  "budget_proposal": {
+    "approved": false,
+    "generation_requests": 3,
+    "embedding_requests": 2,
+    "maximum_generation_output_tokens": 4000,
+    "planning_input_tokens_upper_estimate": 5000,
+    "illustrative_cost_usd": 0.13,
+    "illustrative_assumptions": "$10 per million input tokens and $20 per million output tokens, excluding embeddings; these are NOT verified prices for the configured models",
+    "proposed_ceiling_usd": 1,
+    "dispatch_condition": "explicit user approval, verified current prices fitting ceiling, protected app access, isolated test workspace; no automatic retry or full archive"
+  },
+  "browser_trust_diagnostic": {
+    "platform_proxy_CA_in_runtime_trusted_bundle": true,
+    "platform_proxy_CA_in_existing_NSS_store": true,
+    "TLS_validation_disabled": false,
+    "root_cause": "not yet isolated"
+  }
+}

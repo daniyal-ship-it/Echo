@@ -115,11 +115,19 @@ are not evidence of usable local configuration; tests override them.
 
 ## Hosted verification / dashboard fallback
 
-The proxy currently refuses the feature host with
-`Tunnel connection failed: 403 Forbidden`, before an app response. This is not
-an ECHO authentication failure. The Vercel management API is reachable, so build
-state/source SHA can be checked, but hosted login, database health, embeddings,
-answers and new-session persistence cannot yet be certified here.
+After the environment was republished on 30 October, the feature-host network
+check passed. `/api/auth/status` now returns 302 to Vercel SSO, then 307 to Vercel
+login (200). This is deployment protection, not ECHO application authentication.
+Existing VERCEL_TOKEN allows management API reads but does not establish a browser
+session. No existing automation credential or authenticated test session was found.
+Chromium navigation also fails certificate validation before rendering; normal
+HTTP requests succeed. Keep these findings distinct from application defects.
+
+The current [hosted handoff](HOSTED_VERIFICATION.md) records the verified `30a337e`
+deployment, exact results, conditional cost estimate and missing approval. No
+hosted fixture or billable provider call has been run. Do not create a project-wide
+automation credential implicitly through `vercel curl`; obtain explicit authority
+if an existing authorised browser session cannot be used.
 
 1. Open the project dashboard → **Deployments**, filter to Preview and
    `feat/core-memory-exploration`. Confirm the Source SHA matches the delivered
@@ -135,7 +143,8 @@ answers and new-session persistence cannot yet be certified here.
    creation behind protection; do not enable unrestricted public signup.
 4. In Settings check OpenAI and Anthropic model access independently. Record only
    status and returned model IDs. The check sends no memory and generates no answer.
-5. Import a tiny supported export with a clearly labelled synthetic statement,
+5. Confirm a numeric test-spend ceiling and current pricing before any billable
+   request. Then import a tiny supported export with a clearly labelled synthetic statement,
    for example “TEST FIXTURE: Store the access codes in a sealed envelope inside
    the desk.” Verify the original roles/timestamps/raw JSON. In Intelligence,
    consent to this original only, run summary/index, inspect progress and open
@@ -154,9 +163,9 @@ answers and new-session persistence cannot yet be certified here.
    new-session persistence without secrets. Until these live checks pass, keep the
    core milestone marked incomplete even if Vercel reports READY.
 
-For automated hosted checks from Codex, the network policy must permit the feature
-host and an authenticated isolated test session must be available. This calls for
-runtime access, **not replacement API keys or disabled origin/protection checks**.
+The network policy now permits the feature host. Automated hosted checks still
+need authorised deployment access and a separate ECHO test session, plus approved
+spend. These are **not replacement API keys or disabled origin/protection checks**.
 
 ## Backup and recovery
 

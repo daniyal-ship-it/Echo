@@ -1,17 +1,39 @@
 # Validation record — 30 October 2026
 
+## Republished-environment hosted check
+
+See [HOSTED_VERIFICATION.md](HOSTED_VERIFICATION.md) and the
+[machine-readable results](validation/hosted-verification-2026-10-30.json).
+Git fetch/ancestry, exact-host network access, Vercel management authentication,
+READY deployment source `30a337e`, branch APP_ORIGIN and saved credential binding
+metadata **passed**. Network access now reaches Vercel's SSO/login redirect; the
+former proxy denial for this hostname is resolved. Deployment authentication and
+ECHO's own login are distinct. No authorised deployment browser session or existing
+automation credential is available to this runner, so the live journey is **blocked**.
+
+System Chromium/Playwright are available, but the attempted navigation **failed
+certificate validation before page rendering**. The platform proxy certificate
+is already present in both the runtime trusted bundle and the NSS certificate
+store; the browser failure needs further diagnosis, not an unverified claim that
+installing a missing certificate fixes it. TLS validation was not disabled.
+No hosted application browser test, import, AI call, citation selection or
+new-session persistence test passed. No numeric spending approval was recorded.
+
+The following local results were obtained at the implementation checkpoint and
+were **not rerun** during this verification-only follow-up.
+
 ## Memory intelligence increment
 
-| Check                                  | Result                                                                                             |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `npm run assets:verify`                | Passed: 20,484 vertices, 40,960 triangles; original anatomy and source checksums unchanged         |
-| `npm run typecheck`                    | Passed                                                                                             |
-| `npm test`                             | 30 passed, 0 failed/skipped; isolated databases and explicit provider mocks                        |
-| `npm run test:e2e`                     | 6 passed in one final run (2.3 minutes), including the complete labelled mock intelligence journey |
-| `npm run build`                        | Passed: optimised standalone Next.js build, TypeScript and route tracing                           |
-| `npm run test:production`              | All 4 standalone production-mode smoke groups passed; isolated PGlite database removed             |
-| Live provider calls                    | Not run: provider keys are absent from Codex; existing saved Vercel keys remain configured         |
-| Hosted smoke / new-session persistence | Blocked before the app: proxy tunnel HTTP 403 for the feature alias                                |
+| Check                                  | Result                                                                                                   |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `npm run assets:verify`                | Passed: 20,484 vertices, 40,960 triangles; original anatomy and source checksums unchanged               |
+| `npm run typecheck`                    | Passed                                                                                                   |
+| `npm test`                             | 30 passed, 0 failed/skipped; isolated databases and explicit provider mocks                              |
+| `npm run test:e2e`                     | 6 passed in one final run (2.3 minutes), including the complete labelled mock intelligence journey       |
+| `npm run build`                        | Passed: optimised standalone Next.js build, TypeScript and route tracing                                 |
+| `npm run test:production`              | All 4 standalone production-mode smoke groups passed; isolated PGlite database removed                   |
+| Live provider calls                    | Not run: deployment authentication and explicit test budget pending; saved Vercel keys remain configured |
+| Hosted smoke / new-session persistence | Blocked before ECHO: Vercel deployment authentication; network now reaches the feature alias             |
 
 The new `tests/intelligence.test.ts` tests exact Unicode/message boundaries,
 versioned references and inactive branches; real database close/reopen; unchanged
@@ -116,9 +138,8 @@ records and source-update invalidation. Its upgrade fixture preserves all origin
 content and anatomical anchors. An external Git bundle preserves the prior checkpoint.
 
 The Vercel API confirms the correct team/project/GitHub link and enabled deployment
-protection. The previous feature preview was rebuilt READY at `4b19901` with its
-correct branch-specific APP_ORIGIN. New feature deployment SHA/state is recorded
-in the delivery report; the main preview must not be substituted for this branch:
+protection. The feature Preview was verified READY at `30a337e` with its correct
+branch-specific APP_ORIGIN. The main preview must not be substituted for this branch:
 
 https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
 
@@ -128,10 +149,11 @@ not requested again, replaced or printed. Preview and Production share the datab
 binding; no isolated cloud fixture or managed migration check was performed.
 
 Official SDK model lists were checked for `gpt-6.1-sol`, `claude-sonnet-5-5` and
-`text-embedding-3-small`; SDK support does not verify account access. The network
-proxy rejects the feature auth endpoint with `Tunnel connection failed: 403 Forbidden`.
-No authentication bypass or weakened protection was attempted. The existing saved
-keys must be reused through that runtime once it is accessible. See the exact
+`text-embedding-3-small`; SDK support does not verify account access. The network now
+reaches the feature auth endpoint, which redirects to Vercel authentication. No
+existing authorised deployment session is available in this runner; the management
+API token is not a browser session. No new bypass credential or weakened protection
+was introduced. Existing saved keys must be reused through the authorised runtime. See the exact
 live checklist and dashboard fallback in [DEPLOYMENT.md](DEPLOYMENT.md).
 
 The **complete core milestone has not passed**. Live embeddings, summary fidelity,
