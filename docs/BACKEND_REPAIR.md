@@ -101,6 +101,38 @@ scoped to Preview and this feature branch. Do not paste credentials into chat.
 
 ## Safe continuation
 
+The tested application checkpoint is **`a7c2db1`**, deployed READY as
+`dpl_5int1HxthEEEEsYvUXTBNCB7eH7q` on the existing feature alias:
+
+https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
+
+At 20:41 UTC, after that deployment, health, auth status and unauthenticated
+memories still returned HTTP 500. Health request
+`d1b07147-a6d9-40a2-a6ab-412391837ff6` matches the same private TLS error and
+`custom_database_ca_configured: false`. This is a confirmed unresolved
+configuration prerequisite, not a successful hosted fix. Read the
+[sanitised evidence](validation/backend-repair-2026-10-31.json).
+
+| Hosted requirement                                              | Before diagnostic patch                     | After CA-support deployment                                           |
+| --------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------- |
+| Health / real PostgreSQL query                                  | Failed, HTTP 500 without usable diagnostics | Failed, HTTP 500; TLS trust failure identified before query success   |
+| Authentication status                                           | Failed, HTTP 500                            | Failed, HTTP 500; same correlated TLS cause                           |
+| Authorised isolated account login                               | Blocked                                     | Blocked, not attempted                                                |
+| Harmless note create/read/update                                | Blocked                                     | Blocked, no test records created                                      |
+| Logout/login in a new browser session                           | Blocked                                     | Blocked, no hosted browser persistence run                            |
+| Unauthenticated private-memory access rejection                 | Unverified                                  | HTTP 500 reveals no data, but expected HTTP 401 could not be verified |
+| Import/original/summary/semantic retrieval/GPT/Claude/citations | Blocked                                     | Blocked; no billable requests                                         |
+
+The final local build and all four production smoke groups also passed after the
+TLS change. They use isolated PGlite and do not establish hosted PostgreSQL health.
+No new browser acceptance is claimed for this repair. The prior visual screenshots
+remain historical evidence. Earlier expired OIDC material and the fresh test
+token file were removed. The fresh short-lived token expires at 08:41:45 UTC on
+1 November; file deletion is not individual server-side revocation. No automation
+credential was created, so none required revocation. Protection remains enabled.
+No test accounts, records or retained archives need deletion. No credentials were
+replaced, no shared schema was modified, and API spending remains US$0.
+
 1. After network publication, retrieve the certificate from the verified official
    source; inspect its CA constraints, issuer, validity and fingerprint. Configure
    only the feature Preview's DATABASE_CA_CERT using existing authorised Vercel

@@ -1,0 +1,228 @@
+{
+  "date": "2026-10-31",
+  "application_commit": "a7c2db1d2300daeb5321c65fdb7bec0a255f84b8",
+  "preserved_checkpoint": "e39cba602b37bb75fdb34f9ab9f256f87122a2fc",
+  "preview_origin": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+  "deployment": {
+    "at": "2026-10-31T20:41:50.424071+00:00",
+    "action": "deployment",
+    "id": "dpl_5int1HxthEEEEsYvUXTBNCB7eH7q",
+    "url": "echo-g06e2anfu-daniyal-1415s-projects.vercel.app",
+    "readyState": "READY",
+    "alias": ["echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"],
+    "sha": "a7c2db1d2300daeb5321c65fdb7bec0a255f84b8"
+  },
+  "http": {
+    "at": "2026-10-31T20:41:50.858551+00:00",
+    "action": "probe",
+    "checks": [
+      {
+        "path": "/api/health",
+        "status": 500,
+        "request_id": "d1b07147-a6d9-40a2-a6ab-412391837ff6",
+        "error": "The operation failed. Your existing data has been preserved."
+      },
+      {
+        "path": "/api/auth/status",
+        "status": 500,
+        "request_id": "4619ddbc-73bb-4126-a012-1ffbab67cd71",
+        "error": "The operation failed. Your existing data has been preserved."
+      },
+      {
+        "path": "/api/memories",
+        "status": 500,
+        "request_id": "a650dcd1-3348-4d74-81d5-e85c3cf94496",
+        "error": "The operation failed. Your existing data has been preserved."
+      }
+    ]
+  },
+  "runtime_logs": {
+    "at": "2026-10-31T20:42:14.561943+00:00",
+    "action": "logs",
+    "deployment": "dpl_5int1HxthEEEEsYvUXTBNCB7eH7q",
+    "entries": [
+      {
+        "timestamp": "2026-10-31T20:41:52.865Z",
+        "path": "/api/memories",
+        "event": "api_error",
+        "request_id": "a650dcd1-3348-4d74-81d5-e85c3cf94496",
+        "initialization_id": "5a7047d4-1900-423f-a5d0-87c914c9895d",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:52.864Z",
+        "path": "/api/memories",
+        "event": "database_initialization_failed",
+        "request_id": "a650dcd1-3348-4d74-81d5-e85c3cf94496",
+        "initialization_id": "5a7047d4-1900-423f-a5d0-87c914c9895d",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:52.651Z",
+        "path": "/api/memories",
+        "event": "database_connection_config",
+        "request_id": "a650dcd1-3348-4d74-81d5-e85c3cf94496",
+        "initialization_id": "5a7047d4-1900-423f-a5d0-87c914c9895d",
+        "stage": "configuration",
+        "provider": "supabase",
+        "default_ca_count": 118,
+        "system_ca_count": 0,
+        "additional_system_ca_count": 0,
+        "extra_ca_configured": false,
+        "system_ca_file_configured": false,
+        "custom_database_ca_configured": false
+      },
+      {
+        "timestamp": "2026-10-31T20:41:52.266Z",
+        "path": "/api/auth/status",
+        "event": "api_error",
+        "request_id": "4619ddbc-73bb-4126-a012-1ffbab67cd71",
+        "initialization_id": "ef9d3079-7e94-42a3-ae7b-c81b2bf92c43",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:52.266Z",
+        "path": "/api/auth/status",
+        "event": "database_initialization_failed",
+        "request_id": "4619ddbc-73bb-4126-a012-1ffbab67cd71",
+        "initialization_id": "ef9d3079-7e94-42a3-ae7b-c81b2bf92c43",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:52.051Z",
+        "path": "/api/auth/status",
+        "event": "database_connection_config",
+        "request_id": "4619ddbc-73bb-4126-a012-1ffbab67cd71",
+        "initialization_id": "ef9d3079-7e94-42a3-ae7b-c81b2bf92c43",
+        "stage": "configuration",
+        "provider": "supabase",
+        "default_ca_count": 118,
+        "system_ca_count": 0,
+        "additional_system_ca_count": 0,
+        "extra_ca_configured": false,
+        "system_ca_file_configured": false,
+        "custom_database_ca_configured": false
+      },
+      {
+        "timestamp": "2026-10-31T20:41:51.699Z",
+        "path": "/api/health",
+        "event": "api_error",
+        "request_id": "d1b07147-a6d9-40a2-a6ab-412391837ff6",
+        "initialization_id": "5c0693a0-cd43-47ec-8025-d81a658ed999",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:51.698Z",
+        "path": "/api/health",
+        "event": "database_initialization_failed",
+        "request_id": "d1b07147-a6d9-40a2-a6ab-412391837ff6",
+        "initialization_id": "5c0693a0-cd43-47ec-8025-d81a658ed999",
+        "stage": "connection.check",
+        "error_class": "Error",
+        "code": "SELF_SIGNED_CERT_IN_CHAIN",
+        "sqlstate": null,
+        "reason": "Database TLS chain contains an untrusted self-signed certificate",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T20:41:51.470Z",
+        "path": "/api/health",
+        "event": "database_connection_config",
+        "request_id": "d1b07147-a6d9-40a2-a6ab-412391837ff6",
+        "initialization_id": "5c0693a0-cd43-47ec-8025-d81a658ed999",
+        "stage": "configuration",
+        "provider": "supabase",
+        "default_ca_count": 118,
+        "system_ca_count": 0,
+        "additional_system_ca_count": 0,
+        "extra_ca_configured": false,
+        "system_ca_file_configured": false,
+        "custom_database_ca_configured": false
+      }
+    ]
+  },
+  "bindings": {
+    "at": "2026-10-31T20:37:56.250507+00:00",
+    "action": "bindings",
+    "protection": {
+      "deploymentType": "all_except_custom_domains"
+    },
+    "automation_credentials": 0,
+    "bindings": [
+      {
+        "key": "ECHO_OPENAI_API_KEY",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null
+      },
+      {
+        "key": "ECHO_ANTHROPIC_API_KEY",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null
+      },
+      {
+        "key": "DATABASE_URL",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null
+      }
+    ]
+  },
+  "cleanup": {
+    "local_oidc_file_removed": true,
+    "oidc_individually_revoked": false,
+    "oidc_expires_at": "2026-11-01T08:41:45+00:00",
+    "automation_bypass_credentials_created": 0,
+    "schema_changes": 0,
+    "test_accounts_created": 0,
+    "test_records_created": 0,
+    "billable_provider_requests": 0,
+    "spent_usd": 0,
+    "remaining_total_budget_usd": 1,
+    "automation_credentials_after": 0,
+    "protection_after": {
+      "deploymentType": "all_except_custom_domains"
+    }
+  },
+  "local_validation": {
+    "core_tests_passed": 36,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "production_smoke_groups_passed": 4,
+    "tls_handshake_checks": "configured CA passes; untrusted CA and incorrect hostname rejected",
+    "hosted_login_note_persistence": "blocked, not executed"
+  },
+  "network": {
+    "official_certificate_host": "supabase-downloads.s3-ap-southeast-1.amazonaws.com",
+    "download": "proxy tunnel 403",
+    "draft_saved": true,
+    "requires_publication": true
+  },
+  "status": "TLS root cause confirmed; CA configuration support deployed; official CA retrieval/configuration and hosted repair blocked"
+}
