@@ -1,6 +1,6 @@
 # ECHO requirement ledger
 
-Updated 30 October 2026. Source of truth: [original specification](PRODUCT_BRIEF.md)
+Updated 31 October 2026. Source of truth: [original specification](PRODUCT_BRIEF.md)
 [core milestone clarification](CORE_MILESTONE_BRIEF.md) and
 [durable memory increment](MEMORY_INTELLIGENCE_BRIEF.md). A working deployment
 is infrastructure evidence, not acceptance of the complete product. This ledger
@@ -12,15 +12,23 @@ named below. Local tests and mock provider responses are not live cloud checks.
 
 ## Latest hosted verification
 
-After environment republication, feature-host network access **passed**. The
-READY Preview was verified at `30a337e`. Requests reach Vercel SSO/login; ECHO
-application authentication is **blocked** by the absence of an existing authorised
-deployment session. Chromium navigation **failed certificate validation** before
-rendering. The entire live import/summary/retrieval/GPT/Claude/citation/persistence
-journey remains **blocked**, and no billable budget was approved or used.
-See [HOSTED_VERIFICATION.md](HOSTED_VERIFICATION.md) for the per-check evidence,
-separate authentication layers and bounded cost proposal. No application code
-changed during this verification follow-up.
+Feature-host network access and protected Preview access through existing Vercel
+OIDC authentication **passed**. The READY deployment serves `ae08e7f`, whose app
+code is unchanged from `30a337e`. Narrow NSS database write access resolved the
+Chromium certificate failure without disabling TLS. Hosted brain rendering,
+coloured lobes, front/side/three-quarter views, rotation and zoom **passed** browser
+inspection; screenshots are preserved in the [handoff](HOSTED_VERIFICATION.md).
+
+Hosted `/api/health` and `/api/auth/status` **failed** with ECHO HTTP 500 errors.
+Runtime logs confirm generic application errors but not their underlying cause.
+Isolated account creation and the import/original/summary/semantic-retrieval/GPT/
+Claude/citation/persistence journey remain **blocked**. The user approved **US$1
+aggregate** across providers and retries. Official pricing is proxy-blocked and
+account/model access is unverified, so no billable calls were dispatched. Run cost:
+US$0. No automation credential was needed; the local OIDC file was removed and
+protection remains enabled. No application code or deployment changed. Resolve
+runtime health and pricing before further acceptance or feature work; READY and
+local mock tests do not establish hosted acceptance.
 
 ## Priority and current increment
 
@@ -91,21 +99,21 @@ The core brain-and-memory milestone is **Partially implemented**. Finish in orde
 
 ## Architecture, data, performance and security
 
-| Original reference / requirements                                                                                                                                | Status                       | Evidence and remaining work                                                                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 9: Next/React/TypeScript/Three, custom shaders/instancing, secure API, pgvector foundation and adapter separation                                                | Verified, with evidence      | Existing build, typecheck and core tests; dependencies in lockfile.                                                                                                                                      |
-| 9: background worker/queues, private object storage, embeddings/STT/TTS, logs/traces/error/cost monitoring                                                       | Partially implemented        | Durable leased request-driven import/intelligence jobs and operation journal. No independent worker, object storage, STT/TTS or full observability.                                                      |
-| 9: Vercel app deployment and managed PostgreSQL                                                                                                                  | Implemented but not verified | Feature Preview verified READY at 30a337e with correct APP_ORIGIN. Network passed; Vercel authentication blocks the runner. Managed migration/ECHO auth/persistence unverified (HOSTED_VERIFICATION.md). |
-| 10: users/workspaces/sessions/sources/import jobs/conversations/messages/memory versions/edges/citations                                                         | Partially implemented        | Existing schema and raw message storage; not every entity is first-class (see `SCHEMA.md`).                                                                                                              |
-| 10: provider connections/attachments/embeddings/categories/entities/projects/meetings/transcripts/speakers/decisions/actions/calendar/reminders/agent runs/audit | Partially implemented        | Versioned chunks, embedding cache, analyses and durable jobs now implemented (SCHEMA.md). Most remaining domain entities absent; generated insights are not scheduled actions.                           |
-| 10: node/edge provenance, timestamps, privacy/importance/status and stable collision-aware placement                                                             | Partially implemented        | Stable real vertex anchors, source hashes/versions, edge evidence/strength/confidence tests; rich privacy/category/status controls incomplete.                                                           |
-| 11: pagination, instancing, spatial LOD and 100/1k/10k/100k isolated data benchmarks                                                                             | Verified, with evidence      | `docs/validation/benchmark.json`, `scripts/benchmark.ts`; data-path results, not a GPU performance certification.                                                                                        |
-| 11: 60 FPS, GPU/memory budgets, adaptive density/bloom/presets, cancellation and concurrent scaling                                                              | Partially implemented        | Manual low/balanced/high, reduced motion, bounded view objects/imports; no sustained GPU/concurrency telemetry or automatic quality control.                                                             |
-| 12: authentication/sessions, workspace isolation, mutation origin checks, server-only keys, validation/import limits                                             | Verified, with evidence      | Security/core/browser isolation tests and secret-free example configuration. No independent security audit implied.                                                                                      |
-| 12: RLS/equivalent, TLS/encryption at rest, restricted managed secrets and optional app encryption                                                               | Partially implemented        | API scoping/composite constraints and TLS configuration; managed storage controls/RLS hardening/key rotation not verified.                                                                               |
-| 12: originals/workspace export, record/archive/account deletion and session revocation                                                                           | Verified, with evidence      | Browser integrity and production smoke tests at foundation checkpoint.                                                                                                                                   |
-| 12: malware scanning, full audit, retention, backup/restore, OAuth revocation and breach readiness                                                               | Not implemented              | Production recovery/security milestone.                                                                                                                                                                  |
-| 12: untrusted source boundaries and explicit AI transmission/action consent                                                                                      | Partially implemented        | Provider context consent and no external-action tools; adversarial prompt-injection evaluation and action approvals not built.                                                                           |
+| Original reference / requirements                                                                                                                                | Status                       | Evidence and remaining work                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 9: Next/React/TypeScript/Three, custom shaders/instancing, secure API, pgvector foundation and adapter separation                                                | Verified, with evidence      | Existing build, typecheck and core tests; dependencies in lockfile.                                                                                                                         |
+| 9: background worker/queues, private object storage, embeddings/STT/TTS, logs/traces/error/cost monitoring                                                       | Partially implemented        | Durable leased request-driven import/intelligence jobs and operation journal. No independent worker, object storage, STT/TTS or full observability.                                         |
+| 9: Vercel app deployment and managed PostgreSQL                                                                                                                  | Implemented but not verified | Preview READY at ae08e7f; network/OIDC/browser rendering passed. Health and auth-status fail HTTP 500. Managed migration and hosted persistence remain unverified (HOSTED_VERIFICATION.md). |
+| 10: users/workspaces/sessions/sources/import jobs/conversations/messages/memory versions/edges/citations                                                         | Partially implemented        | Existing schema and raw message storage; not every entity is first-class (see `SCHEMA.md`).                                                                                                 |
+| 10: provider connections/attachments/embeddings/categories/entities/projects/meetings/transcripts/speakers/decisions/actions/calendar/reminders/agent runs/audit | Partially implemented        | Versioned chunks, embedding cache, analyses and durable jobs now implemented (SCHEMA.md). Most remaining domain entities absent; generated insights are not scheduled actions.              |
+| 10: node/edge provenance, timestamps, privacy/importance/status and stable collision-aware placement                                                             | Partially implemented        | Stable real vertex anchors, source hashes/versions, edge evidence/strength/confidence tests; rich privacy/category/status controls incomplete.                                              |
+| 11: pagination, instancing, spatial LOD and 100/1k/10k/100k isolated data benchmarks                                                                             | Verified, with evidence      | `docs/validation/benchmark.json`, `scripts/benchmark.ts`; data-path results, not a GPU performance certification.                                                                           |
+| 11: 60 FPS, GPU/memory budgets, adaptive density/bloom/presets, cancellation and concurrent scaling                                                              | Partially implemented        | Manual low/balanced/high, reduced motion, bounded view objects/imports; no sustained GPU/concurrency telemetry or automatic quality control.                                                |
+| 12: authentication/sessions, workspace isolation, mutation origin checks, server-only keys, validation/import limits                                             | Verified, with evidence      | Security/core/browser isolation tests and secret-free example configuration. No independent security audit implied.                                                                         |
+| 12: RLS/equivalent, TLS/encryption at rest, restricted managed secrets and optional app encryption                                                               | Partially implemented        | API scoping/composite constraints and TLS configuration; managed storage controls/RLS hardening/key rotation not verified.                                                                  |
+| 12: originals/workspace export, record/archive/account deletion and session revocation                                                                           | Verified, with evidence      | Browser integrity and production smoke tests at foundation checkpoint.                                                                                                                      |
+| 12: malware scanning, full audit, retention, backup/restore, OAuth revocation and breach readiness                                                               | Not implemented              | Production recovery/security milestone.                                                                                                                                                     |
+| 12: untrusted source boundaries and explicit AI transmission/action consent                                                                                      | Partially implemented        | Provider context consent and no external-action tools; adversarial prompt-injection evaluation and action approvals not built.                                                              |
 
 ## Experience, journeys and acceptance
 

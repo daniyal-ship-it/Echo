@@ -1,104 +1,153 @@
-# Hosted verification handoff — 30 October 2026
+# Hosted verification handoff — 31 October 2026
 
-This is a verification-only follow-up after the environment was republished.
-No application features were rebuilt, no source code was changed, no credentials
-were replaced and no personal archive was accessed. The fetched feature branch
-and local HEAD both contain `30a337e04f1939af06d2f2392d8281c5e7ecdf25`.
-`main` remains `6f19c18bab3656e90de77f168cda88fe409f126a`.
+The protected feature Preview is reachable through authorised Vercel OIDC access,
+and its brain renders in Chromium. **The hosted acceptance journey is incomplete:**
+ECHO's health and authentication endpoints return HTTP 500. Official pricing is
+independently blocked by the network proxy. No billable requests, fixture imports
+or account creation were attempted.
 
 Preview: https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
 
+Fetched feature HEAD and deployed source are both
+`ae08e7f40e4b6670342776eb3c8fe17bc46b1cfe`, a documentation-only descendant of
+implementation `30a337e04f1939af06d2f2392d8281c5e7ecdf25`.
+Deployment `dpl_3rRpR64FCj6VJDdumkRWP2hhjYHZ` is READY and owns the exact alias.
+`main` remains `6f19c18bab3656e90de77f168cda88fe409f126a`. No application source,
+credentials, signup policy, deployment, hosting plan or personal archive changed.
+This follow-up is saved as a local documentation checkpoint. Pushing is deferred
+to preserve the existing deployment, because it can trigger Vercel's Git build.
+
 ## Actual checks
 
-| Check                                              | Result                      | Evidence                                                                                                                                                 |
-| -------------------------------------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Fetch feature branch / checkpoint ancestry         | Passed                      | Existing origin is daniyal-ship-it/Echo; local and remote feature SHA both 30a337e, clean tree before documentation updates                              |
-| Exact feature-host network access                  | Passed                      | Certificate-verified HTTP request to `/api/auth/status` receives HTTP 302, rather than the former proxy tunnel 403                                       |
-| Vercel deployment protection                       | Blocked for this runner     | Redirect chain: feature host 302 → vercel.com/sso-api 307 → vercel.com/login 200. This is Vercel authentication, not ECHO login                          |
-| Existing Vercel management authentication          | Passed                      | Existing VERCEL_TOKEN reads the correct team/project, deployment and environment metadata; it is not a Vercel browser session                            |
-| Deployed application commit                        | Passed                      | READY Preview dpl_HT5SRLLB4P2pBafuX7ieEn7N2q5q serves 30a337e and owns the exact feature alias                                                           |
-| Origin / credential binding metadata               | Passed                      | Branch-specific Preview APP_ORIGIN matches; both ECHO provider keys and DATABASE_URL have sensitive Preview bindings; values not printed or replaced     |
-| API model catalogue identifiers                    | Passed, catalogue only      | Official SDK type lists include gpt-6.1-sol and claude-sonnet-5-5; actual account/model access remains unverified                                        |
-| ECHO authentication / isolated account             | Blocked                     | Application endpoint not reached through Vercel protection; no test login/session available in the runner                                                |
-| Tiny import and original preservation              | Blocked                     | No hosted fixture created                                                                                                                                |
-| Generated summary and structured insights          | Blocked                     | No hosted generation call made                                                                                                                           |
-| Semantic index and paraphrased retrieval           | Blocked                     | No live embedding call made                                                                                                                              |
-| Source-grounded GPT answer                         | Blocked                     | No live OpenAI generation call made                                                                                                                      |
-| Source-grounded Claude answer                      | Blocked                     | No live Anthropic generation call made                                                                                                                   |
-| Citation / original-passage / brain-node selection | Blocked                     | No hosted application browser journey executed                                                                                                           |
-| Sign out/in and retrieve persisted material        | Blocked                     | No hosted authenticated session available                                                                                                                |
-| Chromium navigation                                | Failed, runner prerequisite | Playwright and system Chromium are installed, but normal certificate validation fails before any page renders. Certificate verification was not disabled |
-| Billable test approval                             | Blocked                     | No recorded numeric budget found; this verification incurred no provider charges                                                                         |
+| Check                                              | Result                     | Evidence                                                                                                                                        |
+| -------------------------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository, branch and checkpoint ancestry         | Passed                     | Fetch from daniyal-ship-it/Echo; feature SHA ae08e7f; 30a337e is an ancestor; main unchanged                                                    |
+| Exact-host network access                          | Passed, HTTP and browser   | Unauthenticated request reaches Vercel 302 → SSO 307 → login 200; no proxy denial for this hostname                                             |
+| Existing Vercel authentication / deployed commit   | Passed, management API     | Existing VERCEL_TOKEN reads the intended project, GitHub link, READY deployment, alias and source SHA                                           |
+| Protected Preview access using OIDC                | Passed, HTTP and browser   | Official SDK token workflow issues a development identity; same-project Trusted Sources accepts it; ECHO page returns 200                       |
+| Chromium certificate trust                         | Passed, browser            | Narrow write access to existing NSS database fixes initialization; direct Chromium navigation succeeds with normal TLS checks                   |
+| Brain, colours, views, rotation and zoom           | Passed, browser            | Hosted page rendered in system Chromium through Playwright; front, side, three-quarter, rotation and zoom screenshots inspected; no page errors |
+| Branch origin and saved credential bindings        | Passed, metadata only      | Branch Preview APP_ORIGIN matches; DATABASE_URL and both ECHO provider keys have sensitive Preview bindings                                     |
+| Configured model identifiers                       | Passed, configuration only | Preview variables gpt-6.1-sol and claude-sonnet-5-5; code default embedding text-embedding-3-small, 1,536 dimensions                            |
+| Hosted database/application health                 | Failed, HTTP               | /api/health returns 500 with ECHO's generic error; runtime logs show api_error, type Error                                                      |
+| ECHO authentication status                         | Failed, HTTP and browser   | /api/auth/status returns 500; browser renders login UI and the error notification                                                               |
+| Isolated test account/workspace                    | Blocked                    | Authentication prerequisite fails; no registration or login mutation attempted                                                                  |
+| Tiny import                                        | Blocked                    | No hosted fixture created                                                                                                                       |
+| Preserved original roles, text and export          | Blocked                    | No imported original to inspect                                                                                                                 |
+| Generated summary                                  | Blocked                    | Runtime and pricing prerequisites unavailable; no generation dispatched                                                                         |
+| Semantic index and paraphrased retrieval           | Blocked                    | No source or question embedding dispatched                                                                                                      |
+| Separate source-grounded GPT response              | Blocked                    | No OpenAI answer dispatched                                                                                                                     |
+| Separate source-grounded Claude response           | Blocked                    | No Anthropic answer dispatched                                                                                                                  |
+| Citations / exact passage / memory-node selection  | Blocked                    | No authenticated hosted memory or live answer exists for this run                                                                               |
+| Persistence after logout/login                     | Blocked                    | No test session established                                                                                                                     |
+| Actual provider account/model availability         | Blocked                    | ECHO's authenticated metadata route is unavailable behind the runtime failure; bindings and catalogues do not establish entitlement             |
+| Current official pricing and maximum request cost  | Blocked                    | Official pricing requests receive proxy tunnel 403; no reliable model-specific rates obtained                                                   |
+| Spending authorisation and accounting              | Passed                     | User authorised US$1 total across providers and retries; zero billable requests dispatched; run cost US$0, full US$1 unspent                    |
+| Temporary access cleanup / protection preservation | Passed                     | Local OIDC file removed; management recheck confirms zero persistent bypass credentials and unchanged protection                                |
 
-Machine-readable evidence: [hosted-verification-2026-10-30.json](validation/hosted-verification-2026-10-30.json).
-Redirect query strings, cookies, credentials and private source content are excluded.
-The previous 30 core tests, 6 browser journeys and production build/smoke checks
-are **local historical evidence**, with labelled provider mocks. They were not
-rerun here and do not count as live hosted acceptance.
+Evidence: [machine-readable results](validation/authorised-hosted-verification-2026-10-31.json).
+The [30 October snapshot](validation/hosted-verification-2026-10-30.json) is retained
+as earlier evidence; its missing-budget and inaccessible-browser findings are
+superseded. The previous 30 core tests, six browser journeys and production
+smoke/build checks remain **historical local evidence with labelled provider
+mocks**. They were not rerun or counted as live hosted acceptance.
 
-## Authentication boundary
+## Browser evidence and certificate correction
 
-The saved network change has taken effect for the exact feature hostname.
-Further allowlist publishing is not the current blocker for that hostname.
-Vercel protection is still enabled (`all_except_custom_domains`). This runner has
-management API authentication but no authenticated Vercel browser session.
-The project metadata reports no existing automation bypass credential, and
-VERCEL_AUTOMATION_BYPASS_SECRET is absent locally. Existing API keys in Vercel
-remain usable by the application once it is accessible; do not replace them.
+- [Front](screenshots/hosted-2026-10-31/front.png)
+- [Side](screenshots/hosted-2026-10-31/side.png)
+- [Three-quarter](screenshots/hosted-2026-10-31/three-quarter.png)
+- [After rotation](screenshots/hosted-2026-10-31/rotated.png)
+- [After zoom](screenshots/hosted-2026-10-31/zoomed.png)
 
-Vercel's supported `vercel curl` command can **generate** an automation token when
-none exists. It was not run implicitly: creating a project-wide bypass credential
-would add access beyond the user's instruction to reuse existing authentication.
-An automation credential applies to the project's deployments, not just this
-feature Preview. Do not silently create one, disable protection, create a public
-share link, change signup policy or repurpose the management token as a browser cookie.
+These are hosted screenshots of the unauthenticated ECHO shell, not a populated
+workspace or local mock. The geometry remains genuine FreeSurfer fsaverage5
+cortical anatomy, not a procedural approximation. No memories or connections
+were invented. The shell displays “LOCAL DEVELOPMENT” before settings can load;
+that label does not establish the deployed storage backend.
 
-References: [vercel curl](https://vercel.com/docs/cli/curl) and
-[automation access](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation).
+The proxy CA was already present in the runtime bundle and NSS store. Chromium
+initializes NSS with NSS_InitReadWrite; the read-only directory prevented that
+initialization. Narrow write access to `/home/agent/.pki/nssdb` fixed direct browser
+navigation. No CA or certificate exception was added; TLS validation remained on.
+The sandbox grant is turn-scoped and may be needed again after resumption.
 
-## Concrete bounded live-test proposal — not approved
+The direct Chromium control had no interception and reached Vercel login. For
+the protected ECHO render, a Playwright request handler attached OIDC only to the
+exact feature origin, with automatic redirects disabled. The token was never
+forwarded to Vercel login or other hosts. Browser contexts were closed; no trace,
+HAR, cookie dump or request-header log was retained.
 
-Use a separate authorised ECHO test workspace and one synthetic two-message
-conversation. For example: “TEST FIXTURE: Store the access codes in a sealed
-envelope inside the desk.” Preserve raw roles/timestamps. Exclude saved assistant
-outputs using the imported-source filter when asking the paraphrase.
+## Authentication and cleanup
 
-One successful run needs approximately two embedding requests (source and cached
-question) and three generation requests (one summary, one GPT answer, one Claude
-answer), with no synthesis or automatic retry. Existing caps allow at most 1,600
-summary output tokens plus 1,200 per answer: **4,000 output tokens**. A planning
-allowance of **5,000 input tokens** includes prompts/context across generation
-calls; exact usage must be measured and verified against the prepared fixture.
-Sign-out/in and repeating the identical semantic query should reuse its embedding.
+There was no installed Vercel CLI or existing CLI/browser login. The supported
+`@vercel/oidc` SDK workflow was used directly with existing VERCEL_TOKEN:
+`POST /v1/projects/{projectId}/token?source=vercel-oidc-refresh&teamId=…`.
+The development identity was accepted by the existing same-project Trusted Sources
+policy for Preview through `x-vercel-trusted-oidc-idp-token`. No policy changed.
+This was not execution of the Vercel CLI binary.
 
-A conditional planning estimate is **US$0.13 plus embeddings**, assuming $10 per
-million input tokens and $20 per million output tokens. **These are illustrative
-rates, not verified prices for gpt-6.1-sol or claude-sonnet-5-5.** Official pricing
-pages at openai.com and www.anthropic.com still receive proxy tunnel 403 in this
-runner. No reliable current model-specific quote was obtained. A proposed ceiling
-is **US$1 for the single fixture run**, subject to user approval and verified
-current rates fitting that ceiling before dispatch. This document does not grant
-approval; no provider call should begin from this estimate alone.
+The fallback permission to create **one** temporary automation-bypass credential
+was unnecessary and unused. Project credential count was zero before and after;
+there is no persistent automation credential requiring revocation. Protection
+remains `all_except_custom_domains`. The mode-0600 local OIDC token file was removed.
+The short-lived token was **not individually revoked**; its recorded expiry is
+**31 October 2026, 03:43:56 UTC / Europe/London**. Deletion is not presented as
+server-side revocation. No test accounts, records or archives require cleanup.
 
-## Next steps
+## Runtime failure and remaining diagnosis
 
-1. Make an existing authorised Vercel browser session available through a supported
-   secure mechanism. If automation access is preferred, obtain explicit permission
-   for a temporary project automation credential, explain its project-wide scope,
-   keep it secret and revoke it after the checks. Preserve deployment protection.
-2. Diagnose Chromium's certificate-validation failure without disabling TLS.
-   The platform proxy CA is already in the runtime trusted bundle and NSS store;
-   do not assume a missing certificate or blindly add a duplicate. HTTP requests
-   succeed with their normal certificate checks; that is not browser UI certification.
-3. Reach ECHO's own authentication endpoint and establish a separate test workspace.
-   Use existing test-account access securely if one exists. Do not enable public
-   signup or touch the owner's archive to get past an authentication blocker.
-4. Verify current provider model/account access and pricing through the authorised
-   runtime, secure the user's explicit test budget, then run the exact tiny journey
-   above. No bulk run, plan upgrade or new feature phase is authorised.
-5. Record each real provider output, source version/passage and persisted job state
-   without secrets. Verify no-source handling, duplicate enqueue, cancellation and
-   deletion where feasible within the approved test scope. Clean up only fixture
-   records and retained fixture archives; report any in-flight billing uncertainty.
-6. Update this handoff, VALIDATION.md and ROADMAP.md with actual outcomes. The full
-   core acceptance gate remains incomplete until the live checks pass.
+Both `/api/health` and `/api/auth/status` return:
+`The operation failed. Your existing data has been preserved.`
+Vercel's bounded Observability query returned four matching function errors at
+03:20–03:21 UTC, all `{"event":"api_error","type":"Error"}`. The earlier streaming
+log request timed out; the bounded query succeeded.
+
+The health route obtains the database and executes SELECT 1 before returning.
+This narrows the failure to database initialization/health-query handling,
+including connection, TLS, migration loading and setup. The deployed logger omits
+error codes and stages, so the specific cause is **unresolved**. A binding proves
+neither connectivity nor successful managed migrations. No speculative database
+reset, migration replay, credential replacement, TLS relaxation or app patch was made.
+
+Next inspect the existing project's Vercel function/database diagnostics for
+this deployment and these paths. Check connectivity, verified TLS, binding
+applicability and packaged migrations without exposing connection strings or
+querying personal records. If existing diagnostics cannot distinguish them,
+prepare a minimal sanitised error-code/stage diagnostic patch for review before
+changing the deployed Preview. Never log raw errors, request headers, connection
+URLs or source content. Preview and Production share DATABASE_URL; do not reset
+or replace that database.
+
+## Cost gate and next acceptance run
+
+The user's **US$1 cumulative** approval persists; do not ask for it again merely
+because this run stopped. It includes embeddings, summaries, both answer providers
+and every retry. No provider billing dashboard was queried: US$0 is established
+by dispatching zero billable provider requests.
+
+Pricing at `https://platform.openai.com/docs/pricing` and
+`https://docs.claude.com/en/docs/about-claude/pricing` was blocked by proxy tunnel 403. Earlier requests to `https://openai.com/api/pricing/` and
+`https://www.anthropic.com/pricing` were also blocked. The previous illustrative
+cost proposal must not be used as verified pricing. Account/model availability
+also remains unverified. No request with an unbounded cost was started.
+
+After the runtime and pricing prerequisites are resolved:
+
+1. Reuse authorised OIDC and existing Vercel provider keys. Do not request new keys
+   because they are absent locally. Keep protection and registration policy intact;
+   establish a separate authorised test workspace.
+2. Verify generation and embedding model access through non-generation metadata
+   checks. Obtain current official prices for all chargeable token categories.
+   Stop if availability or price bounds remain unknown.
+3. Use one tiny synthetic conversation, never the user's archive. Prepare input
+   bounds, strict output caps, retry policy and a conservative cumulative cost
+   ledger. Reserve worst-case cost before every request within the **remaining
+   total US$1**. The app's token limits are not a unified dollar cap.
+4. Verify import → original → separate summary → semantic paraphrase → separate
+   grounded GPT and Claude answers → exact citations → logout/login persistence.
+   Record actual usage and grounding evidence separately for each provider.
+5. Clean up only test-owned records, archives and account as appropriate. Remove
+   short-lived local access material. If the authorised automation fallback is
+   needed, create at most one credential and verify revocation on every exit path.
+   Update this handoff and roadmap. No production promotion, purchases or new phase.

@@ -1,0 +1,268 @@
+{
+  "date": "2026-10-31",
+  "scope": "Existing feature Preview; no application change, redeployment or production promotion",
+  "git": {
+    "repository": "daniyal-ship-it/Echo",
+    "branch": "feat/core-memory-exploration",
+    "fetched_head": "ae08e7f40e4b6670342776eb3c8fe17bc46b1cfe",
+    "required_ancestor": "30a337e04f1939af06d2f2392d8281c5e7ecdf25",
+    "ancestor_verified": true,
+    "main_unchanged": "6f19c18bab3656e90de77f168cda88fe409f126a"
+  },
+  "http_and_management": {
+    "time_utc": "2026-10-31T03:20:06Z",
+    "oidc_seconds_remaining": 1429,
+    "billable_calls": 0,
+    "/api/auth/status": {
+      "status": 500,
+      "content_type": "application/json",
+      "redirect_host": null,
+      "vercel_error": null,
+      "echo_error": "The operation failed. Your existing data has been preserved."
+    },
+    "/api/health": {
+      "status": 500,
+      "content_type": "application/json",
+      "redirect_host": null,
+      "vercel_error": null,
+      "echo_error": "The operation failed. Your existing data has been preserved."
+    },
+    "/": {
+      "status": 200,
+      "content_type": "text/html; charset=utf-8",
+      "redirect_host": null,
+      "vercel_error": null
+    },
+    "project": {
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "redirect_host": null,
+      "vercel_error": null,
+      "name": "echo",
+      "id": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0,
+      "repository": {
+        "org": "daniyal-ship-it",
+        "repo": "Echo",
+        "type": "github",
+        "repoId": 1435210906
+      }
+    },
+    "deployment": {
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "redirect_host": null,
+      "vercel_error": null,
+      "id": "dpl_3rRpR64FCj6VJDdumkRWP2hhjYHZ",
+      "readyState": "READY",
+      "url": "echo-e0in24oiw-daniyal-1415s-projects.vercel.app",
+      "alias": ["echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"],
+      "commit": "ae08e7f40e4b6670342776eb3c8fe17bc46b1cfe",
+      "branch": "feat/core-memory-exploration"
+    },
+    "environments": {
+      "status": 200,
+      "content_type": "application/json; charset=utf-8",
+      "redirect_host": null,
+      "vercel_error": null,
+      "bindings": [
+        {
+          "key": "APP_ORIGIN",
+          "target": ["preview"],
+          "gitBranch": "feat/core-memory-exploration",
+          "type": "plain",
+          "value": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"
+        },
+        {
+          "key": "ECHO_ANTHROPIC_MODEL",
+          "target": ["preview"],
+          "gitBranch": null,
+          "type": "plain",
+          "value": "claude-sonnet-5-5"
+        },
+        {
+          "key": "ECHO_OPENAI_MODEL",
+          "target": ["preview"],
+          "gitBranch": null,
+          "type": "plain",
+          "value": "gpt-6.1-sol"
+        },
+        {
+          "key": "APP_ORIGIN",
+          "target": ["preview"],
+          "gitBranch": null,
+          "type": "plain",
+          "value": "https://echo-git-main-daniyal-1415s-projects.vercel.app"
+        },
+        {
+          "key": "ECHO_OPENAI_API_KEY",
+          "target": ["production", "preview"],
+          "gitBranch": null,
+          "type": "sensitive"
+        },
+        {
+          "key": "ECHO_ANTHROPIC_API_KEY",
+          "target": ["production", "preview"],
+          "gitBranch": null,
+          "type": "sensitive"
+        },
+        {
+          "key": "DATABASE_URL",
+          "target": ["production", "preview"],
+          "gitBranch": null,
+          "type": "sensitive"
+        }
+      ]
+    },
+    "pricing": [
+      {
+        "url": "https://platform.openai.com/docs/pricing",
+        "status": null,
+        "error": "URLError",
+        "proxy_tunnel_403": true
+      },
+      {
+        "url": "https://docs.claude.com/en/docs/about-claude/pricing",
+        "status": null,
+        "error": "URLError",
+        "proxy_tunnel_403": true
+      }
+    ]
+  },
+  "browser": {
+    "timestamp": "2026-10-31T03:21:45.845Z",
+    "certificateValidationEnabled": true,
+    "method": "Playwright with system Chromium",
+    "responses": [
+      {
+        "path": "/",
+        "status": 200
+      },
+      {
+        "path": "/api/auth/status",
+        "status": 500
+      }
+    ],
+    "pageErrors": [],
+    "persistentBypassCreated": false,
+    "nativeChromiumTLS": {
+      "passed": true,
+      "title": "Login \u2013 Vercel",
+      "chain": [
+        {
+          "host": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+          "path": "/api/auth/status",
+          "status": 302
+        },
+        {
+          "host": "vercel.com",
+          "path": "/sso-api",
+          "status": 307
+        },
+        {
+          "host": "vercel.com",
+          "path": "/login",
+          "status": 200
+        }
+      ],
+      "certificateErrorsIgnored": false
+    },
+    "title": "Echo \u2014 The Holographic Brain",
+    "finalOrigin": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+    "bodyText": "ECHO\nTHE HOLOGRAPHIC BRAIN\nPersonal memory system\nLOCAL DEVELOPMENT\nWORKSPACE\nMemory atlas\nAll memories\n0\nImport history\nCEREBRAL REGIONS\n04\nFrontal\n0\nParietal\n0\nTemporal\n0\nOccipital\n0\n\nFour perspectives on your knowledge.\n\nRECENT MEMORIES\n\nYour story starts here\n\nYour memories will appear here once you create a workspace.\nSettings\nWhole brain\n3D ANATOMICAL VIEW\nYOUR KNOWLEDGE, IN PERSPECTIVE\nMemory atlas\n\nA living archive. An anatomical canvas.\n\nA\nL\nANATOMICAL SCAFFOLD\nSTORED MEMORIES\n\nDrag to rotate \u00b7 Scroll to zoom \u00b7 Double-click a region\n\nSource search\nLocal retrieval \u00b7 no AI transmission\n\n0 memories \u00b7 0 confirmed connections\n\nYOUR PRIVATE MEMORY\nWelcome back.\n\nA place for the conversations, ideas and decisions you want to keep.\n\nEmail\nPassword\nSign in\nNo accounts connected. Nothing imported without your choice.\nThe operation failed. Your existing data has been preserved.",
+    "screenshot": "echo-hosted-entry.png",
+    "views": [
+      {
+        "name": "front",
+        "screenshot": "echo-front.png",
+        "buttonClicked": true
+      },
+      {
+        "name": "side",
+        "screenshot": "echo-side.png",
+        "buttonClicked": true
+      },
+      {
+        "name": "three-quarter",
+        "screenshot": "echo-three-quarter.png",
+        "buttonClicked": true
+      }
+    ],
+    "rotationAndZoom": {
+      "dragDispatched": true,
+      "wheelDispatched": true,
+      "screenshots": ["echo-rotated.png", "echo-zoomed.png"],
+      "visualReviewRequired": false,
+      "visualReviewPassed": true
+    },
+    "visualReview": "Front, side, three-quarter, rotated and zoomed captures inspected. Anatomical scaffold and atlas colours render. No authenticated workspace or memory selection verified."
+  },
+  "runtime_diagnostics": {
+    "method": "Vercel CLI Observability events API, existing authentication",
+    "deployment": "dpl_3rRpR64FCj6VJDdumkRWP2hhjYHZ",
+    "entries": [
+      {
+        "timestamp": "2026-10-31T03:21:48.947Z",
+        "level": "error",
+        "source": "function",
+        "requestPath": "/api/auth/status",
+        "event": "api_error",
+        "type": "Error"
+      },
+      {
+        "timestamp": "2026-10-31T03:20:42.929Z",
+        "level": "error",
+        "source": "function",
+        "requestPath": "/api/auth/status",
+        "event": "api_error",
+        "type": "Error"
+      },
+      {
+        "timestamp": "2026-10-31T03:20:08.502Z",
+        "level": "error",
+        "source": "function",
+        "requestPath": "/api/health",
+        "event": "api_error",
+        "type": "Error"
+      },
+      {
+        "timestamp": "2026-10-31T03:20:07.893Z",
+        "level": "error",
+        "source": "function",
+        "requestPath": "/api/auth/status",
+        "event": "api_error",
+        "type": "Error"
+      }
+    ],
+    "http_status": 200,
+    "has_more": false
+  },
+  "cleanup": {
+    "oidc_expiry_utc": "2026-10-31T03:43:56+00:00",
+    "persistent_automation_bypass_created": false,
+    "persistent_automation_bypass_revocation_required": false,
+    "oidc_individually_revoked": false,
+    "local_oidc_file_removed": true,
+    "project_recheck_status": 200,
+    "automation_credential_count_after": 0,
+    "protection_after": {
+      "deploymentType": "all_except_custom_domains"
+    },
+    "test_accounts_created": 0,
+    "fixture_records_created": 0,
+    "billable_provider_requests_dispatched": 0,
+    "provider_cost_usd": 0,
+    "approved_total_budget_usd": 1
+  },
+  "limitations": [
+    "No isolated account created: ECHO auth status returns HTTP 500.",
+    "No import, preserved-original, summary, semantic retrieval, GPT answer, Claude answer, citation or logout/login persistence acceptance executed.",
+    "Official pricing requests are proxy-blocked; actual account/model availability cannot be checked through the failed ECHO runtime.",
+    "Zero billable requests dispatched. Cost is zero from request accounting; no provider billing dashboard was queried.",
+    "Historical local and mock-provider tests are not live hosted acceptance.",
+    "OIDC file removed; short-lived token was not individually revoked. No persistent automation credential was created, so none needed revocation."
+  ]
+}

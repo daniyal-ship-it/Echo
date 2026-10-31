@@ -1,39 +1,42 @@
-# Validation record — 30 October 2026
+# Validation record — 31 October 2026
 
-## Republished-environment hosted check
+## Authorised hosted verification
 
 See [HOSTED_VERIFICATION.md](HOSTED_VERIFICATION.md) and the
-[machine-readable results](validation/hosted-verification-2026-10-30.json).
-Git fetch/ancestry, exact-host network access, Vercel management authentication,
-READY deployment source `30a337e`, branch APP_ORIGIN and saved credential binding
-metadata **passed**. Network access now reaches Vercel's SSO/login redirect; the
-former proxy denial for this hostname is resolved. Deployment authentication and
-ECHO's own login are distinct. No authorised deployment browser session or existing
-automation credential is available to this runner, so the live journey is **blocked**.
+[new machine-readable results](validation/authorised-hosted-verification-2026-10-31.json).
+Git fetch/ancestry, exact-host network, management authentication, READY source
+`ae08e7f`, branch APP_ORIGIN and saved credential metadata **passed**. OIDC issued
+through the official SDK workflow using existing VERCEL_TOKEN reached ECHO without
+creating an automation bypass. Native Chromium TLS validation **passed** after
+narrowly granting write access to its existing NSS database. No CA was added and
+certificate checks stayed enabled. Hosted brain renders, colours, camera presets,
+rotation and zoom **passed** in system Chromium via Playwright.
 
-System Chromium/Playwright are available, but the attempted navigation **failed
-certificate validation before page rendering**. The platform proxy certificate
-is already present in both the runtime trusted bundle and the NSS certificate
-store; the browser failure needs further diagnosis, not an unverified claim that
-installing a missing certificate fixes it. TLS validation was not disabled.
-No hosted application browser test, import, AI call, citation selection or
-new-session persistence test passed. No numeric spending approval was recorded.
+Health and auth-status endpoints **failed** with HTTP 500. Vercel logs confirm
+application errors, but the database initialization/health-query root cause is
+unresolved. No isolated account was created. Import, preserved originals,
+summaries, semantic retrieval, each live provider, citations and logout/login
+persistence remain **blocked**. The user's **US$1 aggregate approval** is recorded;
+official pricing requests remain proxy-blocked, so zero billable requests were
+dispatched and run cost is US$0. Local OIDC material was removed; no persistent
+bypass credential requires revocation. See the handoff for token expiry and
+cleanup distinctions. No application code or deployment changed.
 
 The following local results were obtained at the implementation checkpoint and
 were **not rerun** during this verification-only follow-up.
 
 ## Memory intelligence increment
 
-| Check                                  | Result                                                                                                   |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `npm run assets:verify`                | Passed: 20,484 vertices, 40,960 triangles; original anatomy and source checksums unchanged               |
-| `npm run typecheck`                    | Passed                                                                                                   |
-| `npm test`                             | 30 passed, 0 failed/skipped; isolated databases and explicit provider mocks                              |
-| `npm run test:e2e`                     | 6 passed in one final run (2.3 minutes), including the complete labelled mock intelligence journey       |
-| `npm run build`                        | Passed: optimised standalone Next.js build, TypeScript and route tracing                                 |
-| `npm run test:production`              | All 4 standalone production-mode smoke groups passed; isolated PGlite database removed                   |
-| Live provider calls                    | Not run: deployment authentication and explicit test budget pending; saved Vercel keys remain configured |
-| Hosted smoke / new-session persistence | Blocked before ECHO: Vercel deployment authentication; network now reaches the feature alias             |
+| Check                                  | Result                                                                                                             |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `npm run assets:verify`                | Passed: 20,484 vertices, 40,960 triangles; original anatomy and source checksums unchanged                         |
+| `npm run typecheck`                    | Passed                                                                                                             |
+| `npm test`                             | 30 passed, 0 failed/skipped; isolated databases and explicit provider mocks                                        |
+| `npm run test:e2e`                     | 6 passed in one final run (2.3 minutes), including the complete labelled mock intelligence journey                 |
+| `npm run build`                        | Passed: optimised standalone Next.js build, TypeScript and route tracing                                           |
+| `npm run test:production`              | All 4 standalone production-mode smoke groups passed; isolated PGlite database removed                             |
+| Live provider calls                    | Blocked: runtime failure, unavailable current pricing and unverified model access; US$1 total approved, US$0 spent |
+| Hosted smoke / new-session persistence | Health/auth-status failed HTTP 500 after successful OIDC access; hosted login/persistence blocked                  |
 
 The new `tests/intelligence.test.ts` tests exact Unicode/message boundaries,
 versioned references and inactive branches; real database close/reopen; unchanged
@@ -138,7 +141,7 @@ records and source-update invalidation. Its upgrade fixture preserves all origin
 content and anatomical anchors. An external Git bundle preserves the prior checkpoint.
 
 The Vercel API confirms the correct team/project/GitHub link and enabled deployment
-protection. The feature Preview was verified READY at `30a337e` with its correct
+protection. The feature Preview was verified READY at `ae08e7f` with its correct
 branch-specific APP_ORIGIN. The main preview must not be substituted for this branch:
 
 https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
@@ -148,13 +151,13 @@ ECHO-prefixed provider keys. The keys are absent from this Codex runtime and wer
 not requested again, replaced or printed. Preview and Production share the database
 binding; no isolated cloud fixture or managed migration check was performed.
 
-Official SDK model lists were checked for `gpt-6.1-sol`, `claude-sonnet-5-5` and
-`text-embedding-3-small`; SDK support does not verify account access. The network now
-reaches the feature auth endpoint, which redirects to Vercel authentication. No
-existing authorised deployment session is available in this runner; the management
-API token is not a browser session. No new bypass credential or weakened protection
-was introduced. Existing saved keys must be reused through the authorised runtime. See the exact
-live checklist and dashboard fallback in [DEPLOYMENT.md](DEPLOYMENT.md).
+Earlier SDK catalogue checks covered `gpt-6.1-sol`, `claude-sonnet-5-5` and
+`text-embedding-3-small`; SDK support does not verify account access. Existing
+Vercel authentication now obtains OIDC accepted by the protected Preview, without
+creating a persistent bypass or weakening protection. The runtime health failure
+and proxy-blocked pricing prevent live model checks; the aggregate US$1 budget
+is approved and unspent. Reuse the saved keys through the authorised runtime.
+See [DEPLOYMENT.md](DEPLOYMENT.md) and the current hosted handoff.
 
 The **complete core milestone has not passed**. Live embeddings, summary fidelity,
 each provider's grounded answer/citation, managed schema/runtime persistence and

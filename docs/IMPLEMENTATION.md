@@ -1,4 +1,4 @@
-# Implementation checkpoint — 30 October 2026
+# Implementation checkpoint — 31 October 2026
 
 Continue `feat/core-memory-exploration`, descended from `4b19901`. The foundation
 on `main` remains `6f19c18`. The anatomy, renderer, navigation, original records,
@@ -57,25 +57,33 @@ import → separate summary/index → paraphrase → each provider → exact pas
 See VALIDATION.md for final browser/build results and rendered screenshots.
 
 Existing Vercel project `daniyal-1415s-projects/echo` is linked to the correct Echo
-repository. The `30a337e` feature preview is READY. Its branch-specific
-Preview-only APP_ORIGIN was corrected to:
+repository. The feature preview is READY at documentation checkpoint `ae08e7f`,
+with unchanged application code from `30a337e`. Its branch-specific Preview
+APP_ORIGIN matches:
 
 https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
 
-Deployment protection remains enabled. Saved provider keys and DATABASE_URL have
-Preview bindings; no credentials were replaced or disclosed. After environment
-republication, the exact feature host is reachable: `/api/auth/status` redirects
-302 → Vercel SSO 307 → Vercel login 200. The old proxy tunnel denial for this host
-is resolved. Existing VERCEL_TOKEN authenticates management API reads, but this
-runner has no existing Vercel browser session or project automation credential.
-ECHO authentication and the isolated hosted journey remain blocked behind that
-separate protection layer. Chromium also fails certificate validation before
-rendering; no hosted browser UI acceptance passed.
+Existing Vercel authentication obtains a short-lived same-project OIDC identity
+accepted by the protected Preview. No automation credential was created and
+protection remains enabled. Chromium now renders the hosted brain after narrowly
+allowing its existing NSS certificate database to initialize in read/write mode;
+TLS checks remain enabled. Front/side/three-quarter views, rotation and zoom passed
+real browser inspection. Saved keys and DATABASE_URL have sensitive Preview
+bindings; no credentials were replaced, disclosed or requested again.
 
-No recorded numeric API-test budget was found and no billable call was made.
-The separate [hosted verification handoff](HOSTED_VERIFICATION.md) records every
-passed/failed/blocked check and a conditional cost proposal requiring approval.
-Local tests from `30a337e` remain historical evidence, not live-provider results.
+The live journey is blocked by an application failure: `/api/health` and
+`/api/auth/status` return HTTP 500. Runtime logs confirm `api_error`, type `Error`,
+but do not identify the database initialization/health-query root cause. No
+isolated account or fixture was created. The user approved **US$1 total across all
+providers and retries**, but official pricing remains proxy-blocked and actual
+account/model availability is unverified. Zero billable requests were dispatched;
+run cost is US$0. Local OIDC material was removed; no persistent bypass credential
+requires revocation. No application code or deployment changed.
+
+The [hosted handoff](HOSTED_VERIFICATION.md) records each result, screenshots,
+cleanup and next diagnostics. This documentation checkpoint is kept local to avoid
+triggering a new Vercel deployment. Local tests from `30a337e` remain historical
+evidence, not live-provider results.
 
 ## Deliberate limits / continuation
 

@@ -115,19 +115,28 @@ are not evidence of usable local configuration; tests override them.
 
 ## Hosted verification / dashboard fallback
 
-After the environment was republished on 30 October, the feature-host network
-check passed. `/api/auth/status` now returns 302 to Vercel SSO, then 307 to Vercel
-login (200). This is deployment protection, not ECHO application authentication.
-Existing VERCEL_TOKEN allows management API reads but does not establish a browser
-session. No existing automation credential or authenticated test session was found.
-Chromium navigation also fails certificate validation before rendering; normal
-HTTP requests succeed. Keep these findings distinct from application defects.
+As of 31 October, exact-host access and existing-authentication OIDC access both
+pass. The READY feature deployment serves `ae08e7f` with unchanged application
+code from `30a337e`. Chromium renders the hosted brain after granting narrowly
+scoped write access to its existing NSS database; no TLS checks were disabled.
+ECHO's `/api/health` and `/api/auth/status` now fail HTTP 500 after protection is
+successfully passed. The isolated hosted acceptance journey is blocked by that
+runtime failure and independently by unavailable official pricing, not by missing
+spending approval. The user approved **US$1 total across providers and retries**;
+zero billable requests were dispatched.
 
-The current [hosted handoff](HOSTED_VERIFICATION.md) records the verified `30a337e`
-deployment, exact results, conditional cost estimate and missing approval. No
-hosted fixture or billable provider call has been run. Do not create a project-wide
-automation credential implicitly through `vercel curl`; obtain explicit authority
-if an existing authorised browser session cannot be used.
+The [hosted handoff](HOSTED_VERIFICATION.md) contains actual browser/HTTP evidence,
+cleanup, current model bindings and the unresolved database-health diagnosis.
+Existing VERCEL_TOKEN can obtain a short-lived token using the official OIDC SDK
+workflow. Use its header only against the exact feature origin without redirect
+forwarding. No automation credential was created; the local token was removed.
+The user's one-credential fallback authorisation applies only if OIDC is genuinely
+unavailable and requires verified revocation on every exit path. Do not create
+one implicitly through `vercel curl` while OIDC works. Keep protection enabled.
+
+Resolve the health failure before the checklist below. No app/deployment changes
+were made in this verification. Do not redeploy merely because READY fails to
+prove runtime health; first identify the error without revealing credentials.
 
 1. Open the project dashboard → **Deployments**, filter to Preview and
    `feat/core-memory-exploration`. Confirm the Source SHA matches the delivered
@@ -143,8 +152,10 @@ if an existing authorised browser session cannot be used.
    creation behind protection; do not enable unrestricted public signup.
 4. In Settings check OpenAI and Anthropic model access independently. Record only
    status and returned model IDs. The check sends no memory and generates no answer.
-5. Confirm a numeric test-spend ceiling and current pricing before any billable
-   request. Then import a tiny supported export with a clearly labelled synthetic statement,
+5. Use the already approved US$1 aggregate ceiling and verify current official
+   pricing before any billable request. Reserve each request’s maximum cost,
+   including retries, against the remaining total allowance. Then import a tiny
+   supported export with a clearly labelled synthetic statement,
    for example “TEST FIXTURE: Store the access codes in a sealed envelope inside
    the desk.” Verify the original roles/timestamps/raw JSON. In Intelligence,
    consent to this original only, run summary/index, inspect progress and open
@@ -163,9 +174,10 @@ if an existing authorised browser session cannot be used.
    new-session persistence without secrets. Until these live checks pass, keep the
    core milestone marked incomplete even if Vercel reports READY.
 
-The network policy now permits the feature host. Automated hosted checks still
-need authorised deployment access and a separate ECHO test session, plus approved
-spend. These are **not replacement API keys or disabled origin/protection checks**.
+The network policy permits the feature host and OIDC access is verified. The
+remaining prerequisites are healthy application/database initialization, an
+isolated ECHO session, actual model availability and verified official pricing.
+These require **neither replacement API keys nor disabled protection/TLS checks**.
 
 ## Backup and recovery
 
