@@ -4,6 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import postgres from 'postgres';
 import * as tls from 'node:tls';
+import { databaseTlsOptions } from './database-tls';
 import {
   databaseConfigError,
   DatabaseInitializationError,
@@ -87,13 +88,14 @@ export async function createDatabase(
         additional_system_ca_count: systemRoots.filter((ca) => !defaultRoots.has(ca)).length,
         extra_ca_configured: Boolean(process.env.NODE_EXTRA_CA_CERTS),
         system_ca_file_configured: Boolean(process.env.SSL_CERT_FILE),
+        custom_database_ca_configured: Boolean(process.env.DATABASE_CA_CERT),
       });
       if (process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL === 'disable') {
         throw databaseConfigError('DB_TLS_REQUIRED');
       }
       const sql = postgres(process.env.DATABASE_URL!, {
         max: 5,
-        ssl: process.env.DATABASE_SSL === 'disable' ? false : 'verify-full',
+        ssl: process.env.DATABASE_SSL === 'disable' ? false : databaseTlsOptions(),
         prepare: false,
       });
       const wrap = (client: typeof sql): Database => ({

@@ -39,6 +39,13 @@ proxy secret is not a PostgreSQL TCP authentication mechanism.
 TLS certificate verification is enabled. `DATABASE_SSL=disable` is accepted only
 for a deliberately local development PostgreSQL connection, and rejected in
 production. Do not disable TLS verification to work around an untrusted certificate.
+For a provider with its own CA (including this project's Supabase database), set
+server-side `DATABASE_CA_CERT` to the official public CA certificate in PEM format.
+ECHO adds that CA only to its PostgreSQL client's trusted roots and explicitly
+retains certificate and hostname checks. Private keys and malformed/non-CA input
+are rejected. Existing DATABASE_URL and provider API keys do not need replacement.
+For this repair, scope the CA binding to Preview and `feat/core-memory-exploration`.
+See [BACKEND_REPAIR.md](BACKEND_REPAIR.md) for the verified source and current blocker.
 
 On a fresh database, the migration account needs permission to create the `vector`
 extension (or an operator must install it first). Managed application startup runs

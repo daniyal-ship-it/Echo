@@ -16,6 +16,7 @@ const reasons: Record<string, string> = {
   DB_URL_INVALID: 'DATABASE_URL is not a valid PostgreSQL connection URL',
   DB_URL_PLACEHOLDER: 'DATABASE_URL contains a recognised placeholder',
   DB_TLS_REQUIRED: 'Managed production requires verified database TLS',
+  DB_CA_INVALID: 'DATABASE_CA_CERT must contain only valid public CA certificates in PEM format',
   DB_MIGRATION_REQUIRED: 'Expected migrations are pending; startup will not modify managed schema',
   ENOENT: 'A required runtime file is missing',
   EACCES: 'Runtime file access was denied',

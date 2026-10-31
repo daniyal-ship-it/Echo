@@ -1,5 +1,22 @@
 # Validation record — 31 October 2026
 
+## Backend repair follow-up
+
+See [BACKEND_REPAIR.md](BACKEND_REPAIR.md) for the confirmed private diagnostic
+error, correlation IDs, deployed checkpoints and remaining certificate-download
+blocker. The later repair adds safe diagnostics, read-only managed initialization
+and DATABASE_CA_CERT support. Current local results: **36 core tests passed**,
+TypeScript/build passed, and all four standalone production smoke groups passed.
+The TLS regression uses actual local TLS handshakes, verifies successful trust,
+and rejects both an unknown CA and a hostname mismatch. Disposable TLS keys and
+local database fixtures were removed. No real provider request was dispatched.
+
+The hosted diagnostic deployment still returns HTTP 500 with
+SELF_SIGNED_CERT_IN_CHAIN; no connection query or migration inspection succeeded.
+The official Supabase CA has not yet been downloaded/configured. Local TLS success
+is not a hosted repair claim. Account/note/logout-login acceptance remains blocked.
+The following section preserves the earlier verification and local/mock evidence.
+
 ## Authorised hosted verification
 
 See [HOSTED_VERIFICATION.md](HOSTED_VERIFICATION.md) and the

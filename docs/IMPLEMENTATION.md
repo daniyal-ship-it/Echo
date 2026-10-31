@@ -71,19 +71,21 @@ TLS checks remain enabled. Front/side/three-quarter views, rotation and zoom pas
 real browser inspection. Saved keys and DATABASE_URL have sensitive Preview
 bindings; no credentials were replaced, disclosed or requested again.
 
-The live journey is blocked by an application failure: `/api/health` and
-`/api/auth/status` return HTTP 500. Runtime logs confirm `api_error`, type `Error`,
-but do not identify the database initialization/health-query root cause. No
-isolated account or fixture was created. The user approved **US$1 total across all
-providers and retries**, but official pricing remains proxy-blocked and actual
-account/model availability is unverified. Zero billable requests were dispatched;
-run cost is US$0. Local OIDC material was removed; no persistent bypass credential
-requires revocation. No application code or deployment changed.
+The later authorised [backend repair](BACKEND_REPAIR.md) preserved and pushed
+`e39cba6`, deployed safe diagnostics, and identified the health/auth failure:
+`SELF_SIGNED_CERT_IN_CHAIN` during the Supabase connection check, before migration
+inspection or execution. The deployed runtime has no system or additional CA.
+Managed startup now verifies connectivity and schema state without applying
+pending migrations; the shared database must not change without separate approval.
 
-The [hosted handoff](HOSTED_VERIFICATION.md) records each result, screenshots,
-cleanup and next diagnostics. This documentation checkpoint is kept local to avoid
-triggering a new Vercel deployment. Local tests from `30a337e` remain historical
-evidence, not live-provider results.
+The targeted correction supports server-side `DATABASE_CA_CERT` with certificate
+and hostname verification enabled. Its regression tests pass, but the official
+Supabase certificate download is proxy-blocked and no CA is configured yet.
+The network draft has the required host additions and needs environment publication.
+Hosted repair, login and persistence are not yet verified. All 36 isolated tests,
+TypeScript/build and four local production smoke groups pass; these do not prove
+managed health. No AI call was dispatched; the approved US$1 total remains unspent.
+See BACKEND_REPAIR.md for current deployment evidence and continuation steps.
 
 ## Deliberate limits / continuation
 

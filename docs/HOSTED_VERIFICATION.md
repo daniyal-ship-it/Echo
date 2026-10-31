@@ -1,4 +1,9 @@
-# Hosted verification handoff — 31 October 2026
+# Hosted verification snapshot — 31 October 2026
+
+**Current continuation:** [BACKEND_REPAIR.md](BACKEND_REPAIR.md) records the later
+authorised diagnostic deployments, confirmed Supabase TLS trust failure and
+DATABASE_CA_CERT support. The results below preserve the earlier verification run;
+they do not describe the current deployed source or the current repair scope.
 
 The protected feature Preview is reachable through authorised Vercel OIDC access,
 and its brain renders in Chromium. **The hosted acceptance journey is incomplete:**
