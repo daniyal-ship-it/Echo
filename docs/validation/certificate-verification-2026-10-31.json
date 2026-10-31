@@ -1,0 +1,235 @@
+{
+  "checked_at": "2026-10-31T21:07:59.568822+00:00",
+  "repository": "daniyal-ship-it/Echo",
+  "branch": "feat/core-memory-exploration",
+  "application_source": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+  "preview": "https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+  "certificate_download": {
+    "at": "2026-10-31T21:01:14.793381+00:00",
+    "source": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+    "https_verification": true,
+    "status": 200,
+    "final_url": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+    "downloaded": true,
+    "bytes": 1367,
+    "sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+  },
+  "certificate_validation": {
+    "source": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/prod/ssl/prod-ca-2021.crt",
+    "ca": true,
+    "subject": "C=US\nST=Delware\nL=New Castle\nO=Supabase Inc\nCN=Supabase Root 2021 CA",
+    "issuer": "C=US\nST=Delware\nL=New Castle\nO=Supabase Inc\nCN=Supabase Root 2021 CA",
+    "valid_from": "Apr 28 10:56:53 2021 GMT",
+    "valid_to": "Apr 26 10:56:53 2031 GMT",
+    "within_validity": true,
+    "self_signature_verified": true,
+    "fingerprint_sha256": "80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA",
+    "pem_certificates": 1
+  },
+  "provenance": {
+    "official_source": "https://raw.githubusercontent.com/supabase/supabase/master/apps/studio/hooks/custom-content/custom-content.json",
+    "template": "https://supabase-downloads.s3-ap-southeast-1.amazonaws.com/${env}/ssl/${env}-ca-2021.crt",
+    "production_url_matches": true
+  },
+  "configuration": {
+    "at": "2026-10-31T21:02:55.580331+00:00",
+    "action": "configure",
+    "project_before": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "before": [
+      {
+        "id": "1RhyWdxoA6maPmBQ",
+        "key": "APP_ORIGIN",
+        "type": "plain",
+        "target": ["preview"],
+        "gitBranch": "feat/core-memory-exploration",
+        "createdAt": 1793313861514,
+        "updatedAt": 1793313861514
+      },
+      {
+        "id": "ExcGxpCdGfe4KWiw",
+        "key": "ECHO_ANTHROPIC_MODEL",
+        "type": "plain",
+        "target": ["preview"],
+        "gitBranch": null,
+        "createdAt": 1793165004583,
+        "updatedAt": 1793165004583
+      },
+      {
+        "id": "MvjFHvIisxpiAtYG",
+        "key": "ECHO_OPENAI_MODEL",
+        "type": "plain",
+        "target": ["preview"],
+        "gitBranch": null,
+        "createdAt": 1793165004306,
+        "updatedAt": 1793165004306
+      },
+      {
+        "id": "Zf8pj2CqVs78WviO",
+        "key": "APP_ORIGIN",
+        "type": "plain",
+        "target": ["preview"],
+        "gitBranch": null,
+        "createdAt": 1793164908765,
+        "updatedAt": 1793164908765
+      },
+      {
+        "id": "W640GyJmphRao13N",
+        "key": "ECHO_OPENAI_API_KEY",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793161013047
+      },
+      {
+        "id": "6HDLttoHRswZPiVF",
+        "key": "ECHO_ANTHROPIC_API_KEY",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793161013047
+      },
+      {
+        "id": "eDcJ6IoHWOHAP09R",
+        "key": "DATABASE_URL",
+        "type": "sensitive",
+        "target": ["production", "preview"],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793161013047
+      }
+    ],
+    "configured": true,
+    "binding": {
+      "id": "xTXVKHsjQ5k2GrlQ",
+      "key": "DATABASE_CA_CERT",
+      "type": "encrypted",
+      "target": ["preview"],
+      "gitBranch": "feat/core-memory-exploration",
+      "createdAt": 1793480577088,
+      "updatedAt": 1793480577088
+    },
+    "all_other_bindings_unchanged": true,
+    "project_after": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "pem_bytes": 1367,
+    "pem_sha256": "700723581420dd1ac98fd7e9ac529f0ef210eadcaf87fc868a3ad7d114c2f3b7"
+  },
+  "deployment": {
+    "at": "2026-10-31T21:03:51.404176+00:00",
+    "action": "deployment",
+    "id": "dpl_6j79FX6b5mHEFQB2CUx6ngqzxvHP",
+    "url": "echo-eyix1jhs5-daniyal-1415s-projects.vercel.app",
+    "readyState": "READY",
+    "alias": ["echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"],
+    "target": null,
+    "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+    "sha": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+    "branch": "feat/core-memory-exploration"
+  },
+  "health": {
+    "at": "2026-10-31T21:03:55.794690+00:00",
+    "action": "probe",
+    "checks": [
+      {
+        "path": "/api/health",
+        "status": 500,
+        "request_id": "c3e146b2-d5aa-4c00-9871-7ee5d9c590a8",
+        "error": "The operation failed. Your existing data has been preserved."
+      }
+    ]
+  },
+  "private_runtime_evidence": {
+    "at": "2026-10-31T21:04:43.905589+00:00",
+    "action": "logs",
+    "deployment": "dpl_6j79FX6b5mHEFQB2CUx6ngqzxvHP",
+    "entries": [
+      {
+        "timestamp": "2026-10-31T21:03:58.042Z",
+        "path": "/api/health",
+        "event": "api_error",
+        "request_id": "c3e146b2-d5aa-4c00-9871-7ee5d9c590a8",
+        "initialization_id": "92426fcb-1a6c-4dd7-9b11-c612ce72bbc5",
+        "stage": "connection.check",
+        "error_class": "PostgresError",
+        "code": "28P01",
+        "sqlstate": "28P01",
+        "reason": "Database authentication rejected the supplied credentials",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T21:03:58.039Z",
+        "path": "/api/health",
+        "event": "database_initialization_failed",
+        "request_id": "c3e146b2-d5aa-4c00-9871-7ee5d9c590a8",
+        "initialization_id": "92426fcb-1a6c-4dd7-9b11-c612ce72bbc5",
+        "stage": "connection.check",
+        "error_class": "PostgresError",
+        "code": "28P01",
+        "sqlstate": "28P01",
+        "reason": "Database authentication rejected the supplied credentials",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-10-31T21:03:56.786Z",
+        "path": "/api/health",
+        "event": "database_connection_config",
+        "request_id": "c3e146b2-d5aa-4c00-9871-7ee5d9c590a8",
+        "initialization_id": "92426fcb-1a6c-4dd7-9b11-c612ce72bbc5",
+        "stage": "configuration",
+        "provider": "supabase",
+        "default_ca_count": 118,
+        "system_ca_count": 0,
+        "additional_system_ca_count": 0,
+        "extra_ca_configured": false,
+        "system_ca_file_configured": false,
+        "custom_database_ca_configured": true
+      }
+    ]
+  },
+  "cleanup": {
+    "at": "2026-10-31T21:06:42.611221+00:00",
+    "action": "cleanup",
+    "project": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "oidc_expires_at": "2026-11-01T09:03:27+00:00",
+    "local_oidc_removed": true,
+    "automation_bypass_created": false,
+    "oidc_individually_revoked": false
+  },
+  "result": {
+    "tls_trust": "passed; connection reached PostgreSQL authentication with strict certificate/hostname verification enabled",
+    "database_authentication": "failed, SQLSTATE 28P01",
+    "select_1": "did not succeed; authentication rejected before query completion",
+    "schema_inspection": "not reached",
+    "shared_schema_writes": 0,
+    "application_authentication": "blocked; not retested after connection failure",
+    "isolated_note_create_read_update": "blocked; no test account or note created",
+    "logout_login_persistence": "blocked; no hosted browser session run",
+    "unauthenticated_memory_rejection": "blocked; not retested",
+    "application_source_changes": 0,
+    "provider_calls": 0,
+    "api_spend_usd": 0,
+    "remaining_total_budget_usd": 1
+  }
+}

@@ -1,6 +1,23 @@
 # Validation record — 31 October 2026
 
-## Backend repair follow-up
+## Certificate configuration after environment publication
+
+Live results: official HTTPS certificate download and provenance, CA status,
+validity/signature, branch-only Preview configuration and c292574 redeployment
+**passed**. TLS/hostname validation now reaches PostgreSQL authentication, which
+**failed with SQLSTATE 28P01**. The read-only health request returned HTTP 500;
+SELECT 1 did not succeed. Migration inspection and application account/note/new-
+session persistence checks remain **blocked** and were not attempted. No new
+hosted browser acceptance or billable AI call is claimed. No code, shared schema,
+DATABASE_URL, API keys or protection settings changed. The local OIDC file was
+removed; no persistent automation-bypass credential was created.
+
+See [current handoff](BACKEND_REPAIR.md) and
+[correlated evidence](validation/certificate-verification-2026-10-31.json).
+Local tests/build were not rerun for this configuration-only change. The earlier
+results below are retained as historical evidence, not the current failure cause.
+
+## Backend repair follow-up before CA installation (historical)
 
 See [BACKEND_REPAIR.md](BACKEND_REPAIR.md) for the confirmed private diagnostic
 error, correlation IDs, deployed checkpoints and remaining certificate-download

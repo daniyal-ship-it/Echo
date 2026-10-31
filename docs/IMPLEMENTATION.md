@@ -57,8 +57,8 @@ import → separate summary/index → paraphrase → each provider → exact pas
 See VALIDATION.md for final browser/build results and rendered screenshots.
 
 Existing Vercel project `daniyal-1415s-projects/echo` is linked to the correct Echo
-repository. The feature preview is READY at documentation checkpoint `ae08e7f`,
-with unchanged application code from `30a337e`. Its branch-specific Preview
+repository. The feature preview is READY at checkpoint `c292574`,
+with application code from `a7c2db1`. Its branch-specific Preview
 APP_ORIGIN matches:
 
 https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
@@ -78,14 +78,20 @@ inspection or execution. The deployed runtime has no system or additional CA.
 Managed startup now verifies connectivity and schema state without applying
 pending migrations; the shared database must not change without separate approval.
 
-The targeted correction supports server-side `DATABASE_CA_CERT` with certificate
-and hostname verification enabled. Its regression tests pass, but the official
-Supabase certificate download is proxy-blocked and no CA is configured yet.
-The network draft has the required host additions and needs environment publication.
-Hosted repair, login and persistence are not yet verified. All 36 isolated tests,
-TypeScript/build and four local production smoke groups pass; these do not prove
-managed health. No AI call was dispatched; the approved US$1 total remains unspent.
-See BACKEND_REPAIR.md for current deployment evidence and continuation steps.
+After environment publication, the official Supabase CA was downloaded through
+verified HTTPS, checked for provenance/CA status/validity/signature, and saved as
+DATABASE_CA_CERT only for Preview on this feature branch. The existing c292574
+source was redeployed. TLS and hostname verification now pass, but PostgreSQL
+rejects the preserved DATABASE_URL credentials with **SQLSTATE 28P01**. SELECT 1
+has not succeeded; migration inspection, application login and persistence remain
+blocked. No shared schema or application code changed in this follow-up.
+
+The earlier 36 isolated tests, TypeScript/build and four production smoke groups
+remain local evidence; they were not rerun for this configuration-only operation.
+No AI call was dispatched; the approved US$1 aggregate allowance remains unspent.
+See [BACKEND_REPAIR.md](BACKEND_REPAIR.md) for the correlated live error, certificate
+fingerprint, exact deployment and secure next step. Do not replace DATABASE_URL
+or apply migrations without the required separate authority.
 
 ## Deliberate limits / continuation
 

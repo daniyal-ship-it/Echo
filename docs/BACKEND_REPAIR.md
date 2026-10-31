@@ -1,5 +1,90 @@
 # Backend diagnosis and repair — 31 October 2026
 
+## Current result after environment publication
+
+**The Supabase certificate-trust failure is resolved. The backend is still not
+ready: PostgreSQL rejects the preserved DATABASE_URL credentials with SQLSTATE
+`28P01`.** This supersedes the certificate-download blocker described in the
+historical sections below. No application code was changed during this follow-up.
+
+The official certificate download now returns HTTP 200 with HTTPS verification
+enabled and no redirect. Its URL matches Supabase's official dashboard source.
+The certificate is Supabase Root 2021 CA, has CA status and a verified self-signature,
+and is valid from 28 April 2021 to 26 April 2031. SHA-256 certificate fingerprint:
+`80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA`.
+
+The complete 1,367-byte PEM was saved as encrypted `DATABASE_CA_CERT`, scoped only
+to **Preview / feat/core-memory-exploration** in the existing echo project.
+Every other environment binding's ID, scope, type and timestamps were unchanged.
+DATABASE_URL and all API keys were preserved. Certificate and hostname validation
+remain enabled; deployment protection remains `all_except_custom_domains`.
+
+The existing Git source `c29257434aec44e9e9d9c95c6fb111ca594d75b0` was redeployed
+with the new branch environment. No application code changed. Vercel completed
+its normal deployment build and reports READY:
+
+- Deployment: `dpl_6j79FX6b5mHEFQB2CUx6ngqzxvHP` (Preview, not Production).
+- Feature URL: https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
+- Immutable URL: https://echo-eyix1jhs5-daniyal-1415s-projects.vercel.app
+
+The first read-only health request returned HTTP 500 with correlation ID
+`c3e146b2-d5aa-4c00-9871-7ee5d9c590a8`. Its private runtime logs show the CA is
+configured and the connection now proceeds past TLS to PostgreSQL authentication:
+
+```json
+{
+  "stage": "connection.check",
+  "error_class": "PostgresError",
+  "code": "28P01",
+  "sqlstate": "28P01",
+  "reason": "Database authentication rejected the supplied credentials"
+}
+```
+
+| Check                                                               | Actual result                                                         |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Official certificate provenance, CA status, validity and signature  | Passed                                                                |
+| Complete PEM and branch-only Preview binding                        | Passed                                                                |
+| Existing commit redeployed / source and alias verified              | Passed, c292574                                                       |
+| Database certificate and hostname validation                        | Passed; PostgreSQL authentication was reached with strict TLS enabled |
+| Database authentication / SELECT 1                                  | Failed, 28P01; query did not succeed                                  |
+| Application health                                                  | Failed, HTTP 500 with correlated private error                        |
+| Migration history, SQL assets, pgvector and permissions             | Blocked; inspection was not reached                                   |
+| ECHO authentication / isolated note create, retrieve and update     | Blocked; no account or note created                                   |
+| Logout/login persistence / unauthenticated private-memory rejection | Blocked; no new hosted browser acceptance claimed                     |
+| AI acceptance                                                       | Not run; US$0 spent, full aggregate US$1 allowance remains            |
+
+Evidence: [certificate-verification-2026-10-31.json](validation/certificate-verification-2026-10-31.json).
+This was live hosted HTTP and private-log verification, not a mocked test. Existing
+local test/build results were not rerun because there was no application code change.
+No successful SQL query, pending migration or schema state is inferred from TLS
+success alone. No shared schema or original data was modified.
+
+### Next prerequisite: check the existing database connection details securely
+
+The next operation requires a valid DATABASE_URL. Compare its saved connection
+details against the existing Supabase project's **Connect** dialog, including the
+selected connection method, database username and password encoding. The current
+evidence identifies rejected credentials, not which particular field is wrong.
+Review the value only in [Vercel environment settings](https://vercel.com/daniyal-1415s-projects/echo/settings/environment-variables);
+do not paste it or any password into chat. No replacement AI keys are needed.
+
+The user explicitly required preserving DATABASE_URL, so it was not corrected,
+rotated, replaced or reset. It remains shared between Preview and Production.
+Any subsequent correction needs authorisation for that configuration change;
+prefer a feature-Preview override if the owner wants Production left untouched.
+After credentials are accepted, rerun SELECT 1, then inspect schema state read-only.
+Only if migrations are actually missing should their exact scope be proposed for
+separate approval. No schema-change approval exists in this task.
+
+Temporary local OIDC material was removed. No automation-bypass credential was
+created; the final project recheck reports zero. The short-lived OIDC token was
+not individually revoked and expires at 09:03:27 UTC on 1 November 2026. There are
+no test accounts, notes or archives to delete. The certificate binding remains
+intentionally installed for the feature Preview.
+
+## Earlier diagnosis and certificate-access blocker (historical)
+
 Continue from preserved `e39cba6` on `feat/core-memory-exploration`.
 The user now authorises safe diagnostics, an evidence-based repair and feature
 Preview deployment. Main/production promotion, credential replacement, database

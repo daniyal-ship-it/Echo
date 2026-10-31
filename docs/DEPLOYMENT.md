@@ -126,28 +126,28 @@ are not evidence of usable local configuration; tests override them.
 
 ## Hosted verification / dashboard fallback
 
-As of 31 October, exact-host access and existing-authentication OIDC access both
-pass. The READY feature deployment serves `ae08e7f` with unchanged application
-code from `30a337e`. Chromium renders the hosted brain after granting narrowly
-scoped write access to its existing NSS database; no TLS checks were disabled.
-ECHO's `/api/health` and `/api/auth/status` now fail HTTP 500 after protection is
-successfully passed. The isolated hosted acceptance journey is blocked by that
-runtime failure and independently by unavailable official pricing, not by missing
-spending approval. The user approved **US$1 total across providers and retries**;
-zero billable requests were dispatched.
+The current feature Preview serves `c292574`. After the cloud environment was
+published, the official Supabase CA was validated and saved as DATABASE_CA_CERT
+only for Preview on feat/core-memory-exploration. The existing source was redeployed;
+no application code or shared database schema changed. TLS verification now passes,
+but the preserved DATABASE_URL credentials are rejected with SQLSTATE **28P01**.
+Health still returns HTTP 500, so the backend is not ready. See the current
+[backend handoff](BACKEND_REPAIR.md) before using the acceptance checklist below.
 
-The [hosted handoff](HOSTED_VERIFICATION.md) contains actual browser/HTTP evidence,
-cleanup, current model bindings and the unresolved database-health diagnosis.
-Existing VERCEL_TOKEN can obtain a short-lived token using the official OIDC SDK
-workflow. Use its header only against the exact feature origin without redirect
-forwarding. No automation credential was created; the local token was removed.
-The user's one-credential fallback authorisation applies only if OIDC is genuinely
-unavailable and requires verified revocation on every exit path. Do not create
-one implicitly through `vercel curl` while OIDC works. Keep protection enabled.
+Existing VERCEL_TOKEN can obtain OIDC through the official SDK workflow. Send its
+header only to the exact feature origin without redirect forwarding. Protection
+stays enabled. The temporary local OIDC file was removed after the checks and no
+automation credential was created. Earlier browser screenshots and local tests
+remain historical evidence; no new browser persistence test passed here.
 
-Resolve the health failure before the checklist below. No app/deployment changes
-were made in this verification. Do not redeploy merely because READY fails to
-prove runtime health; first identify the error without revealing credentials.
+Securely verify the saved DATABASE_URL against the Supabase project's existing
+connection details; no replacement AI keys are needed. The value was intentionally
+preserved under the user's instructions. Do not change its shared binding or
+reset a database password without authority. Once authentication works, SELECT 1
+and read-only schema inspection must pass before account/note tests. Migrations on
+the shared Preview/Production database still require separate approval. The US$1
+aggregate AI budget is approved and entirely unspent; no billable calls may precede
+backend readiness and verified current model access/pricing.
 
 1. Open the project dashboard → **Deployments**, filter to Preview and
    `feat/core-memory-exploration`. Confirm the Source SHA matches the delivered
