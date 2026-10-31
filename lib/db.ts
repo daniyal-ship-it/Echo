@@ -3,6 +3,7 @@ import path from 'node:path';
 import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import postgres from 'postgres';
+import * as tls from 'node:tls';
 import {
   databaseConfigError,
   DatabaseInitializationError,
@@ -69,6 +70,24 @@ export async function createDatabase(
   try {
     if (managed) {
       validateDatabaseUrl(process.env.DATABASE_URL);
+      const host = new URL(process.env.DATABASE_URL!).hostname.toLowerCase();
+      const provider = /(^|\.)supabase\.(com|co)$/.test(host)
+        ? 'supabase'
+        : /(^|\.)neon\.(tech|build)$/.test(host)
+          ? 'neon'
+          : host.endsWith('.rds.amazonaws.com')
+            ? 'aws-rds'
+            : 'other';
+      const defaultRoots = new Set(tls.getCACertificates?.('default') || tls.rootCertificates);
+      const systemRoots = tls.getCACertificates?.('system') || [];
+      report('database_connection_config', {
+        provider,
+        default_ca_count: defaultRoots.size,
+        system_ca_count: systemRoots.length,
+        additional_system_ca_count: systemRoots.filter((ca) => !defaultRoots.has(ca)).length,
+        extra_ca_configured: Boolean(process.env.NODE_EXTRA_CA_CERTS),
+        system_ca_file_configured: Boolean(process.env.SSL_CERT_FILE),
+      });
       if (process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL === 'disable') {
         throw databaseConfigError('DB_TLS_REQUIRED');
       }
