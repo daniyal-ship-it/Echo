@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb, type Database } from '@/lib/db';
+import { logDatabaseError, newDiagnosticId, type DatabaseStage } from '@/lib/database-diagnostics';
 import {
   assertOrigin,
   audit,
@@ -119,13 +120,19 @@ function validId(value: string) {
   return z.uuid().parse(value);
 }
 
-async function handle(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+async function handleRequest(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+  requestId: string,
+) {
+  let stage: DatabaseStage = 'request';
   try {
     const route = (await context.params).path.join('/');
     const method = request.method;
     if (method !== 'GET') assertOrigin(request);
-    const db = await getDb();
+    const db = await getDb(requestId);
     if (route === 'health' && method === 'GET') {
+      stage = 'health.query';
       await db.query('SELECT 1');
       return json({
         ok: true,
@@ -751,10 +758,14 @@ async function handle(request: NextRequest, context: { params: Promise<{ path: s
     if (error instanceof z.ZodError)
       return json({ error: error.issues[0]?.message || 'Invalid input.' }, 400);
     if (error instanceof HttpError) return json({ error: error.message }, error.status);
-    console.error(
-      JSON.stringify({ event: 'api_error', type: error instanceof Error ? error.name : 'unknown' }),
-    );
+    logDatabaseError(error, requestId, stage);
     return json({ error: 'The operation failed. Your existing data has been preserved.' }, 500);
   }
+}
+async function handle(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
+  const requestId = newDiagnosticId();
+  const response = await handleRequest(request, context, requestId);
+  response.headers.set('X-Echo-Request-Id', requestId);
+  return response;
 }
 export { handle as GET, handle as POST, handle as PUT, handle as PATCH, handle as DELETE };

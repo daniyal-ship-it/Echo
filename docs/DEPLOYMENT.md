@@ -40,10 +40,14 @@ TLS certificate verification is enabled. `DATABASE_SSL=disable` is accepted only
 for a deliberately local development PostgreSQL connection, and rejected in
 production. Do not disable TLS verification to work around an untrusted certificate.
 
-On a fresh database, grant the migration account permission to create the `vector`
-extension (or have the operator install it first). The server applies the SQL
-migration transactionally, with an advisory lock on managed PostgreSQL. The remote
-database path is implemented but has not been live-validated in this environment.
+On a fresh database, the migration account needs permission to create the `vector`
+extension (or an operator must install it first). Managed application startup runs
+a read-only connection and schema check; it does not apply pending migrations.
+After confirming database ownership and obtaining any required shared-schema
+approval, an operator can use `npm run db:migrate -- --apply`. That command applies
+pending SQL transactionally with an advisory lock. It has not been run against the
+shared Preview/Production database in this repair. Local PGlite startup continues
+to apply migrations automatically. See [BACKEND_REPAIR.md](BACKEND_REPAIR.md).
 
 ## Hosting artifact
 
