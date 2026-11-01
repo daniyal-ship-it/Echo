@@ -1,6 +1,6 @@
 # ECHO requirement ledger
 
-Updated 31 October 2026. Source of truth: [original specification](PRODUCT_BRIEF.md)
+Updated 1 November 2026. Source of truth: [original specification](PRODUCT_BRIEF.md)
 [core milestone clarification](CORE_MILESTONE_BRIEF.md) and
 [durable memory increment](MEMORY_INTELLIGENCE_BRIEF.md). A working deployment
 is infrastructure evidence, not acceptance of the complete product. This ledger
@@ -23,11 +23,16 @@ After the authorised [backend diagnosis](BACKEND_REPAIR.md) identified the Supab
 TLS trust failure, the published environment allowed retrieval of the official CA.
 Its provenance, CA status, validity and signature **passed**. The complete PEM was
 configured only for this branch's Preview and c292574 was redeployed. Strict TLS
-now reaches PostgreSQL authentication, which **fails with SQLSTATE 28P01** using
-the preserved DATABASE_URL. SELECT 1 has not succeeded. No migration state or
-permissions were inspected, and no shared schema or credentials were changed.
-The backend remains **blocked** pending secure verification of the existing
-connection credentials; do not infer readiness from the saved CA or READY status.
+now passes. After the owner's DATABASE_URL update, the same source was redeployed
+and both health/auth-status requests **passed PostgreSQL authentication and SELECT 1**;
+**28P01 is resolved**. Both endpoints still return HTTP 500 with
+`DB_MIGRATION_REQUIRED`: neither expected migration is recorded as applied.
+pgvector is available but not installed; database CREATE and schema USAGE/CREATE
+checks pass. No schema was changed. The backend remains **blocked** pending
+separate shared-schema approval and conflict inspection before migration.
+Vercel reports DATABASE_URL shared across Production/Preview with no branch
+override; all bindings were left unchanged. See the
+[live evidence](validation/password-verification-2026-11-01.json).
 
 Isolated account creation and import/original/summary/semantic-retrieval/GPT/Claude/
 citation/persistence acceptance remain **blocked**. The US$1 aggregate API budget
@@ -80,7 +85,7 @@ The core brain-and-memory milestone is **Partially implemented**. Finish in orde
 | 4.4: durable consolidation/classification, claims/entities/repeated ideas/contradictions/projects/decisions/actions | Partially implemented        | Durable per-original bounded jobs and cited decision/question/commitment analyses implemented and mock-tested. No independent worker, entities, contradictions, repeated-idea reduction or project consolidation.         |
 | 4.5: keyword search with original citations and useful filters                                                      | Verified, with evidence      | Retrieval/isolation core tests and browser source-selection journey.                                                                                                                                                      |
 | 4.5: semantic/hybrid reranking, graph/date/entity/provider/project retrieval and natural-language reasoning         | Partially implemented        | Keyword/cosine reciprocal-rank fusion with metadata filters and exact passage/node navigation; paraphrase test uses labelled vectors. Live relevance, cross-encoder reranker and richer entity/project retrieval pending. |
-| 5.1: independent OpenAI Responses and Anthropic Messages adapters, model choice/configuration                       | Implemented but not verified | Separate official adapters, exact API-model metadata checks and labelled mock browser answers pass. Vercel saved key bindings verified; real account access and responses blocked by Vercel deployment authentication.    |
+| 5.1: independent OpenAI Responses and Anthropic Messages adapters, model choice/configuration                       | Implemented but not verified | Separate official adapters, exact API-model metadata checks and labelled mock browser answers pass. Vercel saved key bindings verified; real provider access and responses remain unverified pending backend schema readiness.    |
 | 5.1: model registry, model switching and ongoing provider availability                                              | Partially implemented        | Environment model IDs, Settings access checks and pre-call model verification. Official SDK listings checked for gpt-6.1-sol / claude-sonnet-5-5; no live registry/availability certification.                            |
 | 5.2: independent compare, critique, synthesis and saving linked results                                             | Partially implemented        | Bounded two-provider comparison plus optional synthesis and saved conversation; no general critique loop, live quality/citations unverified.                                                                              |
 | 5.2: termination, cancellation, token/cost limits and usage visibility                                              | Partially implemented        | Output/attempt/batch caps, durable operation reservations and unknown-charge review for intelligence; separate assistant usage guard. No unified dollar ledger or exact-once provider guarantee.                          |
@@ -109,7 +114,7 @@ The core brain-and-memory milestone is **Partially implemented**. Finish in orde
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9: Next/React/TypeScript/Three, custom shaders/instancing, secure API, pgvector foundation and adapter separation                                                | Verified, with evidence      | Existing build, typecheck and core tests; dependencies in lockfile.                                                                                                             |
 | 9: background worker/queues, private object storage, embeddings/STT/TTS, logs/traces/error/cost monitoring                                                       | Partially implemented        | Durable leased request-driven import/intelligence jobs and operation journal. No independent worker, object storage, STT/TTS or full observability.                             |
-| 9: Vercel app deployment and managed PostgreSQL                                                                                                                  | Implemented but not verified | Feature Preview c292574: official CA installed and TLS trust fixed; PostgreSQL authentication fails 28P01. Schema readiness and hosted persistence blocked (BACKEND_REPAIR.md). |
+| 9: Vercel app deployment and managed PostgreSQL                                                                                                                  | Implemented but not verified | Feature Preview c292574: TLS, PostgreSQL authentication and SELECT 1 pass. Both migrations remain pending; pgvector is available but not installed. Hosted readiness/persistence blocked (BACKEND_REPAIR.md). |
 | 10: users/workspaces/sessions/sources/import jobs/conversations/messages/memory versions/edges/citations                                                         | Partially implemented        | Existing schema and raw message storage; not every entity is first-class (see `SCHEMA.md`).                                                                                     |
 | 10: provider connections/attachments/embeddings/categories/entities/projects/meetings/transcripts/speakers/decisions/actions/calendar/reminders/agent runs/audit | Partially implemented        | Versioned chunks, embedding cache, analyses and durable jobs now implemented (SCHEMA.md). Most remaining domain entities absent; generated insights are not scheduled actions.  |
 | 10: node/edge provenance, timestamps, privacy/importance/status and stable collision-aware placement                                                             | Partially implemented        | Stable real vertex anchors, source hashes/versions, edge evidence/strength/confidence tests; rich privacy/category/status controls incomplete.                                  |

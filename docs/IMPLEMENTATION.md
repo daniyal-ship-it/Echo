@@ -81,10 +81,15 @@ pending migrations; the shared database must not change without separate approva
 After environment publication, the official Supabase CA was downloaded through
 verified HTTPS, checked for provenance/CA status/validity/signature, and saved as
 DATABASE_CA_CERT only for Preview on this feature branch. The existing c292574
-source was redeployed. TLS and hostname verification now pass, but PostgreSQL
-rejects the preserved DATABASE_URL credentials with **SQLSTATE 28P01**. SELECT 1
-has not succeeded; migration inspection, application login and persistence remain
-blocked. No shared schema or application code changed in this follow-up.
+source was redeployed. TLS and hostname verification pass. On 1 November, after
+the owner updated DATABASE_URL, the same source was redeployed again. Both live
+health/auth-status requests completed SELECT 1: **SQLSTATE 28P01 is resolved**.
+The current blocker is **DB_MIGRATION_REQUIRED**: neither expected migration is
+recorded as applied, and pgvector is available but not installed. Both endpoints
+return HTTP 500. Schema inspection was read-only; no application code changed.
+Vercel still reports DATABASE_URL shared across Production/Preview without a
+branch override. No environment binding was modified during this verification.
+Application login and persistence remain blocked pending approved schema setup.
 
 The earlier 36 isolated tests, TypeScript/build and four production smoke groups
 remain local evidence; they were not rerun for this configuration-only operation.

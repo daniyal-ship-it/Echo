@@ -1,6 +1,89 @@
-# Backend diagnosis and repair — 31 October 2026
+# Backend diagnosis and repair — 1 November 2026
 
-## Current result after environment publication
+## Current result after the owner's DATABASE_URL update
+
+**PostgreSQL authentication now succeeds. SQLSTATE `28P01` is resolved. The
+application remains blocked by `DB_MIGRATION_REQUIRED`, not by TLS or credentials.**
+
+The saved DATABASE_URL update was newer than the running Preview. The same Git
+source `c29257434aec44e9e9d9c95c6fb111ca594d75b0` was deployed with the current
+environment; no application code or environment binding was changed in this run.
+
+- READY Preview deployment: `dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW`.
+- Feature URL: https://echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app
+- Immutable URL: https://echo-r06nmlmxx-daniyal-1415s-projects.vercel.app
+- The alias API confirms that the feature URL points to this deployment.
+
+Both live HTTP requests at 02:25 UTC on 1 November successfully completed the
+initial `SELECT 1`. Correlated private logs record `database_connection_ok`,
+`storage: postgresql`, `verified_tls: true` and the configured custom CA.
+Certificate and hostname verification remain enabled.
+
+| Check | Actual result |
+| --- | --- |
+| PostgreSQL authentication / SELECT 1 | Passed on both requests; 28P01 resolved |
+| `/api/health` | Failed, HTTP 500; request `900258d1-34a9-4965-882b-a7337ac33aa7` |
+| `/api/auth/status` | Failed, HTTP 500; request `f4b7ab91-b97c-4a02-b5df-60ff13179211` |
+| Current error | `DB_MIGRATION_REQUIRED`, stage `migration.history` |
+| Deployed migration assets | Both SQL files present |
+| Migration history | `001_foundation` and `002_memory_intelligence` both `applied: false` |
+| pgvector | Available, but not installed, visible or in the search path |
+| Permissions | Database CREATE and current-schema USAGE/CREATE are true |
+| Shared schema changes | None; diagnostics report `writes_authorised: false` |
+| Login, notes, persistence, AI acceptance | Blocked by schema readiness; not attempted |
+
+This is live HTTP and runtime-log evidence, not a browser test. The migration
+ledger check does not distinguish a missing history table from an existing table
+without these versions, and no full relation inventory was performed. Do not
+infer that the database is empty or that an eventual migration is guaranteed to
+succeed. Local tests were not rerun because application code is unchanged.
+
+### Pending migration scope and next action
+
+Separate approval is required before modifying this shared database. Before
+execution, inspect existing relation/constraint/function names read-only for
+conflicts with the scripts; most CREATE statements are not conditional.
+
+- `001_foundation.sql`: enables `vector`; creates `schema_migrations` and 13
+  application tables (`users`, `workspaces`, `sessions`, `auth_attempts`,
+  `data_sources`, `memory_nodes`, `memory_versions`, `memory_edges`, `embeddings`,
+  `import_jobs`, `agent_runs`, `retrieval_citations`, `audit_events`), their indexes,
+  keys and constraints, then records migration 001.
+- `002_memory_intelligence.sql`: creates eight tables (`memory_chunks`,
+  `embedding_cache`, `chunk_embeddings`, `intelligence_jobs`,
+  `intelligence_operations`, `analysis_parts`, `memory_analyses`,
+  `query_embeddings`); adds a unique constraint to `memory_versions`,
+  `retrieval_citations.chunk_id` and its foreign key, `memory_edges.semantic_evidence`,
+  indexes, and the `invalidate_memory_intelligence` function/trigger; records
+  migration 002. The trigger invalidates derived data on later source-version
+  changes. The migration does not intentionally rewrite original content.
+
+The existing operator command is `npm run db:migrate -- --apply`; it was **not
+run** and must not be run against the shared database without separate approval.
+After an authorised migration, rerun both endpoints before account/note checks.
+No replacement password or API key is required by the current evidence.
+
+### Configuration scope and cleanup
+
+Contrary to the reported branch scope, Vercel's API shows DATABASE_URL as a single
+sensitive binding targeting **Production and Preview**, with `gitBranch: null`.
+It was updated at 02:21:38 UTC on 1 November; no feature-branch override exists.
+This metadata does not prove the identity of the underlying database. The shared
+binding was left untouched, and only the feature Preview was deployed. If
+branch-only configuration is intended, correct the scope separately in Vercel;
+do not silently alter the Production binding.
+
+DATABASE_CA_CERT remains branch-only Preview with unchanged metadata. All API-key
+bindings and deployment protection are unchanged. Existing short-lived OIDC
+access worked; no automation-bypass credential was created (zero before/after).
+The local OIDC file was removed. The token was not individually revoked and
+expires at 14:25:18 UTC on 1 November. No account, note or archive was created.
+No AI request was sent: US$0 spent; the total US$1 allowance remains intact.
+
+Evidence: [password-verification-2026-11-01.json](validation/password-verification-2026-11-01.json).
+The earlier certificate and password-failure evidence below is historical.
+
+## Certificate installation after environment publication (historical)
 
 **The Supabase certificate-trust failure is resolved. The backend is still not
 ready: PostgreSQL rejects the preserved DATABASE_URL credentials with SQLSTATE

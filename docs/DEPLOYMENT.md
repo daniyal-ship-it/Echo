@@ -129,9 +129,12 @@ are not evidence of usable local configuration; tests override them.
 The current feature Preview serves `c292574`. After the cloud environment was
 published, the official Supabase CA was validated and saved as DATABASE_CA_CERT
 only for Preview on feat/core-memory-exploration. The existing source was redeployed;
-no application code or shared database schema changed. TLS verification now passes,
-but the preserved DATABASE_URL credentials are rejected with SQLSTATE **28P01**.
-Health still returns HTTP 500, so the backend is not ready. See the current
+no application code or shared database schema changed. After the owner's password
+update on 1 November, the same source was redeployed again. TLS and PostgreSQL
+SELECT 1 now pass: **28P01 is resolved**. Health and auth status still return
+HTTP 500 with **DB_MIGRATION_REQUIRED**. Both expected migration files exist,
+but neither is recorded as applied; pgvector is available and not installed.
+The backend is not ready. See the current
 [backend handoff](BACKEND_REPAIR.md) before using the acceptance checklist below.
 
 Existing VERCEL_TOKEN can obtain OIDC through the official SDK workflow. Send its
@@ -140,12 +143,13 @@ stays enabled. The temporary local OIDC file was removed after the checks and no
 automation credential was created. Earlier browser screenshots and local tests
 remain historical evidence; no new browser persistence test passed here.
 
-Securely verify the saved DATABASE_URL against the Supabase project's existing
-connection details; no replacement AI keys are needed. The value was intentionally
-preserved under the user's instructions. Do not change its shared binding or
-reset a database password without authority. Once authentication works, SELECT 1
-and read-only schema inspection must pass before account/note tests. Migrations on
-the shared Preview/Production database still require separate approval. The US$1
+No replacement credentials are needed. Vercel metadata shows DATABASE_URL still
+targeting both Production and Preview, without a feature-branch override; this
+differs from the reported scope. All bindings were left unchanged and only the
+feature Preview was deployed. Correct that scope separately if branch isolation
+is intended. Inspect existing relation-name conflicts before executing pending
+migrations; the migration ledger alone does not establish an empty database.
+Migrations on the shared database still require separate approval. The US$1
 aggregate AI budget is approved and entirely unspent; no billable calls may precede
 backend readiness and verified current model access/pricing.
 

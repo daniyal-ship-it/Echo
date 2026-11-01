@@ -1,6 +1,27 @@
-# Validation record — 31 October 2026
+# Validation record — 1 November 2026
 
-## Certificate configuration after environment publication
+## Password-update verification
+
+The unchanged `c292574` source was redeployed to load the owner's updated
+DATABASE_URL. Live health and auth-status requests both completed `SELECT 1`
+with verified TLS: **28P01 is resolved**. Both endpoints still return HTTP 500,
+now with correlated `DB_MIGRATION_REQUIRED`. Both migration SQL assets are present;
+neither migration is recorded as applied. pgvector is available but not installed
+or visible. Database CREATE and schema USAGE/CREATE checks pass. All database
+inspection was read-only; no schema write or full relation inventory occurred.
+
+The feature alias points to READY deployment `dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW`.
+Vercel metadata shows DATABASE_URL still shared across Production and Preview,
+without a branch override; this differs from the reported scope. All environment
+metadata remained unchanged during verification. CA/API keys/protection were
+preserved. Local OIDC material was removed; no automation bypass was created.
+
+Authentication, notes, persistence and live AI acceptance remain blocked by
+pending migrations. No browser check, local test rerun or billable call occurred.
+See [handoff and exact next action](BACKEND_REPAIR.md) and
+[live evidence](validation/password-verification-2026-11-01.json).
+
+## Certificate configuration after environment publication (historical)
 
 Live results: official HTTPS certificate download and provenance, CA status,
 validity/signature, branch-only Preview configuration and c292574 redeployment
