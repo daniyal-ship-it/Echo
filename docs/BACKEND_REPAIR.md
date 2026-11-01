@@ -1,5 +1,18 @@
 # Backend diagnosis and repair — 1 November 2026
 
+## Read-only migration preflight follow-up
+
+The owner authorised inspection and planning, not execution. The existing local
+checkpoint `654c09c` is preserved. Full hosted inspection is **blocked**: Codex's
+DATABASE_URL is a placeholder and Vercel's Sensitive value cannot be retrieved
+for a direct connection. No new hosted SQL or deployment occurred. Neither an
+empty ECHO schema nor migration readiness has been established. See
+[DATABASE_PREFLIGHT.md](DATABASE_PREFLIGHT.md) for the validated read-only SQL,
+access routes, exact object scope, Production implications and conditional
+execution/recovery plan. Do not request execution approval until the verified
+target and actual inventory are available. The successful connection evidence
+below remains from the preceding hosted run.
+
 ## Current result after the owner's DATABASE_URL update
 
 **PostgreSQL authentication now succeeds. SQLSTATE `28P01` is resolved. The

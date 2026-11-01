@@ -12,6 +12,12 @@ named below. Local tests and mock provider responses are not live cloud checks.
 
 ## Latest hosted verification
 
+The subsequent [read-only migration preflight](DATABASE_PREFLIGHT.md) is blocked
+on a usable inspection connection: local DATABASE_URL is a placeholder and the
+saved Vercel Sensitive value is not readable. Catalog SQL and an execution/recovery
+plan are prepared; no hosted inventory or migration has run. The database is not
+yet certified empty of ECHO objects or ready for migration.
+
 Feature-host network access and protected Preview access through existing Vercel
 OIDC authentication **passed**. The current READY deployment serves `c292574`; the
 following browser evidence was captured on the earlier `ae08e7f` deployment. Narrow NSS database write access resolved the

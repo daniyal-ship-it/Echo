@@ -1,5 +1,22 @@
 # Validation record — 1 November 2026
 
+## Migration preflight preparation
+
+Live Vercel metadata confirms the existing project, unchanged binding scopes and
+Production source `6f19c18`. Direct hosted SQL inspection is blocked: the local
+DATABASE_URL is a placeholder and Vercel's Sensitive value is not returned by
+the authenticated environment read. There is no hosted emptiness/conflict or
+installation-readiness verdict. No credential, database or deployment changed.
+
+The supplied [preflight SQL](preflight/database-preflight.sql) passed parsing and
+execution in an isolated in-memory PGlite database with read-only/repeatable-read
+settings. Minimal local table stubs verified row-presence booleans, migration
+history counts and an index-name conflict without returning row values. No ECHO
+migration or hosted credential was used. These checks validate the inspection
+script only; they do not prove hosted PostgreSQL compatibility or data absence.
+See [plan and access blocker](DATABASE_PREFLIGHT.md) and
+[evidence](validation/preflight-access-2026-11-01.json).
+
 ## Password-update verification
 
 The unchanged `c292574` source was redeployed to load the owner's updated

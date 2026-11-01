@@ -1,0 +1,88 @@
+{
+  "at": "2026-11-01T02:38:12.351367+00:00",
+  "checkpoint_preserved": "654c09c1024b3ae63c400a365bf50a53ccebcdc7",
+  "remote_feature_checkpoint": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+  "access": {
+    "operation": "read-only credential access capability",
+    "local_database_url": "placeholder, unusable; left unchanged",
+    "database_bindings": [
+      {
+        "id": "xTXVKHsjQ5k2GrlQ",
+        "key": "DATABASE_CA_CERT",
+        "type": "encrypted",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": "feat/core-memory-exploration",
+        "createdAt": 1793480577088,
+        "updatedAt": 1793480577088
+      },
+      {
+        "id": "eDcJ6IoHWOHAP09R",
+        "key": "DATABASE_URL",
+        "type": "sensitive",
+        "target": [
+          "production",
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793499698206
+      }
+    ],
+    "saved_database_url_readable_for_connection": false,
+    "response_type": "sensitive"
+  },
+  "project": {
+    "project": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "production_deployments": [
+      {
+        "id": "dpl_DwWoKnXjC741386ehwxUjHwqpBPH",
+        "url": "echo-ib9liadcm-daniyal-1415s-projects.vercel.app",
+        "readyState": "READY",
+        "alias": null,
+        "target": "production",
+        "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+        "createdAt": 1793163200766,
+        "created": 1793163200766,
+        "buildingAt": 1793163202218,
+        "ready": 1793163240498,
+        "sha": "6f19c18bab3656e90de77f168cda88fe409f126a",
+        "branch": "main"
+      }
+    ]
+  },
+  "local_inspection_sql_validation": {
+    "kind": "isolated empty PGlite; no application migrations or hosted credentials used",
+    "sql_parsed_and_executed": true,
+    "read_only": "on",
+    "isolation": "repeatable read",
+    "echo_tables": 0,
+    "hosted_proof": false,
+    "existing_relation_dynamic_branches_tested": true,
+    "local_fixture_checks": [
+      "existing row detected without row values",
+      "migration history counts correct",
+      "index-name conflict inventoried",
+      "read-only snapshot used"
+    ]
+  },
+  "hosted_read_only_queries_executed_this_task": 0,
+  "migrations_executed_this_task": false,
+  "database_empty_of_echo_objects": "unverified",
+  "target_migration_compatibility": "unverified",
+  "ready_for_execution": false,
+  "environment_changes": false,
+  "application_code_changes": false,
+  "deployment_changes": false,
+  "temporary_access_credentials_created": false,
+  "ai_spend_usd": 0,
+  "prior_hosted_evidence": "password-verification-2026-11-01.json"
+}

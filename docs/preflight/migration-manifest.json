@@ -1,0 +1,64 @@
+{
+  "source_checkpoint": "654c09c1024b3ae63c400a365bf50a53ccebcdc7",
+  "method": "Static SQL inspection only; migrations have not been executed in this task. Implicit indexes/constraints/types are also created by these exact scripts.",
+  "migrations": [
+    {
+      "file": "db/migrations/001_foundation.sql",
+      "sha256": "e2aa042caac73f5c9bfcc6670e1d2ebaf02fd16663af32cb92865d54965ec8d5",
+      "tables": [
+        "schema_migrations",
+        "users",
+        "workspaces",
+        "sessions",
+        "auth_attempts",
+        "data_sources",
+        "memory_nodes",
+        "memory_versions",
+        "memory_edges",
+        "embeddings",
+        "import_jobs",
+        "agent_runs",
+        "retrieval_citations",
+        "audit_events"
+      ],
+      "explicit_indexes": [
+        "sessions_expiry",
+        "memories_search",
+        "memories_workspace_date",
+        "memories_tags"
+      ],
+      "alter_statements": [],
+      "functions": [],
+      "triggers": []
+    },
+    {
+      "file": "db/migrations/002_memory_intelligence.sql",
+      "sha256": "03a8133818c74bc51882a2c91f1b57019ae5080ab11a4b61e233e59da28d26c7",
+      "tables": [
+        "memory_chunks",
+        "embedding_cache",
+        "chunk_embeddings",
+        "intelligence_jobs",
+        "intelligence_operations",
+        "analysis_parts",
+        "memory_analyses",
+        "query_embeddings"
+      ],
+      "explicit_indexes": [
+        "chunks_search",
+        "chunks_source"
+      ],
+      "alter_statements": [
+        "ALTER TABLE memory_versions ADD CONSTRAINT versions_workspace_memory_version UNIQUE(workspace_id,memory_id,version);",
+        "ALTER TABLE retrieval_citations ADD COLUMN chunk_id uuid REFERENCES memory_chunks(id) ON DELETE CASCADE;",
+        "ALTER TABLE memory_edges ADD COLUMN semantic_evidence jsonb;"
+      ],
+      "functions": [
+        "invalidate_memory_intelligence"
+      ],
+      "triggers": [
+        "invalidate_memory_intelligence"
+      ]
+    }
+  ]
+}
