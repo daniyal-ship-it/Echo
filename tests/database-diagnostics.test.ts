@@ -80,6 +80,7 @@ test('managed migration inspection and pending-schema rejection never execute wr
   assert.deepEqual(state, [
     { version: '001_foundation', applied: true },
     { version: '002_memory_intelligence', applied: false },
+    { version: '003_server_only_access', applied: false },
   ]);
   assert.throws(
     () => requireCurrentManagedSchema(state),

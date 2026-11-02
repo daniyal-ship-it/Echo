@@ -1,5 +1,11 @@
 # Validation record — 1 November 2026
 
+Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
+003 is implemented and locally tested; hosted execution remains **NO-GO** pending
+live preflight, including verified disabled automatic exposure. Earlier statements
+below that the security companion is unimplemented are historical and superseded.
+
+
 ## Owner Supabase inspection and security reconciliation — 2 November
 
 Accepted owner-reported findings: project echo / pyidklztsnowarqumtki / eu-west-1,

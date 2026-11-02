@@ -14,7 +14,11 @@ import {
   type DatabaseStage,
 } from './database-diagnostics';
 
-export const MIGRATIONS = ['001_foundation', '002_memory_intelligence'] as const;
+export const MIGRATIONS = [
+  '001_foundation',
+  '002_memory_intelligence',
+  '003_server_only_access',
+] as const;
 
 // Read-only inspection. Never create the history table just to inspect it.
 export async function inspectManagedMigrations(db: Database) {
@@ -186,6 +190,10 @@ export async function createDatabase(
     }
     stage = 'migration.apply';
     await db.transaction(async (tx) => {
+      await tx.exec("SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s'");
+      const [namespace] = await tx.query<{ name: string }>('SELECT current_schema() AS name');
+      if (namespace.name !== 'public')
+        throw new Error('ECHO migrations require public creation schema');
       if (process.env.DATABASE_URL && !directory) {
         await tx.query('SELECT pg_advisory_xact_lock(68182041)');
       }

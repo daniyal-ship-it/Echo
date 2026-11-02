@@ -1,5 +1,11 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
+003 is implemented and locally tested; hosted execution remains **NO-GO** pending
+live preflight, including verified disabled automatic exposure. Earlier statements
+below that the security companion is unimplemented are historical and superseded.
+
+
 Continue `feat/core-memory-exploration`, descended from `4b19901`. The foundation
 on `main` remains `6f19c18`. The anatomy, renderer, navigation, original records,
 authentication, saved credentials and hosting plan are preserved. The complete

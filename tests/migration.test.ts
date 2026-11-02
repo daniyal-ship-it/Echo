@@ -48,10 +48,10 @@ test('additive migration upgrades an existing foundation database without changi
     assert.deepEqual(detail.position, [1, 2, 3]);
     assert.equal(detail.anchor, 42);
     assert.equal(detail.version, 1);
-    assert.equal((await current.query('SELECT * FROM schema_migrations')).length, 2);
+    assert.equal((await current.query('SELECT * FROM schema_migrations')).length, 3);
     await current.close();
     current = await createDatabase(dir);
-    assert.equal((await current.query('SELECT * FROM schema_migrations')).length, 2);
+    assert.equal((await current.query('SELECT * FROM schema_migrations')).length, 3);
   } finally {
     await old?.close();
     await current?.close();

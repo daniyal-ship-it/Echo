@@ -1,5 +1,11 @@
 # ECHO requirement ledger
 
+Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
+003 is implemented and locally tested; hosted execution remains **NO-GO** pending
+live preflight, including verified disabled automatic exposure. Earlier statements
+below that the security companion is unimplemented are historical and superseded.
+
+
 Updated 1 November 2026. Source of truth: [original specification](PRODUCT_BRIEF.md)
 [core milestone clarification](CORE_MILESTONE_BRIEF.md) and
 [durable memory increment](MEMORY_INTELLIGENCE_BRIEF.md). A working deployment

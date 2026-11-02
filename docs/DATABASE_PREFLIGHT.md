@@ -1,5 +1,11 @@
 # Database migration preflight — 2 November 2026
 
+Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
+003 is implemented and locally tested; hosted execution remains **NO-GO** pending
+live preflight, including verified disabled automatic exposure. Earlier statements
+below that the security companion is unimplemented are historical and superseded.
+
+
 **The owner's connected Supabase inspection clears the empty-public-schema
 blocker. The existing migrations are not ready for approval as-is: their Data API
 privileges and RLS protections are incomplete. No migration has been executed.**
