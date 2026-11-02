@@ -1,0 +1,229 @@
+{
+  "at": "2026-11-02T02:14:24.319411+00:00",
+  "supabase_management_access_present": false,
+  "bindings": [
+    {
+      "id": "xTXVKHsjQ5k2GrlQ",
+      "key": "DATABASE_CA_CERT",
+      "type": "encrypted",
+      "target": [
+        "preview"
+      ],
+      "gitBranch": "feat/core-memory-exploration",
+      "createdAt": 1793480577088,
+      "updatedAt": 1793480577088
+    },
+    {
+      "id": "eDcJ6IoHWOHAP09R",
+      "key": "DATABASE_URL",
+      "type": "sensitive",
+      "target": [
+        "production",
+        "preview"
+      ],
+      "gitBranch": null,
+      "createdAt": 1793161013047,
+      "updatedAt": 1793499698206
+    }
+  ],
+  "deployments": [
+    {
+      "id": "dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW",
+      "url": "echo-r06nmlmxx-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793499913134,
+      "created": 1793499913134,
+      "buildingAt": 1793499914157,
+      "ready": 1793499926345,
+      "sha": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_6j79FX6b5mHEFQB2CUx6ngqzxvHP",
+      "url": "echo-eyix1jhs5-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793480600432,
+      "created": 1793480600432,
+      "buildingAt": 1793480601729,
+      "ready": 1793480614493,
+      "sha": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_CD7zv2ktaoZWMwVcwYoXxfn17EnZ",
+      "url": "echo-b08b861wr-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793479419813,
+      "created": 1793479419813,
+      "buildingAt": 1793479420635,
+      "ready": 1793479434157,
+      "sha": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_5int1HxthEEEEsYvUXTBNCB7eH7q",
+      "url": "echo-g06e2anfu-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793479273050,
+      "created": 1793479273050,
+      "buildingAt": 1793479273851,
+      "ready": 1793479287886,
+      "sha": "a7c2db1d2300daeb5321c65fdb7bec0a255f84b8",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_B8YBihgaAhaQP3ozKgBDZXwkH9Cq",
+      "url": "echo-52draai3g-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793418266471,
+      "created": 1793418266471,
+      "buildingAt": 1793418267453,
+      "ready": 1793418284790,
+      "sha": "9be7e464323d93690d57ce1bc9bb5049cc01b813",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_7LUt3vRGDwVEWnjqcYDRSgA7Fkrs",
+      "url": "echo-lenwyb1lw-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793418068488,
+      "created": 1793418068488,
+      "buildingAt": 1793418069640,
+      "ready": 1793418088688,
+      "sha": "698a839835f9e2975150dcd905e10920ebe09a5e",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_3rRpR64FCj6VJDdumkRWP2hhjYHZ",
+      "url": "echo-e0in24oiw-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793374306233,
+      "created": 1793374306233,
+      "buildingAt": 1793374307259,
+      "ready": 1793374327023,
+      "sha": "ae08e7f40e4b6670342776eb3c8fe17bc46b1cfe",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_HT5SRLLB4P2pBafuX7ieEn7N2q5q",
+      "url": "echo-geni5xra8-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793333190443,
+      "created": 1793333190443,
+      "buildingAt": 1793333191314,
+      "ready": 1793333214237,
+      "sha": "30a337e04f1939af06d2f2392d8281c5e7ecdf25",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_Du2CEyRYkR7iNBdtz83SXvcURopf",
+      "url": "echo-ours6c9pb-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793314030371,
+      "created": 1793314030371,
+      "buildingAt": 1793314031420,
+      "ready": 1793314063744,
+      "sha": "4b199016da0cc19211b3fd37f4a0e44c63be8a0d",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_FQ9NCCtLsh6rnvVbJc19eGLCbpUm",
+      "url": "echo-g76a4242z-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793247667739,
+      "created": 1793247667739,
+      "buildingAt": 1793247668895,
+      "ready": 1793247711983,
+      "sha": "4b199016da0cc19211b3fd37f4a0e44c63be8a0d",
+      "branch": "feat/core-memory-exploration"
+    },
+    {
+      "id": "dpl_3VTcW7zHwQC3WSFxVetBjLqvV4hs",
+      "url": "echo-jjczd40cm-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793165067299,
+      "created": 1793165067299,
+      "buildingAt": 1793165068782,
+      "ready": 1793165085864,
+      "sha": "6f19c18bab3656e90de77f168cda88fe409f126a",
+      "branch": "main"
+    },
+    {
+      "id": "dpl_4dSh5nc1URhCeaucVvFJ5swjYp79",
+      "url": "echo-79iojg7rv-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793164925312,
+      "created": 1793164925312,
+      "buildingAt": 1793164927202,
+      "ready": 1793164966333,
+      "sha": "6f19c18bab3656e90de77f168cda88fe409f126a",
+      "branch": "main"
+    },
+    {
+      "id": "dpl_DwWoKnXjC741386ehwxUjHwqpBPH",
+      "url": "echo-ib9liadcm-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": null,
+      "target": "production",
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793163200766,
+      "created": 1793163200766,
+      "buildingAt": 1793163202218,
+      "ready": 1793163240498,
+      "sha": "6f19c18bab3656e90de77f168cda88fe409f126a",
+      "branch": "main"
+    }
+  ],
+  "feature_alias": {
+    "alias": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+    "deploymentId": "dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW"
+  },
+  "owner_role_evidence": {
+    "api_roles_public_usage": true,
+    "api_roles_public_create": false,
+    "postgres_public_usage_create": true,
+    "postgres_inherits_api_roles": true,
+    "automatic_exposure_disabled_saved": true
+  },
+  "verdict": "NO-GO",
+  "hosted_sql_executed": false,
+  "backup_exists": "unverified",
+  "runtime_role_search_path": "unverified",
+  "source_patch": "74f3dc8"
+}

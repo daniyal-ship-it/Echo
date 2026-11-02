@@ -1,5 +1,12 @@
 # ECHO requirement ledger
 
+Latest runtime/recovery review: public USAGE/no-CREATE for API roles and postgres's
+membership direction are accepted and closed. [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md)
+records fresh Vercel metadata and four remaining gaps: runtime identity, extension
+installation authority, active database dependencies and actual recovery inventory.
+No code, hosted SQL, deployment, role, default privilege or Production change occurred.
+
+
 Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
 003 is implemented and locally tested; hosted execution remains **NO-GO** pending
 remaining role/extension/recovery and Production-coordination checks. The owner

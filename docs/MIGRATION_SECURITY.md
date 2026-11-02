@@ -14,6 +14,96 @@ confirmation. Data API remains enabled with public/graphql_public exposed.
 These are owner-supplied live findings, not independent agent-hosted SQL results.
 No database credential is requested and no hosted SQL ran during this review.
 
+## Latest confirmed role evidence and unresolved operational checks
+
+Accepted owner evidence now also confirms public USAGE without CREATE for anon,
+authenticated and service_role; postgres has USAGE/CREATE and inherits several
+Supabase roles, including those API roles. Those schema checks are closed and
+must not be requested again without relevant drift.
+
+Membership is directional: postgres inheriting anon/authenticated/service_role
+does not grant those roles postgres ownership. Revoking their grants does not
+remove postgres's owner rights. Migration 003 checks effective API-role table,
+column and function privileges; any surviving inherited access aborts the whole
+transaction instead of editing unrelated parent-role grants. No role membership
+change is required by this evidence. It does not establish the role used by a
+Vercel function's database connection.
+
+Fresh read-only Vercel metadata confirms feature alias deployment
+`dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW` at c292574 and READY Production deployment
+`dpl_DwWoKnXjC741386ehwxUjHwqpBPH` at 6f19c18. The project DATABASE_URL binding
+still targets both environments. This is potential shared dependency, not proof
+of an active connection to pyidklztsnowarqumtki. Production was built before the
+saved credential update and retains its own environment snapshot. READY status
+and saved binding metadata cannot establish runtime identity or active traffic.
+Other deployments/consumers cannot be excluded from that metadata.
+
+Source review confirms neither deployed version emits current_user/session_user
+or its effective search_path. The driver takes its connection configuration from
+the runtime secret and applies no explicit role/search-path override in code.
+This does not prove the secret's username or session settings. Existing safe
+health diagnostics therefore cannot answer the runtime identity question.
+No Production HTTP probe was made: its source may auto-apply migration 001 on
+startup, violating this task's read-only boundary. No diagnostic deployment was
+created and no deployment's secret was extracted.
+
+**Current result: NO-GO, with four remaining evidence gaps:**
+
+1. Actual backend-session identity/path and database attribution for each active
+   ECHO environment. Obtain only `current_database(), current_user, session_user,
+   current_setting('search_path'), current_schemas(false)` from the running backend
+   connection, with its deployment ID. SQL Editor output cannot substitute for
+   this. Existing deployed diagnostics do not collect it, so closing this needs
+   an existing runtime-observability facility or a separately reviewed diagnostic
+   capability. No such deployment is authorised or performed in this review.
+2. Extension-install authority for the chosen execution role. Use the new
+   [metadata-only query](preflight/extension-authority.sql) via the existing
+   connected account. The official Supautils documentation describes delegation
+   for allowlisted privileged extensions; actual installed-library/configuration
+   evidence must establish that vector qualifies. An absent GUC is inconclusive,
+   not proof of permission. Supautils can also override the extension installation
+   schema, so search_path alone does not guarantee installation into public.
+   Verify the actual resulting-schema plan and runtime visibility; do not change
+   the shared search_path or permissions to force it through.
+3. Deployment/consumer attribution to this exact database. Correlate actual
+   runtime identity/configuration with connection activity and deployment-specific
+   tags or management inventory. Anonymous pooler sessions, a generic application
+   name or a quiet snapshot are insufficient to exclude other dependencies.
+   No raw SQL query text or secrets are needed. Until resolved, assume Production
+   and other consumers may be affected and do not invoke old startup migrators.
+4. A concrete, usable recovery point. No Supabase connector or management token
+   is available here; no backup listing has been read. No backup is claimed to
+   exist. Through the connected account, inspect Database > Backups or GET
+   `/v1/projects/pyidklztsnowarqumtki/database/backups`. Provide only backup ID/type,
+   completion status, UTC time (or enabled PITR recoverable interval), retention
+   and available restore action. A plan name or empty public schema is not proof.
+
+### Restore procedure: provider-documented, target availability unverified
+
+Official Supabase backup documentation was retrieved over verified HTTPS. If a
+completed scheduled backup exists, the project-specific path is Database >
+Backups > select the required pre-change point > Restore > confirmation. The
+project is inaccessible during restore; all affected schemas and later writes
+must be accounted for. Wait for the dashboard completion state, then verify
+connection, schema/history/security and application behaviour. Existing custom
+role passwords and any non-Realtime replication/subscription handling must be
+reviewed for the selected backup method. Database backups include Storage metadata,
+not the stored object bytes. Do not assume restoring the database restores files.
+
+If PITR is already enabled and a valid retained interval exists, select a UTC
+point in that interval and use its restore workflow instead. Do not enable or
+purchase PITR here. If neither method exists, report recovery unavailable; do
+not infer an export or create paid resources. The actual project restore method
+cannot be selected or certified until its backup inventory is available. No
+restore was tested or initiated. Restoration would require separate destructive-
+action approval and Production downtime coordination, not migration approval alone.
+
+Official references: [Supabase backups](https://supabase.com/docs/guides/platform/backups)
+and [Supautils privileged extensions/schema overrides](https://github.com/supabase/supautils).
+The precise next owner action is to obtain these missing non-secret runtime and
+management evidence items through the existing connected accounts; no further
+empty-schema/automatic-exposure/schema-CREATE recheck or DATABASE_URL is requested.
+
 003_server_only_access is now registered after unchanged 001 and 002. All three
 run in the existing single transaction with advisory lock on managed PostgreSQL.
 Transaction-local lock/statement timeouts are 5/60 seconds; creation schema must
@@ -30,8 +120,7 @@ owner/BYPASSRLS backend from its own data. Server workspace checks remain essent
 Scope review: no application sequences exist, so no sequence ACL is modified.
 Public schema USAGE cannot be broadly revoked without affecting unrelated managed
 objects. No schema-wide table/function revokes or managed extension changes are
-made. API roles must have no inappropriate public CREATE access; verify this in
-the remaining preflight. Unexpected existing policies/owners abort migration.
+made. The owner has confirmed API roles have no public CREATE access. Unexpected existing policies/owners abort migration.
 
 ALTER DEFAULT PRIVILEGES review: defaults are scoped by creator/schema, not by
 an ECHO table-name list. Changing postgres defaults globally or across public
@@ -84,28 +173,11 @@ cause rollback rather than modifying unrelated parent roles. Existing owner-mode
 authentication/memory/indexing/retrieval passed the local suite. This does not
 prove the current hosted app's runtime role or post-migration operation.
 
-Remaining evidence (not new permission to alter anything):
-
-1. The current role-membership and schema-grant matrix: especially API-role public
-   CREATE, privileged/SET ROLE memberships, and confirmation that ECHO's actual
-   backend connects as the intended postgres owner. The supplied role was the
-   inspected SQL session; broad database CREATE alone does not answer this matrix.
-   No shared schema grants/default ACLs may be silently changed to clear a failure.
-2. Supabase's postgres extension-install eligibility (privileged-extension rules)
-   and a usable existing recovery point with timestamp/identifier and restore
-   procedure. Availability of vector plus schema CREATE is not itself proof of
-   untrusted-extension installation authority or backup recoverability.
-3. Confirm shared Production dependencies/write coordination for that database.
-   A saved shared binding does not prove old runtime snapshots; applying this
-   schema can affect Production without deploying new code.
-
-Use the existing connected account and preflight/security-prerequisites.sql for
-metadata only. Backup/restore and runtime identity evidence may require its
-management view. No connector is available in this agent session. Do not ask for
-DATABASE_URL, replace credentials, create a paid backup or test restoration on
-Production. These pre-existing gates remain open; the empty-schema, server-version,
-search-path, default-grant and automatic-exposure questions are resolved by the
-owner's evidence.
+The latest operational evidence gaps are listed above. They supersede the older
+role/schema-grant checklist: public permissions, membership direction, default
+grants and disabled automatic exposure are now accepted. Runtime identity,
+extension authority, active dependency attribution and recovery inventory remain
+unverified. No application/migration code changes were needed for this review.
 
 ## Exact rollback and uncertain-commit procedure
 
