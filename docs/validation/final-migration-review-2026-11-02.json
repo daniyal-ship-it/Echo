@@ -1,0 +1,40 @@
+{
+  "source_patch": "74f3dc8",
+  "owner_evidence": {
+    "project_ref": "pyidklztsnowarqumtki",
+    "database": "postgres",
+    "version": "17.11",
+    "role": "postgres",
+    "search_path": "\"$user\", public, extensions",
+    "public_empty": true,
+    "vector_available": "0.8.2",
+    "automatic_exposure_disabled_and_saved": true,
+    "data_api_enabled": true,
+    "exposed_schemas": [
+      "public",
+      "graphql_public"
+    ],
+    "unsafe_default_grants_to_api_roles": true
+  },
+  "local_additional_checks": {
+    "hosted": false,
+    "source": "isolated PGlite executing unchanged 74f3dc8 SQL",
+    "checks": [
+      "Unsafe default table and function grants removed, including PG17 MAINTAIN",
+      "Inherited function privilege abort rolls back vector and tables"
+    ],
+    "local_postgres": {
+      "server_version": "18.6"
+    },
+    "local_vector": {
+      "extversion": "0.8.7"
+    }
+  },
+  "sql_hashes": {
+    "001_foundation.sql": "e2aa042caac73f5c9bfcc6670e1d2ebaf02fd16663af32cb92865d54965ec8d5",
+    "002_memory_intelligence.sql": "03a8133818c74bc51882a2c91f1b57019ae5080ab11a4b61e233e59da28d26c7",
+    "003_server_only_access.sql": "1d853c35afa1a37e30c3395b727158b80fd8db5ac23b993df98fd4476afde44e"
+  },
+  "hosted_sql_executed": false,
+  "verdict": "NO-GO pending role/schema/extension eligibility metadata, recovery point and shared Production coordination"
+}

@@ -2,7 +2,8 @@
 
 Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
 003 is implemented and locally tested; hosted execution remains **NO-GO** pending
-live preflight, including verified disabled automatic exposure. Earlier statements
+remaining role/extension/recovery and Production-coordination checks. The owner
+has confirmed automatic exposure disabled and saved. Earlier statements
 below that the security companion is unimplemented are historical and superseded.
 
 
