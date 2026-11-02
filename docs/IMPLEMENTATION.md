@@ -90,6 +90,11 @@ return HTTP 500. Schema inspection was read-only; no application code changed.
 Vercel still reports DATABASE_URL shared across Production/Preview without a
 branch override. No environment binding was modified during this verification.
 Application login and persistence remain blocked pending approved schema setup.
+The owner's subsequent connected inspection confirms an empty public schema in
+Supabase project pyidklztsnowarqumtki. The remaining approval gate is security:
+001/002 lack RLS and Data API privilege restrictions. A scoped companion must
+commit atomically with table creation; it has not been implemented or applied.
+See [the reconciled preflight](DATABASE_PREFLIGHT.md). No DATABASE_URL is requested.
 
 The earlier 36 isolated tests, TypeScript/build and four production smoke groups
 remain local evidence; they were not rerun for this configuration-only operation.

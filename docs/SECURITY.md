@@ -46,6 +46,18 @@ API ownership checks are the current access-control boundary. RLS is not enabled
 and direct browser access to PostgreSQL/Supabase must not be added. Use a scoped
 database account and do not expose administrative credentials.
 
+The 2 November [managed-database preflight](DATABASE_PREFLIGHT.md) identifies a
+concrete deployment gate: migrations 001/002 contain no RLS or GRANT/REVOKE
+statements. Supabase public-schema default grants can expose new tables through
+its Data API. The proposed correction enables no-policy RLS and revokes all
+Data API role privileges on ECHO's exact tables, and restricts its application
+function, before the creation transaction commits. This is a reviewed design,
+not an implemented control. The actual project Data API settings/default ACLs
+remain unverified. ECHO uses its own sessions, so Supabase auth.uid() policies
+must not be copied in as though the identities already match. Owner/admin
+connections retain broad access; these controls do not replace server workspace
+checks or provide isolation against a compromised database-owning backend.
+
 The CSP blocks foreign connections/frames and unsafe object embedding, but still
 allows inline scripts/styles and eval for the framework/WebGL development runtime.
 A production nonce policy and a dedicated security review remain outstanding.

@@ -12,11 +12,13 @@ named below. Local tests and mock provider responses are not live cloud checks.
 
 ## Latest hosted verification
 
-The subsequent [read-only migration preflight](DATABASE_PREFLIGHT.md) is blocked
-on a usable inspection connection: local DATABASE_URL is a placeholder and the
-saved Vercel Sensitive value is not readable. Catalog SQL and an execution/recovery
-plan are prepared; no hosted inventory or migration has run. The database is not
-yet certified empty of ECHO objects or ready for migration.
+The owner-supplied [Supabase preflight](DATABASE_PREFLIGHT.md) confirms project
+`pyidklztsnowarqumtki`, database `postgres`, empty public application schema and
+available vector 0.8.2. The old local-credential blocker no longer prevents this
+review. Approval remains gated on Data API/default-grant metadata and a reviewed
+atomic RLS/privilege companion: existing 001/002 contain no such controls. No
+migration or Production change has occurred. A local fixture verified denial
+semantics only; actual hosted controls remain unverified.
 
 Feature-host network access and protected Preview access through existing Vercel
 OIDC authentication **passed**. The current READY deployment serves `c292574`; the

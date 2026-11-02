@@ -1,5 +1,30 @@
 # Validation record — 1 November 2026
 
+## Owner Supabase inspection and security reconciliation — 2 November
+
+Accepted owner-reported findings: project echo / pyidklztsnowarqumtki / eu-west-1,
+postgres database/inspected role, no public tables/views/sequences/functions/ECHO
+migration objects, creation permissions available, vector 0.8.2 available and
+not installed. This was not independently rerun by this agent. No credentials
+were requested, and no hosted SQL was dispatched in the reconciliation.
+
+Repository review confirms unchanged migration hashes and no RLS/GRANT/REVOKE
+controls in 001/002. Official Supabase security docs and pinned pgvector 0.8.2
+sources were retrieved over verified HTTPS. Current Data API exposure and default
+ACLs are unverified, so the existing scripts are not approved as-is.
+
+An isolated in-memory PGlite fixture passed 18 permission-denial checks for
+SELECT/INSERT/UPDATE/DELETE/TRUNCATE/function execution across anon, authenticated
+and service_role. Owner access and no-policy RLS denial also passed. The new
+metadata-only SQL ran in read-only mode. These are control-semantics tests with
+minimal harmless fixtures, not full application migrations, actual Supabase
+permissions, HTTP/browser checks or proof of hosted security. No ECHO migration,
+application change, provider request or Production operation occurred.
+
+See [current decision and plan](DATABASE_PREFLIGHT.md) and
+[evidence](validation/security-preflight-2026-11-02.json). Earlier access-only
+checks below are retained as historical records, not the current approval blocker.
+
 ## Migration preflight preparation
 
 **2 November recheck:** Git ancestry and unchanged application/migration source

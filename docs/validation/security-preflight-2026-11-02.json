@@ -1,0 +1,187 @@
+{
+  "reviewed_at": "2026-11-02T01:56:46.937801+00:00",
+  "checkpoint_preserved": "adb61ca",
+  "owner_inspection": {
+    "source": "User report of read-only inspection through connected Supabase account; no raw query output supplied and no independent agent database run",
+    "project": "echo",
+    "project_ref": "pyidklztsnowarqumtki",
+    "region": "eu-west-1",
+    "database": "postgres",
+    "inspected_role": "postgres",
+    "public_tables_views_sequences_echo_objects": "none reported",
+    "public_functions": "none reported",
+    "creation_permissions": "available",
+    "pgvector_available_version": "0.8.2",
+    "pgvector_installed": false,
+    "database_changes": false
+  },
+  "repository_review": {
+    "migration_hashes_unchanged": true,
+    "enable_rls_statements": 0,
+    "grant_or_revoke_statements": 0,
+    "uses_supabase_auth_uid": false,
+    "uses_custom_echo_sessions": true,
+    "tables_including_history": 22,
+    "explicit_indexes": 6,
+    "sequences_created": 0,
+    "existing_runner_includes_security_companion": false
+  },
+  "local_controls": {
+    "environment": "isolated in-memory PGlite, minimal harmless fixture; no hosted database or credentials",
+    "echo_migrations_executed": false,
+    "checks": [
+      {
+        "role": "anon",
+        "operation": "select",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "anon",
+        "operation": "insert",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "anon",
+        "operation": "update",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "anon",
+        "operation": "delete",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "anon",
+        "operation": "truncate",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "anon",
+        "operation": "function_execute",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "select",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "insert",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "update",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "delete",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "truncate",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "authenticated",
+        "operation": "function_execute",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "select",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "insert",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "update",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "delete",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "truncate",
+        "result": "denied",
+        "sqlstate": "42501"
+      },
+      {
+        "role": "service_role",
+        "operation": "function_execute",
+        "result": "denied",
+        "sqlstate": "42501"
+      }
+    ],
+    "owner_read_write": "passed",
+    "default_deny_rls_when_select_granted": "passed",
+    "remaining_metadata_sql_read_only": "passed",
+    "hosted_controls_verified": false
+  },
+  "official_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/supabase/supabase/master/apps/docs/content/guides/api/securing-your-api.mdx",
+      "status": 200,
+      "sha256": "3f209a1025d8ac21d56fed8125479449878ade4c31475f7bcbc507f3ee3d78bc"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/supabase/supabase/master/apps/docs/content/guides/database/postgres/row-level-security.mdx",
+      "status": 200,
+      "sha256": "6f15d7552b68fe39918ff6944939fe8bb42eb80acd0897a9ba431b06a31f6e81"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/supabase/supabase/master/apps/docs/content/guides/database/extensions/pgvector.mdx",
+      "status": 200,
+      "sha256": "d5535caa28916afe040ad63769b9dfe51e4e49a76f8b71d888bfbc058090b9e6"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/pgvector/pgvector/v0.8.2/README.md",
+      "status": 200,
+      "sha256": "3832bf3628ab88789daffa72e25f1844296f1ad2c285eb5f948a434b69f0facf"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/pgvector/pgvector/v0.8.2/vector.control",
+      "status": 200,
+      "sha256": "83de3012aafd63cd0d3cb3f179b6c7d4f709ed0bbb0f0b1ae3f8789b0b6e6b53"
+    }
+  ],
+  "remaining_unverified": [
+    "Data API enabled/exposed schema/automatically expose new tables settings",
+    "actual default ACLs and API role memberships",
+    "PostgreSQL version, runtime role/search_path and extension install eligibility",
+    "shared Production runtime binding and available recovery point"
+  ],
+  "verdict": "Not ready for execution as-is; owner empty-schema finding accepted; atomic object-scoped security companion required and not yet implemented",
+  "new_hosted_sql_requests": 0,
+  "migrations_executed": false,
+  "application_code_changes": false,
+  "main_or_production_changes": false,
+  "database_url_requested": false,
+  "ai_spend_usd": 0
+}

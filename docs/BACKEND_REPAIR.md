@@ -2,21 +2,20 @@
 
 ## Read-only migration preflight follow-up
 
-The 2 November access recheck found no configuration change: Codex still has a
-placeholder DATABASE_URL, and the existing feature alias still serves c292574.
-654c09c and the prepared plan at 871349e are preserved. No additional hosted SQL
-ran; see the dated recheck in [DATABASE_PREFLIGHT.md](DATABASE_PREFLIGHT.md).
+The owner has now supplied a connected Supabase inspection: `echo`, project
+`pyidklztsnowarqumtki`, eu-west-1, database/inspected role `postgres`; public has
+no tables, views, sequences, functions or ECHO migration objects. Creation
+permissions are available; vector 0.8.2 is available and not installed. This
+supersedes the earlier access-only blocker. The evidence is owner-reported,
+not an independent hosted query in this agent session. Do not request DATABASE_URL.
 
-The owner authorised inspection and planning, not execution. The existing local
-checkpoint `654c09c` is preserved. Full hosted inspection is **blocked**: Codex's
-DATABASE_URL is a placeholder and Vercel's Sensitive value cannot be retrieved
-for a direct connection. No new hosted SQL or deployment occurred. Neither an
-empty ECHO schema nor migration readiness has been established. See
-[DATABASE_PREFLIGHT.md](DATABASE_PREFLIGHT.md) for the validated read-only SQL,
-access routes, exact object scope, Production implications and conditional
-execution/recovery plan. Do not request execution approval until the verified
-target and actual inventory are available. The successful connection evidence
-below remains from the preceding hosted run.
+The existing migrations are **not ready for approval as-is**: they contain no
+RLS or API-role privilege controls. Actual Data API settings/default grants remain
+unverified. See [DATABASE_PREFLIGHT.md](DATABASE_PREFLIGHT.md) for the accepted
+identity/emptiness findings, official compatibility/security sources, narrow
+remaining read-only query, exact schema scope and proposed atomic security step.
+That step is not yet implemented or registered in the existing migration runner.
+No migrations, application changes, main or Production changes occurred.
 
 ## Current result after the owner's DATABASE_URL update
 
