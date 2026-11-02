@@ -2,6 +2,12 @@
 
 ## Migration preflight preparation
 
+**2 November recheck:** Git ancestry and unchanged application/migration source
+passed; live Vercel metadata and feature-alias source remain unchanged. The local
+database connection is still a placeholder. No new hosted SQL or local tests
+were run, and no schema-readiness verdict is possible. See
+[metadata evidence](validation/preflight-access-2026-11-02.json).
+
 Live Vercel metadata confirms the existing project, unchanged binding scopes and
 Production source `6f19c18`. Direct hosted SQL inspection is blocked: the local
 DATABASE_URL is a placeholder and Vercel's Sensitive value is not returned by

@@ -1,0 +1,178 @@
+{
+  "checked_at": "2026-11-02T01:42:34.641477+00:00",
+  "checkpoint_preserved": "654c09c",
+  "prepared_plan_checkpoint_preserved": "871349e",
+  "local_access": {
+    "checked_at": "2026-11-02T01:42:34.641477+00:00",
+    "credential_values_disclosed": false,
+    "DATABASE_URL": {
+      "present": true,
+      "placeholder_markers": true,
+      "parseable": false
+    },
+    "DATABASE_CA_CERT": {
+      "present": false
+    },
+    "VERCEL_TOKEN": {
+      "present": true
+    },
+    "SUPABASE_ACCESS_TOKEN": {
+      "present": false
+    },
+    "SUPABASE_PROJECT_REF": {
+      "present": false
+    },
+    "PGHOST": {
+      "present": false
+    },
+    "PGDATABASE": {
+      "present": false
+    },
+    "PGUSER": {
+      "present": false
+    },
+    "PGPASSWORD": {
+      "present": false
+    }
+  },
+  "vercel": {
+    "checked_at": "2026-11-02T01:43:05.901324+00:00",
+    "action": "read-only metadata recheck",
+    "project": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "bindings": [
+      {
+        "id": "xTXVKHsjQ5k2GrlQ",
+        "key": "DATABASE_CA_CERT",
+        "type": "encrypted",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": "feat/core-memory-exploration",
+        "createdAt": 1793480577088,
+        "updatedAt": 1793480577088
+      },
+      {
+        "id": "1RhyWdxoA6maPmBQ",
+        "key": "APP_ORIGIN",
+        "type": "plain",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": "feat/core-memory-exploration",
+        "createdAt": 1793313861514,
+        "updatedAt": 1793313861514
+      },
+      {
+        "id": "ExcGxpCdGfe4KWiw",
+        "key": "ECHO_ANTHROPIC_MODEL",
+        "type": "plain",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793165004583,
+        "updatedAt": 1793165004583
+      },
+      {
+        "id": "MvjFHvIisxpiAtYG",
+        "key": "ECHO_OPENAI_MODEL",
+        "type": "plain",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793165004306,
+        "updatedAt": 1793165004306
+      },
+      {
+        "id": "Zf8pj2CqVs78WviO",
+        "key": "APP_ORIGIN",
+        "type": "plain",
+        "target": [
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793164908765,
+        "updatedAt": 1793164908765
+      },
+      {
+        "id": "W640GyJmphRao13N",
+        "key": "ECHO_OPENAI_API_KEY",
+        "type": "sensitive",
+        "target": [
+          "production",
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793161013047
+      },
+      {
+        "id": "6HDLttoHRswZPiVF",
+        "key": "ECHO_ANTHROPIC_API_KEY",
+        "type": "sensitive",
+        "target": [
+          "production",
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793161013047
+      },
+      {
+        "id": "eDcJ6IoHWOHAP09R",
+        "key": "DATABASE_URL",
+        "type": "sensitive",
+        "target": [
+          "production",
+          "preview"
+        ],
+        "gitBranch": null,
+        "createdAt": 1793161013047,
+        "updatedAt": 1793499698206
+      }
+    ],
+    "feature_alias": {
+      "alias": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+      "deploymentId": "dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW",
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N"
+    },
+    "feature_deployment": {
+      "id": "dpl_7SnSSc4w7sYJGvGq67wCxMaxA2oW",
+      "url": "echo-r06nmlmxx-daniyal-1415s-projects.vercel.app",
+      "readyState": "READY",
+      "alias": [
+        "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"
+      ],
+      "target": null,
+      "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "createdAt": 1793499913134,
+      "created": null,
+      "buildingAt": 1793499914157,
+      "ready": 1793499926345,
+      "sha": "c29257434aec44e9e9d9c95c6fb111ca594d75b0",
+      "branch": "feat/core-memory-exploration"
+    }
+  },
+  "environment_metadata_unchanged": true,
+  "hosted_database_queries_this_run": 0,
+  "ready_for_migrations": false,
+  "unverified": [
+    "Supabase project and database identity",
+    "full catalog and object conflicts",
+    "existing ECHO data",
+    "pgvector installation eligibility",
+    "target migration compatibility"
+  ],
+  "changes_to_application_database_credentials_production": false,
+  "temporary_access_credentials_created": false,
+  "ai_spend_usd": 0,
+  "local_tests_rerun": false
+}

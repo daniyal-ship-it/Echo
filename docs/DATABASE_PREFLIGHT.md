@@ -3,6 +3,18 @@
 **Status: blocked on read-only database access. The migrations are not yet
 certified ready to execute, and no migration approval is being exercised.**
 
+Rechecked **2 November 2026** after renewed read-only authorisation. Local
+DATABASE_URL remains a non-parseable placeholder, with no Supabase management
+credential/SQL connector. Vercel environment metadata is unchanged from the
+successful 1 November connection check: the working DATABASE_URL remains
+Sensitive and shared across Preview/Production; the CA remains branch-only.
+The exact feature alias still serves `c292574`. Checkpoints `654c09c` and
+`871349e` are preserved, with application and migration source unchanged.
+No additional hosted SQL or local fixture run occurred; identity, conflicts,
+data presence and migration eligibility remain unverified. The access routes
+and conditional approval plan below still apply. New evidence:
+[preflight-access-2026-11-02.json](validation/preflight-access-2026-11-02.json).
+
 The user authorised catalog/data-presence inspection and a migration/recovery
 plan, explicitly excluding migration execution, deletion, resets, security
 changes and Production changes. Checkpoint `654c09c` remains an ancestor. GitHub

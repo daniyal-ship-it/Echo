@@ -2,6 +2,11 @@
 
 ## Read-only migration preflight follow-up
 
+The 2 November access recheck found no configuration change: Codex still has a
+placeholder DATABASE_URL, and the existing feature alias still serves c292574.
+654c09c and the prepared plan at 871349e are preserved. No additional hosted SQL
+ran; see the dated recheck in [DATABASE_PREFLIGHT.md](DATABASE_PREFLIGHT.md).
+
 The owner authorised inspection and planning, not execution. The existing local
 checkpoint `654c09c` is preserved. Full hosted inspection is **blocked**: Codex's
 DATABASE_URL is a placeholder and Vercel's Sensitive value cannot be retrieved
