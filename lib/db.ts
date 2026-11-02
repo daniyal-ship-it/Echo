@@ -5,6 +5,7 @@ import { vector } from '@electric-sql/pglite-pgvector';
 import postgres from 'postgres';
 import * as tls from 'node:tls';
 import { databaseTlsOptions } from './database-tls';
+import { identityDiagnosticEnabled, inspectDatabaseIdentity } from './database-identity-diagnostic';
 import {
   databaseConfigError,
   DatabaseInitializationError,
@@ -149,6 +150,20 @@ export async function createDatabase(
       storage: managed ? 'postgresql' : 'local-postgresql',
       verified_tls: managed && process.env.DATABASE_SSL !== 'disable',
     });
+    if (managed && !options.applyManagedMigrations && identityDiagnosticEnabled(process.env)) {
+      try {
+        report('database_runtime_identity', {
+          ...(await inspectDatabaseIdentity(db)),
+          deployment_id: process.env.VERCEL_DEPLOYMENT_ID || null,
+          deployment_url: process.env.VERCEL_URL || null,
+          source_sha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+          branch: process.env.VERCEL_GIT_COMMIT_REF,
+        });
+      } catch {
+        // Diagnostic failures must neither disclose driver errors nor change startup behaviour.
+        report('database_runtime_identity_unavailable');
+      }
+    }
     if (managed) {
       stage = 'migration.files';
       // Only inspect migration assets after a real connection has succeeded.

@@ -1,5 +1,11 @@
 # Migration security patch — 2 November 2026
 
+Prepared, not deployed: [temporary Preview identity diagnostic](PREVIEW_IDENTITY_DIAGNOSTIC.md).
+It defaults off and requires separate approval for a feature-only deployment,
+short-lived flags, protected read-only probe and cleanup. Current Vercel evidence
+is accepted; database sharing remains the assumption. Migration stays NO-GO.
+
+
 Status: patch review passed; **NO-GO for hosted execution pending the remaining
 operator/recovery evidence below**. Patch source remains exactly `74f3dc8`.
 
