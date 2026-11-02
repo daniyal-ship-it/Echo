@@ -1,0 +1,250 @@
+{
+  "diagnostic_source": "109eb1072b66acc9f7f47e1d2cef7779bc4e95fa",
+  "single_authenticated_health_request": {
+    "at": "2026-11-02T02:33:44.331984+00:00",
+    "action": "probe",
+    "checks": [
+      {
+        "path": "/api/health",
+        "status": 500,
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "error": "The operation failed. Your existing data has been preserved."
+      }
+    ]
+  },
+  "identity": {
+    "timestamp": "2026-11-02T02:33:46.346Z",
+    "path": "/api/health",
+    "event": "database_runtime_identity",
+    "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+    "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+    "stage": "connection.check",
+    "database": "postgres",
+    "effective_role": "postgres",
+    "session_role": "postgres",
+    "search_path": "\"\\$user\", public, extensions",
+    "resolved_search_path": [
+      "public",
+      "extensions"
+    ],
+    "read_only": true,
+    "deployment_id": "dpl_6v5mFoaYpt9wywt2pHrUaMnHZpTu",
+    "deployment_url": "echo-ki1qsi8sr-daniyal-1415s-projects.vercel.app",
+    "source_sha": "109eb1072b66acc9f7f47e1d2cef7779bc4e95fa",
+    "branch": "feat/core-memory-exploration"
+  },
+  "runtime_logs": {
+    "at": "2026-11-02T02:34:06.711360+00:00",
+    "action": "logs",
+    "deployment": "dpl_6v5mFoaYpt9wywt2pHrUaMnHZpTu",
+    "entries": [
+      {
+        "timestamp": "2026-11-02T02:33:46.728Z",
+        "path": "/api/health",
+        "event": "api_error",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "migration.history",
+        "error_class": "Error",
+        "code": "DB_MIGRATION_REQUIRED",
+        "sqlstate": null,
+        "reason": "Expected migrations are pending; startup will not modify managed schema",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-11-02T02:33:46.657Z",
+        "path": "/api/health",
+        "event": "database_initialization_failed",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "migration.history",
+        "error_class": "Error",
+        "code": "DB_MIGRATION_REQUIRED",
+        "sqlstate": null,
+        "reason": "Expected migrations are pending; startup will not modify managed schema",
+        "statement_position": null
+      },
+      {
+        "timestamp": "2026-11-02T02:33:46.657Z",
+        "path": "/api/health",
+        "event": "database_catalogue",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "migration.catalogue",
+        "catalogue": {
+          "vector_available": true,
+          "vector_installed": false,
+          "vector_visible": false,
+          "vector_schema": null,
+          "vector_schema_in_search_path": false,
+          "database_create": true,
+          "schema_usage": true,
+          "schema_create": true
+        }
+      },
+      {
+        "timestamp": "2026-11-02T02:33:46.417Z",
+        "path": "/api/health",
+        "event": "database_migration_history",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "migration.history",
+        "migrations": [
+          {
+            "version": "001_foundation",
+            "applied": false
+          },
+          {
+            "version": "002_memory_intelligence",
+            "applied": false
+          },
+          {
+            "version": "003_server_only_access",
+            "applied": false
+          }
+        ],
+        "writes_authorised": false
+      },
+      {
+        "timestamp": "2026-11-02T02:33:46.346Z",
+        "path": "/api/health",
+        "event": "database_migration_files",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "migration.files",
+        "files": [
+          {
+            "version": "001_foundation",
+            "present": true
+          },
+          {
+            "version": "002_memory_intelligence",
+            "present": true
+          },
+          {
+            "version": "003_server_only_access",
+            "present": true
+          }
+        ]
+      },
+      {
+        "timestamp": "2026-11-02T02:33:46.346Z",
+        "path": "/api/health",
+        "event": "database_runtime_identity",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "connection.check",
+        "database": "postgres",
+        "effective_role": "postgres",
+        "session_role": "postgres",
+        "search_path": "\"\\$user\", public, extensions",
+        "resolved_search_path": [
+          "public",
+          "extensions"
+        ],
+        "read_only": true,
+        "deployment_id": "dpl_6v5mFoaYpt9wywt2pHrUaMnHZpTu",
+        "deployment_url": "echo-ki1qsi8sr-daniyal-1415s-projects.vercel.app",
+        "source_sha": "109eb1072b66acc9f7f47e1d2cef7779bc4e95fa",
+        "branch": "feat/core-memory-exploration"
+      },
+      {
+        "timestamp": "2026-11-02T02:33:45.993Z",
+        "path": "/api/health",
+        "event": "database_connection_ok",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "connection.check",
+        "storage": "postgresql",
+        "verified_tls": true
+      },
+      {
+        "timestamp": "2026-11-02T02:33:45.218Z",
+        "path": "/api/health",
+        "event": "database_connection_config",
+        "request_id": "5f6b9d97-28cf-4fd9-b657-fd135cf6cc11",
+        "initialization_id": "41efc9fd-11e6-44fc-9875-ee01f2dc99f0",
+        "stage": "configuration",
+        "provider": "supabase",
+        "default_ca_count": 118,
+        "system_ca_count": 0,
+        "additional_system_ca_count": 0,
+        "extra_ca_configured": false,
+        "system_ca_file_configured": false,
+        "custom_database_ca_configured": true
+      }
+    ]
+  },
+  "cleanup_deployment": {
+    "at": "2026-11-02T02:34:36.953401+00:00",
+    "action": "deployment",
+    "id": "dpl_9QEGz74Kw5rvewvvzz45tqgBzzba",
+    "url": "echo-bctcr6nir-daniyal-1415s-projects.vercel.app",
+    "readyState": "READY",
+    "alias": [
+      "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app"
+    ],
+    "target": null,
+    "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+    "createdAt": 1793586836094,
+    "created": null,
+    "buildingAt": 1793586837113,
+    "ready": 1793586850784,
+    "sha": "109eb1072b66acc9f7f47e1d2cef7779bc4e95fa",
+    "branch": "feat/core-memory-exploration"
+  },
+  "feature_alias": {
+    "at": "2026-11-02T02:34:38.098593+00:00",
+    "action": "alias",
+    "alias": "echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app",
+    "deploymentId": "dpl_9QEGz74Kw5rvewvvzz45tqgBzzba",
+    "projectId": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+    "updatedAt": 1793586850925,
+    "deployment": "dpl_9QEGz74Kw5rvewvvzz45tqgBzzba"
+  },
+  "cleanup": {
+    "at": "2026-11-02T02:34:39.714276+00:00",
+    "flags_absent": true,
+    "all_original_bindings_unchanged": true,
+    "production_deployment_unchanged": true,
+    "protection_unchanged": true,
+    "persistent_bypass_credentials": 0,
+    "local_oidc_removed": true
+  },
+  "oidc_cleanup": {
+    "at": "2026-11-02T02:34:07.750240+00:00",
+    "action": "cleanup",
+    "project": {
+      "project": "prj_JzteBKMFmckXFWr2riaOGYy1cH6N",
+      "name": "echo",
+      "protection": {
+        "deploymentType": "all_except_custom_domains"
+      },
+      "automation_credentials": 0
+    },
+    "oidc_expires_at": "2026-11-02T14:33:35+00:00",
+    "local_oidc_removed": true,
+    "automation_bypass_created": false,
+    "oidc_individually_revoked": false
+  },
+  "diagnostic_expiry": "2026-11-02T02:46:31Z",
+  "operational_note": "Initial env-create response shape caused partial flag setup failure. Partial flag removed and original bindings verified restored. Git push triggered one Preview with no expiry, so diagnostic remained disabled. A verified flag setup then produced the diagnostic Preview. Only one authenticated health request was sent. Cleanup deployed same source without flags. The initial expiry revision was not persisted when setup failed; the verified retry used the original saved 02:46:31 UTC deadline. An offline check against the announced earlier time did not establish actual expiry. The retained temporary diagnostic deployment was therefore removed and absence verified; cleanup does not rely on an elapsed deadline.",
+  "migration_permission": false,
+  "schema_or_database_writes_performed": false,
+  "production_changed": false,
+  "ai_spend_usd": 0,
+  "retained_diagnostic_cleanup": {
+    "deleted_deployment": "dpl_6v5mFoaYpt9wywt2pHrUaMnHZpTu",
+    "verified_absent": true,
+    "at": "2026-11-02T02:38:16.395589+00:00",
+    "active_preview_unchanged": true,
+    "production_unchanged": true,
+    "actual_snapshot_expiry": "2026-11-02T02:46:31Z"
+  },
+  "expiry_bookkeeping_correction": {
+    "announced_expiry": "2026-11-02T02:36:31Z",
+    "actual_saved_expiry": "2026-11-02T02:46:31Z",
+    "deadline_expiry_claimed": false,
+    "resolution": "Removed the temporary diagnostic deployment after verifying it was not Production or the active feature alias. GET afterwards returned 404. Original flags remain absent and disabled cleanup Preview remains active."
+  }
+}

@@ -1,5 +1,60 @@
 # Migration security patch — 2 November 2026
 
+## Verified Preview runtime identity — 2 November 2026
+
+The explicitly authorised diagnostic at source 109eb10 was deployed only to the
+feature Preview. A single authenticated health GET produced a private identity
+event at 02:33:46 UTC, correlated to request
+`5f6b9d97-28cf-4fd9-b657-fd135cf6cc11` and deployment
+`dpl_6v5mFoaYpt9wywt2pHrUaMnHZpTu`.
+
+- Database: postgres. Effective role: postgres. Session role: postgres.
+- Raw reported search_path: `"\$user", public, extensions` (a literal backslash
+  precedes the dollar sign in the runtime value; do not silently normalise it).
+- Resolved effective path: public, extensions. No configuration was corrected.
+- Diagnostic transaction read_only=true; initial SELECT 1 and verified TLS passed.
+- All three migration assets were present and all three history states unapplied.
+  writes_authorised=false. HTTP 500 was DB_MIGRATION_REQUIRED, not identity failure.
+
+This closes the feature diagnostic deployment's runtime-role/path gate. It does
+not retrospectively establish c292574's identity, prove the Supabase project
+reference from the generic database name alone, identify Production consumers or
+verify extension authority/backups. Continue treating the database as shared.
+
+Both temporary branch-only flags were deleted immediately after the request;
+all original environment-binding metadata was restored exactly. Cleanup Preview
+`dpl_9QEGz74Kw5rvewvvzz45tqgBzzba` is READY at the same 109eb10 source, with the
+feature alias pointing to it and no diagnostic flags. Its immutable URL is
+https://echo-bctcr6nir-daniyal-1415s-projects.vercel.app.
+Production deployment dpl_DwWoKnXjC741386ehwxUjHwqpBPH and protection were unchanged.
+The actual older snapshot expiry was 02:46:31 UTC, rather than the announced
+02:36:31 UTC: the revised timestamp was not persisted during the initial setup
+error. No elapsed-expiry claim is made. At 02:38:16 UTC the temporary diagnostic
+deployment was removed after verifying it was neither Production nor the active
+feature alias; a management GET confirmed 404. The disabled cleanup Preview and
+Production were unchanged. Evidence was preserved before removal. No second
+health request was sent. Cleanup no longer relies on waiting for that deadline.
+
+Existing OIDC authentication was used only in a secure header to the exact feature
+origin with no redirects. Local OIDC material was deleted; no persistent bypass
+was created (zero before/after). The short-lived OIDC token was not individually
+revoked and expires at 14:33:35 UTC; local deletion is not revocation.
+
+An initial helper response-format error left only the enable flag, without expiry;
+it was removed and original settings verified restored. The authorised feature
+push triggered an extra inactive Preview build. The diagnostic remained disabled
+there because the required expiry was absent. The later diagnostic and cleanup
+builds used the exact approved source. No additional authenticated health request,
+Production operation, credential modification, migration or paid API call occurred.
+
+**Migration remains NO-GO** pending pgvector installation authority for postgres,
+active-consumer/shared-Production attribution and an actual recovery point/restore
+readiness. These requirements are unchanged; feature runtime identity is now
+verified. No migration approval was granted or exercised.
+
+[Correlated evidence and cleanup](validation/preview-identity-execution-2026-11-02.json).
+
+
 Prepared, not deployed: [temporary Preview identity diagnostic](PREVIEW_IDENTITY_DIAGNOSTIC.md).
 It defaults off and requires separate approval for a feature-only deployment,
 short-lived flags, protected read-only probe and cleanup. Current Vercel evidence

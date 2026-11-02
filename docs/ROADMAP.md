@@ -1,5 +1,13 @@
 # ECHO requirement ledger
 
+Latest result: the authorised diagnostic has executed once on feature Preview
+109eb10. Database/effective role/session role are postgres, resolved search path
+public,extensions, and transaction read-only=true. Temporary flags were removed
+and the disabled cleanup Preview is READY. No migrations or Production changes.
+See [verified runtime and cleanup](MIGRATION_SECURITY.md). Earlier preparation-only
+or runtime-unverified statements below are historical and superseded.
+
+
 Latest runtime/recovery review: public USAGE/no-CREATE for API roles and postgres's
 membership direction are accepted and closed. [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md)
 records fresh Vercel metadata and four remaining gaps: runtime identity, extension

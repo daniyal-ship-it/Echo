@@ -1,5 +1,13 @@
 # Validation record — 1 November 2026
 
+Latest result: the authorised diagnostic has executed once on feature Preview
+109eb10. Database/effective role/session role are postgres, resolved search path
+public,extensions, and transaction read-only=true. Temporary flags were removed
+and the disabled cleanup Preview is READY. No migrations or Production changes.
+See [verified runtime and cleanup](MIGRATION_SECURITY.md). Earlier preparation-only
+or runtime-unverified statements below are historical and superseded.
+
+
 Prepared, not deployed: [temporary Preview identity diagnostic](PREVIEW_IDENTITY_DIAGNOSTIC.md).
 It defaults off and requires separate approval for a feature-only deployment,
 short-lived flags, protected read-only probe and cleanup. Current Vercel evidence
