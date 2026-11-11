@@ -5,10 +5,23 @@ organisation, preferably eu-west-1. This is a new independent project, not a
 paid Supabase database branch. No resources or remote settings have changed.
 Preserve current checkpoint 15470a6 and the hardened 001/002/003 migrations.
 
-The owner answered yes to availability of a Free project slot. Treat that as
-owner-reported availability, not creation approval or independent account-quota
-verification. The organisation name/ID has not been supplied. Confirm it and the
-$0 creation summary immediately before any approved creation.
+Owner-reported account inspection, 11 November: organisation
+`daniyal-ship-it's Org` (`rttaltwkawyehzqregon`), Free subscription.
+Existing projects are `echo` (`pyidklztsnowarqumtki`) and
+`daniyal-ship-it's Project` (`splejgaknxvjpkblqnhz`), both reported INACTIVE.
+Neither may be deleted, restored, modified or repurposed without separate approval.
+
+Official billing policy rechecked on 11 November: paused projects do not count
+against the two Free-project allowance. Two existing project records alone do
+not establish that quota is exhausted. Confirm that the dashboard identifies
+INACTIVE as paused and that there are fewer than two active Free projects across
+ALL organisations where the owner is Owner/Administrator. This session has no
+connected Supabase tool or browser tool, so account-wide quota and the actual
+New Project eligibility screen have not been independently inspected.
+
+Next read-only owner check: open New Project, select the named organisation,
+confirm it permits an additional Free project and shows $0, but do not submit.
+No credential is needed in chat. An available slot is not creation approval.
 
 Official billing/pricing checked on 2 November: two active Free projects across
 organisations where the user is Owner/Administrator; paused projects do not count.
@@ -110,8 +123,21 @@ unchanged and does not authorise calls before backend acceptance and pricing che
 ## Decision
 
 GO for this isolation approach; NO-GO for executing changes until approval.
-Immediate next owner input: the intended Free organisation name/ID, followed by
-explicit approval to create only echo-dev at $0. No connection credential is
+Immediate next owner input: confirmation of the New Project screen eligibility
+for the supplied organisation, followed by explicit approval to create only
+echo-dev at $0. No connection credential is
 requested. Stop after creation/read-only identity reporting unless later stages
 are also explicitly approved. If the Free slot is no longer available, stop;
 do not disturb the existing project or silently choose a paid route.
+
+
+If the screen rejects creation despite both projects being paused, record the
+non-secret quota message and check account-wide active-project usage before
+choosing another route. A second Free organisation does not evade this limit.
+Do not infer that the unrelated inactive project is safe to reuse. If Supabase
+cannot provide a Free slot, a separate hosted PostgreSQL provider with a Free
+plan and pgvector is a possible zero-cost alternative, subject to verifying its
+current limits, TLS, extension permissions and migration compatibility first.
+This would still use only a new branch-specific Preview connection and preserve
+both Supabase projects and Production. Provider selection/account creation would
+require separate approval; no such alternative has been provisioned or tested.
