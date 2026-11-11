@@ -75,4 +75,26 @@ migrations 001–003 unmodified from `db/migrations`, and a final verification, 
 transaction. The guard binds execution to echo-dev's cluster identifier
 (`7703760980994770283`) and to an empty `public` schema, so it aborts unchanged anywhere else.
 The final verification also checks `MAINTAIN`.
-Not executed. Requires explicit owner approval.
+
+## Execution — 11 November 2026, 00:44 UTC
+
+Executed once on echo-dev with explicit owner approval. The statements sent were those of the
+bundle; only its header comment lines were omitted. The original project was not touched.
+
+Fresh-session verification:
+
+| Check | Result |
+|---|---|
+| Transaction committed | Yes |
+| Tables | 22 of 22 expected, none unexpected, all owned by `postgres` |
+| Row level security | Enabled on 22 of 22, no policies |
+| API-role privileges (`anon`, `authenticated`, `service_role`, `authenticator`) | None on any table or column; no `PUBLIC` grants; no function `EXECUTE` |
+| Trigger function | Security invoker, `search_path=pg_catalog, public`, trigger present |
+| Explicit indexes | 6 of 6 |
+| pgvector | 0.8.2 in `public`, three `vector` columns |
+| Migration records | `001_foundation`, `002_memory_intelligence`, `003_server_only_access` |
+| Data | No rows in `users` or `memory_nodes` |
+
+Supabase security advisor afterwards: 22 informational "RLS enabled, no policy" notices,
+which is the intended server-only design, and one warning that `vector` is in `public`,
+already recorded above as a fix before Production.
