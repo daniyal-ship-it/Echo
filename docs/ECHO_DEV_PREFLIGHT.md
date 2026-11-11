@@ -20,18 +20,64 @@ was made, no secret value is reproduced, and no credential replacement is needed
 for the connected-account/SQL Editor route. Vercel access does not grant database
 management access. The old Preview binding must NOT be used to run this preflight.
 
-## Remaining read-only checks
+## Additional independent live findings accepted
 
-Run [echo-dev-security.sql](preflight/echo-dev-security.sql) using the existing
-connected account/SQL Editor **in dtcxlxehqiuhmhuypqbm**, as the intended execution
-role postgres. It uses read-only transactions, catalog queries and timeouts;
-returns no row contents or credentials. Its expected-reference label is not an
-identity assertion: verify the dashboard project reference separately. It reports:
+Owner-supplied live read-only evidence after checkpoint 905668f confirms:
+PostgreSQL 17.11 / postgres, effective and session roles postgres/postgres,
+resolved path public,extensions, no public relations or functions; anon,
+authenticated, service_role and authenticator have public USAGE but no CREATE;
+postgres has public CREATE and BYPASSRLS. Role memberships/default ACLs were
+inspected; postgres-created public objects receive API-role default grants.
+Vector 0.8.2 is available, uninstalled, with superuser=true and trusted=false.
+These are independent connected-account results supplied by the owner, not SQL
+run by this agent. Do not repeat the established identity/empty-state checks
+except for immediate target/drift guards before an approved operation.
 
-- Effective/session identity, creation schema, role flags, all membership edges
-  (including PG17 inherit/set options), schema/database rights and default ACLs.
-- pgvector control metadata and actual Supautils delegation/schema overrides.
-- PL/pgSQL, English full-text configuration and vector visibility prerequisites.
+The inspection report does not give the full membership graph or effective
+owner-role reachability results. Do not equate “inspected” with “no unsafe paths”.
+Before migration approval retain the non-secret membership findings (especially
+API/authenticator inheritance or SET ROLE paths into owner roles) and confirm no
+such access. API grants at object creation are expected and removed by 003 in
+its creation transaction; global defaults remain untouched. 003 explicitly
+checks anon/authenticated/service_role, not authenticator; review authenticator's
+own defaults/direct grants too. Unexpected direct authenticator application
+access requires a scoped patch/review before execution, not an assumed pass.
+
+## Safest extension-authority validation — separate approval required
+
+Extension superuser=true is a requirement on the installer, NOT evidence that
+postgres is a superuser. BYPASSRLS is unrelated to extension installation.
+trusted=false excludes the ordinary trusted-extension/database-CREATE shortcut.
+An actual superuser or Supabase's privileged-extension delegation must authorise
+installation. Existing read-only Supautils metadata may establish delegation;
+missing/inconclusive settings must not be presented as a denial or success.
+
+If that metadata is inconclusive, the smallest conclusive check is the prepared
+[rollback-only authority probe](preflight/echo-dev-vector-authority-probe.sql).
+It is transactional DDL, **not read-only**, and has NOT been executed. Use only
+the already connected SQL Editor for echo-dev, with the project reference verified
+outside SQL; do not use the Vercel/shared/local DATABASE_URL. No Docker/local DB
+or new credentials are needed. The project-ref GUC, if published, is an additional
+guard, not a replacement for dashboard attribution.
+
+The probe holds the migration advisory lock, checks identity/path/empty state,
+requires default vector version 0.8.2, runs the exact CREATE EXTENSION statement
+from 001, inspects actual schema/version/visibility and a harmless vector expression,
+then unconditionally ROLLBACKs. It creates no ECHO tables or migration records,
+changes no global ACL/role/default settings and never commits. Run as one complete
+submission on one session; do not use the dashboard extension toggle (which would
+persist installation). Transactional catalog changes are transient writes and
+can take locks, despite leaving no committed installation.
+
+On error explicitly ROLLBACK the open session; on disconnect confirm session
+termination before claiming cleanup. After either outcome use a fresh read-only
+session to confirm vector remains absent, public relations/functions remain zero,
+and migration history remains absent. If cleanup cannot be verified, stop; never
+auto-DROP/reset or run migrations. Provider permission denial is evidence to
+investigate with Supabase, not permission to elevate roles. Success verifies
+installation authority at that time; it is not migration or backend acceptance.
+
+## Remaining prerequisites for migrations
 
 Inspect echo-dev's Data API enabled state, exposed schemas and Automatically
 expose new tables state without changing them. The old project's OFF setting
@@ -47,7 +93,8 @@ extension route with database CREATE, or verified loaded Supautils delegation
 covering vector for the executing role. Inspect both extension-specific schema
 overrides and default install schema. Null settings are inconclusive. If catalog
 metadata cannot establish delegation, seek provider evidence for this project;
-no trial CREATE EXTENSION is authorised in a read-only review. Confirm the actual
+no trial CREATE EXTENSION is authorised in a read-only review; the proposed
+rollback-only probe requires the separate approval above. Confirm the actual
 planned installation schema is visible through public,extensions and usable by
 the intended backend. No Supabase-managed schema or role changes are proposed.
 
@@ -160,6 +207,19 @@ installation and scoped security controls, ONLY on echo-dev
 schema/security acceptance. Exclude both existing projects, Vercel environment
 changes, deployments, Production, paid resources and AI calls.”
 
-Do not interpret the present planning request as this approval. Immediate next
-action: obtain only the read-only query results and echo-dev dashboard exposure
-settings through the already connected account. No credentials in chat.
+Do not interpret the present planning request as this approval.
+
+**Immediate approval request (probe only):** “Approve one rollback-only pgvector
+installation-authority probe using docs/preflight/echo-dev-vector-authority-probe.sql,
+only on echo-dev / dtcxlxehqiuhmhuypqbm / postgres as postgres, through the existing
+connected account. Permit transient CREATE EXTENSION in one transaction ending
+with ROLLBACK, and fresh-session read-only cleanup verification. No committed
+extension installation, application migrations, role/default-privilege changes,
+other project access, Vercel changes, deployments, Production changes or spending.”
+
+Remaining migration prerequisites: verified extension authority/schema visibility;
+echo-dev Data API/exposed-schema/automatic-exposure settings; explicit safe
+membership/authenticator-grant findings; remaining PL/pgSQL/English FTS and relevant
+schema/database permission results; reviewed combined atomic migration artifact;
+then separate migration execution approval. No credentials in chat. NO-GO for
+migrations remains; the narrowly scoped probe is ready for approval.
