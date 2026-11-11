@@ -1,5 +1,12 @@
 # Separate disposable development database — 11 November 2026
 
+Latest target update (11 November): the owner has created **echo-dev /
+ dtcxlxehqiuhmhuypqbm / eu-central-1**. See [the new-target preflight](ECHO_DEV_PREFLIGHT.md)
+for accepted identity/version evidence, remaining read-only security/extension
+checks, atomic execution plan and separate approval gates. Earlier creation-pending
+statements below are historical. The old project and Production remain unchanged;
+no migrations, bindings or deployments have been performed for echo-dev.
+
 Recommendation: a separate Supabase project `echo-dev` on an existing Free-plan
 organisation, preferably eu-west-1. This is a new independent project, not a
 paid Supabase database branch. No resources or remote settings have changed.
