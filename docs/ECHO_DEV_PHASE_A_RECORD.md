@@ -98,3 +98,45 @@ Fresh-session verification:
 Supabase security advisor afterwards: 22 informational "RLS enabled, no policy" notices,
 which is the intended server-only design, and one warning that `vector` is in `public`,
 already recorded above as a fix before Production.
+
+## After execution — 11 November 2026
+
+### Owner's independent read-only verification of echo-dev
+
+- 22 application tables exist.
+- Row level security is enabled on all 22.
+- pgvector is installed.
+- `anon`, `authenticated`, `service_role` and `authenticator` have no effective table privileges
+  on the 22 application tables.
+
+### Repository and Preview
+
+- GitHub `feat/core-memory-exploration` is at `dcb6691`: the six commits through `723b469`,
+  then the four Phase A commits. Migration 003 there has the same SHA-256 as the SQL executed
+  on echo-dev (`a480f12b…`).
+- Vercel built a Preview (not Production) from `dcb6691`. Its `DATABASE_URL` and
+  `DATABASE_CA_CERT` are scoped to this branch; the shared Production/Preview `DATABASE_URL`
+  entry was not edited.
+- Preview runtime log, `GET /api/health` at 01:20 UTC: database connection ok with verified
+  TLS, provider Supabase, custom CA in use, migrations 001–003 reported applied, `vector`
+  visible in `public`.
+- echo-dev at 01:23 UTC: no users, workspaces, sessions or memories. Three rate-limit rows
+  from 01:21, one of them for registration. Whether an account was created and deleted or the
+  registration failed is not established.
+
+### Cross-workspace isolation
+
+- Design: every authenticated route takes the workspace from the session row, never from the
+  request, and every memory query filters on it.
+- `scripts/isolation/` holds a 19-check HTTP test: user B attacks user A's note through list,
+  filtered list, read, versioned read, overwrite, delete, link, keyword retrieval, graph,
+  intelligence status, intelligence queue and export; A's note is then checked intact and
+  both test notes are deleted. It never calls the assistant or a paid provider endpoint.
+- Local result: 19 of 19 passed over HTTP against this commit's code with a local database
+  (PostgreSQL 18.6 engine) and two registered users.
+- Hosted result: **not yet run.** Needs a second account on echo-dev without opening
+  registration, which requires owner approval.
+
+### Provider adapters
+
+Not yet verified on the hosted Preview. Budget: US$1 combined.
