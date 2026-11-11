@@ -1,5 +1,57 @@
 # echo-dev migration preflight — 11 November 2026
 
+## Approved probe — execution blocked before connection
+
+The owner explicitly approved ONE execution of the rollback-only probe after
+checkpoint 301b583, on dtcxlxehqiuhmhuypqbm / postgres as postgres, with independent
+cleanup verification. Approval persists; do not ask for the same approval again.
+No migrations, persistent installation, environments or deployments are authorised.
+
+Session access rechecked: no callable Supabase/SQL/browser connector, no outbound
+Supabase identity, no SUPABASE_ACCESS_TOKEN, and the local DATABASE_URL is not
+parseable. The only managed secret is VERCEL_TOKEN. No connection was attempted,
+no SQL dispatched and no original-project access occurred. Runtime target identity
+could not be confirmed; execution stopped before BEGIN. Installation authority
+and fresh-session cleanup are therefore **BLOCKED / NOT RUN**, not failed or
+passed. No rollback is claimed and no probe transaction exists to clean up.
+
+Approved probe SHA-256:
+`8aa6833cbf91e7065277ece7235fd9b46be48624af59b2c37486aa7e4430ea56`.
+The script is unchanged and unexecuted. Next access action: expose the existing
+authorised Supabase connection to this session, or execute the approved complete
+probe through the already connected account in the named project's SQL Editor.
+Do not send credentials in chat or substitute the old Vercel connection. Verify
+target attribution before execution and independently repeat the final read-only
+checks from a fresh session. Record actual execution before any later attempt;
+the one-run approval must not lead to duplicate probes across sessions.
+
+### Authenticator review: confirmed source gap, hosted impact unresolved
+
+003's two role loops explicitly list only anon, authenticated and service_role.
+The existing isolated security tests likewise omit authenticator. Direct grants
+to authenticator, or effective grants inherited from another unlisted role, are
+not independently revoked/asserted. Public schema USAGE alone grants no table
+access. Inheritance only from the three stripped API roles does not by itself
+leave object grants, but a membership or SET ROLE path to an owner/privileged or
+otherwise granted role could. NOINHERIT alone does not eliminate SET ROLE access.
+RLS is not a sufficient answer for owners/BYPASSRLS or privileges such as TRUNCATE.
+
+The owner reported that memberships/defaults were inspected, without the actual
+non-secret findings for those paths. No live conclusion can be drawn from that
+summary. Inspect authenticator's own global/public default ACL entries, role
+flags and complete membership paths (including PG17 inherit_option/set_option),
+and effective owner-role USAGE/SET reachability. Existing read-only checklist
+returns memberships/defaults; review those results rather than changing roles.
+If authenticator has additional application access, require a scoped 003 patch
+and isolated tests (including inherited grants) before migration approval. Do not
+remove Supabase's normal authenticator-to-API memberships or modify managed roles.
+No migration patch or tests were changed/run under this probe-only approval.
+
+**Assessment: NO-GO for migrations.** First unblock authorised target access and
+complete the single probe/cleanup. Then resolve authenticator evidence and the
+remaining Data API/compatibility gates below. Separate migration approval remains
+required; none is implied by approval of this probe.
+
 ## Target and decision
 
 Only permitted candidate: **echo-dev / dtcxlxehqiuhmhuypqbm**, organisation
