@@ -1,5 +1,12 @@
 # Implementation checkpoint — 31 October 2026
 
+Current direction (11 November): [separate disposable Free development project](ISOLATED_DEVELOPMENT_PLAN.md).
+This supersedes attempts to migrate the shared database. The old project and
+Production remain untouched. The owner reports a Free slot available; organisation
+identity and explicit creation approval remain pending. No new project, connection,
+migration or deployment has been created for this plan.
+
+
 Latest authorised implementation: [MIGRATION_SECURITY.md](MIGRATION_SECURITY.md).
 003 is implemented and locally tested; hosted execution remains **NO-GO** pending
 remaining role/extension/recovery and Production-coordination checks. The owner

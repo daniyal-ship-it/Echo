@@ -1,5 +1,12 @@
 # Migration security patch — 2 November 2026
 
+Current direction (11 November): [separate disposable Free development project](ISOLATED_DEVELOPMENT_PLAN.md).
+This supersedes attempts to migrate the shared database. The old project and
+Production remain untouched. The owner reports a Free slot available; organisation
+identity and explicit creation approval remain pending. No new project, connection,
+migration or deployment has been created for this plan.
+
+
 ## Verified Preview runtime identity — 2 November 2026
 
 The explicitly authorised diagnostic at source 109eb10 was deployed only to the

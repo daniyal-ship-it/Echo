@@ -1,5 +1,12 @@
 # Backend diagnosis and repair — 1 November 2026
 
+Current direction (11 November): [separate disposable Free development project](ISOLATED_DEVELOPMENT_PLAN.md).
+This supersedes attempts to migrate the shared database. The old project and
+Production remain untouched. The owner reports a Free slot available; organisation
+identity and explicit creation approval remain pending. No new project, connection,
+migration or deployment has been created for this plan.
+
+
 Latest result: the authorised diagnostic has executed once on feature Preview
 109eb10. Database/effective role/session role are postgres, resolved search path
 public,extensions, and transaction read-only=true. Temporary flags were removed
