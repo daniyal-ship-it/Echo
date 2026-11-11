@@ -2,6 +2,11 @@
 // open DevTools > Console on that page, paste this whole file and press Enter.
 // It asks for the two test accounts' emails and passwords; nothing is stored or sent anywhere else.
 (async () => {
+  const EXPECTED_HOST = 'echo-git-feat-core-memory-exploration-daniyal-1415s-projects.vercel.app';
+  if (location.host !== EXPECTED_HOST) {
+    console.error(`ISOLATION CHECK DID NOT RUN: this page is ${location.host}, not the ECHO feature Preview. No request was sent.`);
+    return;
+  }
 // ECHO cross-workspace isolation check. Shared by the Node runner and the browser console build.
 // `api(method, path, body)` must return { status, data, text } and keep the session cookie.
 // Creates one harmless note per workspace, attacks workspace A from workspace B, verifies A is

@@ -121,8 +121,10 @@ already recorded above as a fix before Production.
   TLS, provider Supabase, custom CA in use, migrations 001–003 reported applied, `vector`
   visible in `public`.
 - echo-dev at 01:23 UTC: no users, workspaces, sessions or memories. Three rate-limit rows
-  from 01:21, one of them for registration. Whether an account was created and deleted or the
-  registration failed is not established.
+  from 01:21, one of them for registration. The owner confirmed these are Codex's live registration,
+  login, logout and persistence checks followed by account cleanup. The rows fit that: one
+  registration key, one key used twice (two logins) and one key used once (account
+  deletion), with the user, workspace, sessions and audit events gone by cascade.
 
 ### Cross-workspace isolation
 
@@ -140,3 +142,14 @@ already recorded above as a fix before Production.
 ### Provider adapters
 
 Not yet verified on the hosted Preview. Budget: US$1 combined.
+
+### Hosted isolation test preparation
+
+- `docs/preflight/echo-dev-isolation-user-b-create.sql` and `…-remove.sql` create and remove a
+  temporary second account without opening registration. Both are bound to echo-dev's
+  cluster identifier. Not executed on echo-dev.
+- Local rehearsal with registration closed: second registration refused (403); user B created
+  by the SQL and able to sign in; 19 of 19 isolation checks passed; after a simulated
+  interrupted run the removal SQL deleted user B, its session and the leftover test note,
+  and left user A and A's own note intact.
+- The browser-console script refuses to run on any host other than the feature Preview.
