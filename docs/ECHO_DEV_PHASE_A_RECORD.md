@@ -24,16 +24,49 @@ Scope: Supabase project `echo-dev` (`dtcxlxehqiuhmhuypqbm`) only. The original p
 
 ## Data API settings
 
-| Setting | Status | Evidence |
-|---|---|---|
-| Data API enabled | Yes (database evidence) | A `PostgREST 14.18` session is connected as `authenticator` |
-| Default exposure of new `public` tables | On (database evidence) | Default privileges grant all table rights to `anon`, `authenticated`, `service_role`; a probe table was selectable by `anon` |
-| Exposed schemas | **Not yet recorded** | Dashboard-only; no override is stored in the database, which suggests the default set |
-| Dashboard toggle "automatically expose new tables" | **Not yet recorded** | Dashboard-only |
+Owner dashboard inspection of echo-dev (`dtcxlxehqiuhmhuypqbm`), 11 November 2026:
 
-Final security acceptance is open until the two dashboard values are recorded here.
-Migration 003 removes API-role access to ECHO tables in the creating transaction, whatever
-these settings are. Any later migration that adds tables must do the same.
+| Setting | Value | Source |
+|---|---|---|
+| Data API | Enabled | Owner dashboard inspection; a `PostgREST 14.18` session is connected as `authenticator` |
+| Exposed schemas | `graphql_public`, `public` | Owner dashboard inspection |
+| Automatically expose new tables | ON at inspection, then switched OFF by the owner | Owner dashboard; change confirmed in the database afterwards |
+
+### What switching the setting OFF changed
+
+Confirmed by a read-only query after the change. Default privileges for objects created by
+`postgres` in `public`:
+
+| Object type | Before (ON) | After (OFF) |
+|---|---|---|
+| Tables | API roles: all rights | API roles: `TRUNCATE`, `REFERENCES`, `TRIGGER`, `MAINTAIN` remain; `SELECT`, `INSERT`, `UPDATE`, `DELETE` removed |
+| Sequences | API roles: `SELECT`, `UPDATE`, `USAGE` | API roles: `UPDATE` remains |
+| Functions | API roles: `EXECUTE` | No API-role or `PUBLIC` `EXECUTE` |
+
+"API roles" are `anon`, `authenticated` and `service_role`. Default privileges for objects
+created by `supabase_admin` are unchanged and still grant everything to the API roles.
+
+### Interaction with migration 003
+
+- Migration 003 does not change default privileges. It revokes and verifies privileges on each
+  of the 22 ECHO tables and on the trigger function, in the transaction that creates them.
+- The OFF setting alone is not sufficient: new tables still give the API roles `TRUNCATE`,
+  `REFERENCES`, `TRIGGER` and `MAINTAIN`. Row level security does not restrict `TRUNCATE`.
+  Migration 003 revokes and checks all four, so ECHO's tables end with no API-role privileges.
+- The revokes are valid whether the setting is ON or OFF. The bundle was run locally against
+  both privilege shapes and finished with zero API-role table privileges in each. The local
+  engine was PostgreSQL 18.6, not hosted 17.11.
+- ECHO's migrations create no sequences, so the residual sequence grant has no effect today.
+- Any later migration that creates tables must repeat the 003 revoke-and-verify step,
+  whatever the dashboard setting is.
+
+### Accepted for echo-dev, to fix before Production
+
+`vector` installs into `public`, which is an exposed schema, and its objects are created by
+`supabase_admin`, whose default privileges still grant `EXECUTE` to the API roles. The
+extension's distance functions are therefore callable through the Data API. They read no
+ECHO data. The extension is relocatable, so `ALTER EXTENSION vector SET SCHEMA extensions`
+moves it later without a rebuild.
 
 ## Migration bundle
 
@@ -41,4 +74,5 @@ these settings are. Any later migration that adds tables must do the same.
 migrations 001–003 unmodified from `db/migrations`, and a final verification, in one
 transaction. The guard binds execution to echo-dev's cluster identifier
 (`7703760980994770283`) and to an empty `public` schema, so it aborts unchanged anywhere else.
+The final verification also checks `MAINTAIN`.
 Not executed. Requires explicit owner approval.

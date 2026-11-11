@@ -260,7 +260,7 @@ BEGIN
     FROM pg_class c, pg_roles r
     WHERE c.relnamespace='public'::regnamespace AND c.relkind='r'
       AND r.rolname IN ('anon','authenticated','service_role','authenticator')
-      AND (has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
+      AND (has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
            OR has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES'));
   IF bad IS NOT NULL THEN RAISE EXCEPTION 'ECHO verify: API role privileges remain: %', bad; END IF;
   IF EXISTS (SELECT 1 FROM pg_roles r WHERE r.rolname IN ('anon','authenticated','service_role','authenticator')
