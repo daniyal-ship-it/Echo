@@ -110,3 +110,43 @@ test('inherited privileges fail closed and roll back the entire fresh migration'
     await db.close();
   }
 });
+
+test('security migration covers authenticator and every role it can SET ROLE to (live Supabase role shape)', async () => {
+  const db = await PGlite.create({ dataDir: 'memory://', extensions: { vector } });
+  try {
+    await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
+      CREATE ROLE authenticator NOINHERIT LOGIN; GRANT anon,authenticated,service_role TO authenticator;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated,service_role;
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated,service_role;`);
+    await apply(db);
+    await db.exec('SET ROLE authenticator');
+    await assert.rejects(db.query('SELECT * FROM users'), { code: '42501' });
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+      await db.exec(`SET ROLE ${role}`);
+      await assert.rejects(db.query('SELECT * FROM memory_nodes'), { code: '42501' });
+      await assert.rejects(db.query("INSERT INTO auth_attempts(key,count) VALUES ('x',1)"), {
+        code: '42501',
+      });
+      await db.exec('RESET ROLE; SET ROLE authenticator');
+    }
+    await db.exec('RESET ROLE');
+  } finally {
+    await db.close();
+  }
+});
+test('security migration strips grants from any extra role authenticator can reach', async () => {
+  const db = await PGlite.create({ dataDir: 'memory://', extensions: { vector } });
+  try {
+    await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
+      CREATE ROLE authenticator NOINHERIT LOGIN; CREATE ROLE side_door;
+      GRANT anon,authenticated,service_role,side_door TO authenticator;`);
+    await apply(db, async (tx) => {
+      await tx.exec('GRANT SELECT ON users TO side_door; GRANT SELECT(email) ON users TO side_door');
+    });
+    await db.exec('SET ROLE authenticator; SET ROLE side_door');
+    await assert.rejects(db.query('SELECT email FROM users'), { code: '42501' });
+    await db.exec('RESET ROLE');
+  } finally {
+    await db.close();
+  }
+});

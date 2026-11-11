@@ -1,5 +1,7 @@
 -- Object-scoped security; executed in the same transaction as 001/002.
 -- Shared public schema/default ACLs and extension objects are deliberately untouched.
+-- Covers the API login role (authenticator) and every role it can reach by membership
+-- or SET ROLE, so a future grant path through authenticator fails the migration.
 DO $security$
 DECLARE
   table_name text; role_name text; columns_sql text; object_id oid;
@@ -22,7 +24,9 @@ BEGIN
       FROM pg_attribute WHERE attrelid=object_id AND attnum>0 AND NOT attisdropped;
     EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC',table_name);
     EXECUTE format('REVOKE SELECT (%s), INSERT (%s), UPDATE (%s), REFERENCES (%s) ON public.%I FROM PUBLIC',columns_sql,columns_sql,columns_sql,columns_sql,table_name);
-    FOR role_name IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role') LOOP
+    FOR role_name IN SELECT r.rolname FROM pg_roles r
+      WHERE r.rolname IN ('anon','authenticated','service_role','authenticator')
+         OR pg_has_role((SELECT oid FROM pg_roles WHERE rolname='authenticator'), r.oid, 'MEMBER') LOOP
       EXECUTE format('REVOKE ALL ON TABLE public.%I FROM %I',table_name,role_name);
       EXECUTE format('REVOKE SELECT (%s), INSERT (%s), UPDATE (%s), REFERENCES (%s) ON public.%I FROM %I',columns_sql,columns_sql,columns_sql,columns_sql,table_name,role_name);
       IF has_table_privilege(role_name,object_id,privileges)
@@ -34,7 +38,9 @@ BEGIN
   REVOKE ALL ON FUNCTION public.invalidate_memory_intelligence() FROM PUBLIC;
   ALTER FUNCTION public.invalidate_memory_intelligence() SECURITY INVOKER;
   ALTER FUNCTION public.invalidate_memory_intelligence() SET search_path = pg_catalog, public;
-  FOR role_name IN SELECT rolname FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role') LOOP
+  FOR role_name IN SELECT r.rolname FROM pg_roles r
+      WHERE r.rolname IN ('anon','authenticated','service_role','authenticator')
+         OR pg_has_role((SELECT oid FROM pg_roles WHERE rolname='authenticator'), r.oid, 'MEMBER') LOOP
     EXECUTE format('REVOKE ALL ON FUNCTION public.invalidate_memory_intelligence() FROM %I',role_name);
     IF has_function_privilege(role_name,'public.invalidate_memory_intelligence()','EXECUTE') THEN
       RAISE EXCEPTION 'ECHO function execution remains through inherited grants';
