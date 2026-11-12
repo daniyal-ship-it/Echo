@@ -406,8 +406,9 @@ export default function MemoryIntelligence({
                 <span className="eyebrow">POSSIBLE API COST</span>
                 Continuing makes at most {remaining.total} more provider{' '}
                 {remaining.total === 1 ? 'request' : 'requests'} ({remaining.index} to index,{' '}
-                {remaining.analyse} to analyse). Saved results are reused, so it can be fewer. Your
-                provider bills the API account connected to this server; ECHO cannot see prices.
+                {remaining.analyse} to analyse) before retries. Retries can add requests and
+                charges. Saved results are reused, so it can be fewer. Your provider bills the API
+                account connected to this server; ECHO cannot see prices.
               </p>
             )}
             {job && ['uncertain', 'cancelled'].includes(job.status) && (
@@ -515,9 +516,9 @@ export default function MemoryIntelligence({
                   <dd>
                     API charges apply and are billed by each provider to the API account connected
                     to this server. ECHO cannot see prices or balances. One original needs at most{' '}
-                    {MAX_REQUESTS_PER_RUN} provider requests ({PASSAGES_PER_REQUEST} passages per
-                    request, up to {PASSAGE_LIMIT} passages). A daily limit on this server stops
-                    runaway use.
+                    {MAX_REQUESTS_PER_RUN} provider requests before retries ({PASSAGES_PER_REQUEST}{' '}
+                    passages per request, up to {PASSAGE_LIMIT} passages). A daily limit on this
+                    server stops runaway use. Retries can add requests and charges.
                   </dd>
                 </div>
                 <div>
@@ -727,6 +728,12 @@ function ClaimList({
       {claims.map((claim, index) => (
         <li key={index} className="analysis-claim iq-claim">
           <p className="iq-claim-text">{claim.text}</p>
+          {(claim.speakerRole || claim.certainty) && (
+            <p className="fine-print iq-claim-attribution">
+              {claim.speakerRole && <>Source speaker: {claim.speakerRole}. </>}
+              {claim.certainty && <>Interpretation: {claim.certainty}.</>}
+            </p>
+          )}
           {claim.citations.length ? (
             <ul className="iq-evidence" aria-label="Evidence from the original">
               {claim.citations.map((citation, i) => (

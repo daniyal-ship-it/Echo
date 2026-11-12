@@ -162,6 +162,8 @@ test('REAL: unprocessed → informed consent → completed summary → evidence 
   for (const heading of ['What is sent', 'Who receives it', 'What it may cost', 'What is kept'])
     await expect(consent.getByText(heading, { exact: true })).toBeVisible();
   await expect(consent).toContainText('at most 16 provider requests');
+  await expect(consent).toContainText('before retries');
+  await expect(consent).toContainText('Retries can add requests and charges.');
   await expect(consent).toContainText('ECHO cannot see prices');
   await expect(consent.getByLabel('Summary provider')).toContainText('mock-openai-model');
   await expect(consent).not.toContainText('MOCK-ONLY-NOT-A-CREDENTIAL');
@@ -227,6 +229,10 @@ test('REAL: queued → cancelled → resumed → completed, then outdated after 
   await expect(panel(page)).toContainText('no step has started');
   await expect(panel(page).locator('.iq-cost')).toContainText(
     'at most 2 more provider requests (1 to index, 1 to analyse)',
+  );
+  await expect(panel(page).locator('.iq-cost')).toContainText('before retries');
+  await expect(panel(page).locator('.iq-cost')).toContainText(
+    'Retries can add requests and charges.',
   );
   await expect(panel(page).locator('.iq-stage.is-done')).toHaveCount(1);
   await shot(page, '04-queued');
@@ -442,6 +448,8 @@ test('AUGMENTED real analysis: decisions, questions and commitments with numbere
   await page.route('**/api/intelligence?*', async (route) => {
     const response = await route.fetch();
     const body = await response.json();
+    body.analyses[0].result.summary[0].speakerRole = 'user';
+    body.analyses[0].result.summary[0].certainty = 'uncertain';
     body.analyses[0].result.insights = [
       {
         kind: 'decision',
@@ -458,6 +466,9 @@ test('AUGMENTED real analysis: decisions, questions and commitments with numbere
   });
   await openIntelligence(page, 'Vault decision conversation');
   const analysis = panel(page).locator('.generated-analysis');
+  await expect(analysis.locator('.iq-claim-attribution')).toHaveText(
+    'Source speaker: user. Interpretation: uncertain.',
+  );
   await expect(analysis.getByRole('region', { name: 'Decisions' })).toContainText(
     'sealed envelope inside the desk',
   );
@@ -489,6 +500,43 @@ test('AUGMENTED real analysis: decisions, questions and commitments with numbere
   await shot(page, '11-passage-stepping');
   expect(errors).toEqual([]);
   // In-flight stubbed requests must not fail the test while the page closes.
+  await page.unrouteAll({ behavior: 'ignoreErrors' });
+});
+
+test('STUBBED route fault: retry re-fetches the workspace and preserves saved originals', async ({
+  page,
+}) => {
+  await signIn(page, 'first');
+  const saved = await note(
+    page,
+    'Route recovery fixture',
+    'TEST FIXTURE: Preserve this original across a display fault.',
+  );
+  let malformed = true;
+  await page.route('**/api/memories?*', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    if (malformed) body.memories = { invalid: 'STUBBED display fault' };
+    await route.fulfill({ response, json: body });
+  });
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'The workspace could not be drawn' }),
+  ).toBeVisible();
+  malformed = false;
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  await expect(page.locator('canvas')).toBeVisible();
+  await page
+    .getByRole('button', { name: /Route recovery fixture/ })
+    .first()
+    .click();
+  await expect(page.locator('.original-content')).toHaveText(
+    'TEST FIXTURE: Preserve this original across a display fault.',
+  );
+  const original = await page.request.get(`/api/memories/${saved.id}`);
+  expect(original.status()).toBe(200);
+  expect((await original.json()).version).toBe(1);
   await page.unrouteAll({ behavior: 'ignoreErrors' });
 });
 

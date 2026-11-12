@@ -4,8 +4,8 @@ import {
   INTELLIGENCE_BATCH,
   MAX_CHUNKS,
   type Analysis,
+  type Claim,
   type Evidence,
-  type GeneratedAnalysis,
   type IntelligenceJob,
 } from './intelligence-types';
 import type { Edge } from './types';
@@ -210,19 +210,19 @@ export function stages(job: PublicJob, hasAnalysis: boolean): Stage[] {
 }
 
 const batches = (count: number) => Math.ceil(Math.max(0, count) / INTELLIGENCE_BATCH);
-/** Upper bound on provider requests still needed. Saved results are reused, so it can be lower. */
+/** Requests still needed before retries. Saved results are reused, so it can be lower. */
 export function remainingRequests(job: PublicJob) {
   const index = batches(job.total_chunks - job.embedded),
     analyse = batches(job.total_chunks - job.analysed);
   return { index, analyse, total: index + analyse };
 }
-/** Upper bound for any single original, before its passages are counted. */
+/** Request bound before retries for one original, before its passages are counted. */
 export const MAX_REQUESTS_PER_RUN = batches(MAX_CHUNKS) * 2;
 export const PASSAGE_LIMIT = MAX_CHUNKS;
 export const PASSAGES_PER_REQUEST = INTELLIGENCE_BATCH;
 
 export type NumberedEvidence = Evidence & { number: number };
-export type NumberedClaim = { text: string; citations: NumberedEvidence[] };
+export type NumberedClaim = Omit<Claim, 'citations'> & { citations: NumberedEvidence[] };
 export type AnalysisView = {
   summary: NumberedClaim[];
   decisions: NumberedClaim[];
@@ -235,8 +235,8 @@ export type AnalysisView = {
 export function numberAnalysis(result: Analysis): AnalysisView {
   const numbers = new Map<string, number>();
   const passages: AnalysisView['passages'] = [];
-  const claim = (c: { text: string; citations: Evidence[] }): NumberedClaim => ({
-    text: c.text,
+  const claim = (c: Claim): NumberedClaim => ({
+    ...c,
     citations: c.citations.map((citation) => {
       let number = numbers.get(citation.chunkId);
       if (!number) {

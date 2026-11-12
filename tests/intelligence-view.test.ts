@@ -149,6 +149,46 @@ test('connections separate the reader’s decisions from suggestions and inferen
   assert.equal(connectionOrigin(edge('semantic', 'candidate')), 'Inferred from meaning');
   assert.match(connectionOrigin(edge('semantic', 'confirmed')), /confirmed by you/);
 });
+test('numbering preserves v2 attribution, uncertainty and immutable evidence without inventing v1 metadata', () => {
+  const evidence = {
+    chunkId: 'passage',
+    quote: 'Perhaps Friday.',
+    memoryId: 'original',
+    version: 2,
+    messageId: 'message',
+    speakerRole: 'user',
+    startOffset: 10,
+    endOffset: 25,
+  };
+  const view = numberAnalysis({
+    summary: [
+      {
+        text: 'Friday is tentative.',
+        speakerRole: 'user',
+        certainty: 'uncertain',
+        citations: [evidence],
+      },
+      { text: 'Older analysis.', citations: [{ chunkId: 'old', quote: 'Older text.' }] },
+    ],
+    insights: [
+      {
+        kind: 'question',
+        text: 'Friday?',
+        speakerRole: 'user',
+        certainty: 'inference',
+        citations: [evidence],
+      },
+    ],
+  });
+  assert.equal(view.summary[0].speakerRole, 'user');
+  assert.equal(view.summary[0].certainty, 'uncertain');
+  assert.deepEqual(view.summary[0].citations[0], { ...evidence, number: 1 });
+  assert.equal(view.questions[0].certainty, 'inference');
+  assert.equal(view.questions[0].speakerRole, 'user');
+  assert.equal(view.questions[0].citations[0].number, 1);
+  assert.equal('speakerRole' in view.summary[1], false);
+  assert.equal('certainty' in view.summary[1], false);
+});
 test('a passage is highlighted only when its offsets reproduce the cited text exactly', () => {
   const text = 'Keep the codes in the desk. Review in March.';
   const hit = locatePassage(text, { start_offset: 5, end_offset: 14, content: 'the codes' });
