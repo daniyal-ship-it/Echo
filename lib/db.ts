@@ -51,6 +51,26 @@ export interface Database {
   close(): Promise<void>;
 }
 
+/** Queries pass JSON as text they have already serialised, as the local engine expects.
+ * The managed driver's default would serialise that text a second time and store a JSON
+ * string instead of the array or object, so strings are passed through unchanged. */
+export const serialiseJsonParameter = (value: unknown) =>
+  typeof value === 'string' ? value : JSON.stringify(value);
+export function managedPostgresOptions() {
+  return {
+    max: 5,
+    ssl: process.env.DATABASE_SSL === 'disable' ? (false as const) : databaseTlsOptions(),
+    prepare: false,
+    types: {
+      json: {
+        to: 114,
+        from: [114, 3802],
+        serialize: serialiseJsonParameter,
+        parse: (text: string) => JSON.parse(text),
+      },
+    },
+  };
+}
 export async function createDatabase(
   directory?: string,
   options: { requestId?: string; applyManagedMigrations?: boolean } = {},
@@ -98,11 +118,7 @@ export async function createDatabase(
       if (process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL === 'disable') {
         throw databaseConfigError('DB_TLS_REQUIRED');
       }
-      const sql = postgres(process.env.DATABASE_URL!, {
-        max: 5,
-        ssl: process.env.DATABASE_SSL === 'disable' ? false : databaseTlsOptions(),
-        prepare: false,
-      });
+      const sql = postgres(process.env.DATABASE_URL!, managedPostgresOptions());
       const wrap = (client: typeof sql): Database => ({
         async query<T>(text: string, params: unknown[] = []) {
           return (await client.unsafe(text, params as never[])) as unknown as T[];

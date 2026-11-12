@@ -215,3 +215,29 @@ Found during the hosted isolation test on 12 November 2026.
 - **One-off cleanup** (per database, after review):
   `DELETE FROM data_sources s WHERE NOT EXISTS (SELECT 1 FROM memory_nodes m WHERE m.source_id = s.id);`
   Not executed.
+
+## Bug: jsonb values double-encoded on managed PostgreSQL — 12 November 2026
+
+- **Symptom.** On the hosted Preview, saving a memory or opening one showed "This page
+  couldn't load." Browser exception: `memory.messages.filter is not a function`.
+- **Root cause.** Queries pass JSON already serialised with `JSON.stringify`. The managed
+  driver (postgres.js) serialises jsonb parameters again, so PostgreSQL stored a JSON string
+  holding JSON text. Reads then returned strings where the interface expects arrays and
+  objects (`position`, `raw`, `messages`). The local engine used by the test suite accepts
+  pre-serialised text, so no test showed it. Not a Next.js navigation or deployment fault.
+- **Scope.** Every jsonb write through the managed driver: memory positions, versions,
+  import jobs, assistant runs, intelligence jobs and analyses.
+- **Reproduction.** Local PostgreSQL 17.11 with the same driver and the application's own
+  save code: values stored as jsonb strings; a browser showed the same error page and
+  exception. With the fix: arrays and objects stored, no page error.
+- **Fix.** `lib/db.ts`: the managed client's JSON serializer passes strings through unchanged.
+  Regression tests in `tests/managed-postgres-json.test.ts`; the integration test runs when
+  `ECHO_TEST_POSTGRES_URL` points at a real PostgreSQL server and fails without the fix.
+- **Existing data.** echo-dev holds one affected memory and one affected version (the
+  owner's "ECHO provider test" note). `docs/preflight/echo-dev-repair-double-encoded-json.sql`
+  unwraps affected values in place, deletes nothing and is bound to echo-dev. Tested locally
+  on double- and triple-encoded rows; other columns unchanged; afterwards the previously
+  failing memory opened in a browser. Not executed on echo-dev. Run it after the fix is
+  deployed, or new writes will be double-encoded again.
+- **Follow-up before Production.** Run the test suite against real PostgreSQL in CI, since
+  the local engine hid this.
