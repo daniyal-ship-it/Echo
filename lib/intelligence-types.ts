@@ -1,5 +1,5 @@
 export const CHUNKER_VERSION = 'messages-utf16-v1';
-export const PROMPT_VERSION = 'grounded-analysis-v1';
+export const PROMPT_VERSION = 'grounded-analysis-v2';
 export const EMBEDDING_DIMENSIONS = 1536;
 export const MAX_CHUNKS = 64;
 export const INTELLIGENCE_BATCH = 8;
@@ -20,8 +20,22 @@ export type Passage = {
   content_hash: string;
   chunker_version: string;
 };
-export type Evidence = { chunkId: string; quote: string };
-export type Claim = { text: string; citations: Evidence[] };
+export type Evidence = {
+  chunkId: string;
+  quote: string;
+  memoryId?: string;
+  version?: number;
+  messageId?: string | null;
+  speakerRole?: string | null;
+  startOffset?: number;
+  endOffset?: number;
+};
+export type Claim = {
+  text: string;
+  citations: Evidence[];
+  speakerRole?: string;
+  certainty?: 'explicit' | 'uncertain' | 'inference';
+};
 export type Analysis = {
   summary: Claim[];
   insights: (Claim & { kind: 'decision' | 'question' | 'commitment' })[];

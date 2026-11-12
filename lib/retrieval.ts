@@ -1,7 +1,14 @@
 import type { Database } from './db';
 import { memoryFilter } from './exploration';
-import type { Citation } from './types';
-import { embedTexts, embeddingStatus, verifyProviderModel } from './providers';
+import type { Citation, Message } from './types';
+import { getPassage } from './chunks';
+import {
+  embedTexts,
+  embeddingStatus,
+  verifyProviderModel,
+  ProviderFailure,
+  validateEmbeddingResult,
+} from './providers';
 import { hash, HttpError, uuid } from './security';
 const STOP = new Set(
   'find show where when what which how did does do the a an we i my me about first discussed please conversation conversations everything related to and or of in on is was were that it have has who'.split(
@@ -16,20 +23,60 @@ function terms(question: string) {
 }
 export async function assertCitationAccess(db: Database, workspace: string, citations: Citation[]) {
   for (const citation of citations) {
-    const [source] = await db.query<{ version: number }>(
-      `SELECT m.version FROM memory_nodes m JOIN memory_versions v ON v.memory_id=m.id AND v.workspace_id=m.workspace_id AND v.version=coalesce($3,m.version) WHERE m.workspace_id=$1 AND m.id=$2`,
+    const [source] = await db.query<{
+      version: number;
+      content: string;
+      messages: Message[];
+      title: string;
+      source: string;
+      region: string;
+    }>(
+      `SELECT m.version,m.title,m.source,m.region,v.content,v.messages FROM memory_nodes m
+       JOIN memory_versions v ON v.memory_id=m.id AND v.workspace_id=m.workspace_id AND v.version=coalesce($3,m.version)
+       WHERE m.workspace_id=$1 AND m.id=$2`,
       [workspace, citation.id, citation.version ?? null],
     );
     if (!source) throw new HttpError(409, 'A cited original is no longer available. Search again.');
-    if (citation.version && source.version !== citation.version)
+    if (citation.version !== undefined && source.version !== citation.version)
       throw new HttpError(409, 'A cited original changed. Search again before sending context.');
+    if (
+      !citation.excerpt ||
+      citation.title !== source.title ||
+      citation.source !== source.source ||
+      citation.region !== source.region ||
+      (citation.brainNodeId !== undefined && citation.brainNodeId !== citation.id)
+    )
+      throw new HttpError(409, 'Citation identity does not match its original.');
     if (citation.chunkId) {
-      const [chunk] = await db.query<{ id: string }>(
-        'SELECT id FROM memory_chunks WHERE workspace_id=$1 AND memory_id=$2 AND source_version=$3 AND id=$4 AND content=$5',
-        [workspace, citation.id, citation.version, citation.chunkId, citation.excerpt],
-      );
-      if (!chunk) throw new HttpError(409, 'A citation does not match its original passage.');
+      const chunk = await getPassage(db, workspace, citation.id, citation.chunkId);
+      if (
+        !chunk.active ||
+        chunk.source_version !== citation.version ||
+        chunk.content !== citation.excerpt ||
+        (citation.messageId !== undefined && citation.messageId !== chunk.message_id) ||
+        (citation.messageIndex !== undefined && citation.messageIndex !== chunk.message_index) ||
+        (citation.speakerRole !== undefined && citation.speakerRole !== chunk.role) ||
+        (citation.timestamp !== undefined &&
+          String(citation.timestamp) !== String(chunk.source_timestamp)) ||
+        (citation.startOffset !== undefined && citation.startOffset !== chunk.start_offset) ||
+        (citation.endOffset !== undefined && citation.endOffset !== chunk.end_offset)
+      )
+        throw new HttpError(409, 'A citation does not match its original passage.');
+    } else {
+      // Unindexed fallback excerpts are evidence too, never arbitrary client text.
+      const start = citation.startOffset ?? source.content.indexOf(citation.excerpt);
+      const end = citation.endOffset ?? start + citation.excerpt.length;
+      if (
+        !Number.isInteger(start) ||
+        !Number.isInteger(end) ||
+        start < 0 ||
+        end !== start + citation.excerpt.length ||
+        source.content.slice(start, end) !== citation.excerpt
+      )
+        throw new HttpError(409, 'A citation excerpt does not match its immutable original.');
     }
+    if (citation.contentHash !== undefined && citation.contentHash !== hash(citation.excerpt))
+      throw new HttpError(409, 'Citation content hash does not match its evidence.');
   }
 }
 type QueryEmbedder = (
@@ -69,12 +116,21 @@ async function queryVector(
   if (claim) return claim;
   try {
     const result = await embed([question], model, lease);
+    validateEmbeddingResult(result, 1, model);
     await db.query(
       "UPDATE query_embeddings SET status='completed',embedding=$4::vector,tokens=$5 WHERE workspace_id=$1 AND query_hash=$2 AND model=$3 AND lease_token=$6",
       [workspace, digest, model, JSON.stringify(result.vectors[0]), result.tokens, lease],
     );
     return result.vectors[0];
   } catch (error) {
+    // Explicit rejection (429) may be retried; uncertain sends must never auto-repeat.
+    if (error instanceof ProviderFailure && error.retryable && !error.uncertain) {
+      await db.query(
+        'DELETE FROM query_embeddings WHERE workspace_id=$1 AND query_hash=$2 AND model=$3 AND lease_token=$4',
+        [workspace, digest, model, lease],
+      );
+      throw error;
+    }
     await db.query(
       "UPDATE query_embeddings SET status='uncertain' WHERE workspace_id=$1 AND query_hash=$2 AND model=$3 AND lease_token=$4",
       [workspace, digest, model, lease],
@@ -90,10 +146,12 @@ export async function hybridRetrieve(
   semantic = false,
   embed: QueryEmbedder = embedTexts,
 ) {
+  question = question.trim();
+  if (question.length < 2) throw new HttpError(400, 'Enter a nonempty question.');
   if (question.length > 2000) throw new HttpError(400, 'Question is too long.');
   const { where, args } = memoryFilter(workspace, filters),
     query = terms(question);
-  const columns = `m.id,m.title,m.source,m.region,c.content AS excerpt,c.source_version AS version,c.id AS "chunkId",c.message_id AS "messageId",c.source_timestamp AS timestamp,c.start_offset AS "startOffset",c.end_offset AS "endOffset"`;
+  const columns = `m.id,m.title,m.source,m.region,c.content AS excerpt,c.source_version AS version,c.id AS "chunkId",c.message_id AS "messageId",c.source_timestamp AS timestamp,c.start_offset AS "startOffset",c.end_offset AS "endOffset",c.message_index AS "messageIndex",c.role AS "speakerRole",c.content_hash AS "contentHash"`;
   const lexical = query
     ? await db.query<Citation>(
         `WITH scoped AS (SELECT * FROM memory_nodes WHERE ${where})
@@ -116,6 +174,9 @@ export async function hybridRetrieve(
       .filter((index) => index >= 0);
     const start = locations.length ? Math.max(0, Math.min(...locations) - 150) : 0;
     citation.excerpt = citation.excerpt.slice(start, start + 1600);
+    citation.startOffset = start;
+    citation.endOffset = start + citation.excerpt.length;
+    citation.contentHash = hash(citation.excerpt);
   }
   const keywords = [...lexical, ...fallback].sort((a, b) => b.rank - a.rank);
   const config = embeddingStatus();
@@ -124,7 +185,7 @@ export async function hybridRetrieve(
   if (semantic) {
     // Only seek account access/send a query when this workspace and filter have eligible current entries.
     const [{ count }] = await db.query<{ count: number }>(
-      `WITH scoped AS (SELECT * FROM memory_nodes WHERE ${where}) SELECT count(*)::int AS count FROM memory_chunks c JOIN scoped m ON m.id=c.memory_id AND m.workspace_id=c.workspace_id AND m.version=c.source_version JOIN chunk_embeddings i ON i.chunk_id=c.id AND i.workspace_id=c.workspace_id JOIN embedding_cache e ON e.id=i.cache_id AND e.workspace_id=c.workspace_id WHERE c.active AND e.model=$9`,
+      `WITH scoped AS (SELECT * FROM memory_nodes WHERE ${where}) SELECT count(*)::int AS count FROM memory_chunks c JOIN scoped m ON m.id=c.memory_id AND m.workspace_id=c.workspace_id AND m.version=c.source_version JOIN chunk_embeddings i ON i.chunk_id=c.id AND i.workspace_id=c.workspace_id JOIN embedding_cache e ON e.id=i.cache_id AND e.workspace_id=c.workspace_id AND e.memory_id=c.memory_id AND e.content_hash=c.content_hash AND e.dimensions=1536 WHERE c.active AND e.model=$9`,
       [...args, config.model],
     );
     if (count) {
@@ -132,7 +193,7 @@ export async function hybridRetrieve(
       const embedding = await queryVector(db, workspace, question, config.model, embed);
       vectors = await db.query<Citation>(
         `WITH scoped AS (SELECT * FROM memory_nodes WHERE ${where}) SELECT ${columns},1-(e.embedding <=> $10::vector) AS similarity,0::real AS rank
-    FROM memory_chunks c JOIN scoped m ON m.id=c.memory_id AND m.workspace_id=c.workspace_id AND m.version=c.source_version JOIN chunk_embeddings i ON i.chunk_id=c.id AND i.workspace_id=c.workspace_id JOIN embedding_cache e ON e.id=i.cache_id AND e.workspace_id=c.workspace_id
+    FROM memory_chunks c JOIN scoped m ON m.id=c.memory_id AND m.workspace_id=c.workspace_id AND m.version=c.source_version JOIN chunk_embeddings i ON i.chunk_id=c.id AND i.workspace_id=c.workspace_id JOIN embedding_cache e ON e.id=i.cache_id AND e.workspace_id=c.workspace_id AND e.memory_id=c.memory_id AND e.content_hash=c.content_hash AND e.dimensions=1536
     WHERE c.active AND e.model=$9 AND 1-(e.embedding <=> $10::vector)>=0.45 ORDER BY e.embedding <=> $10::vector,c.id LIMIT 40`,
         [...args, config.model, JSON.stringify(embedding)],
       );
@@ -155,20 +216,44 @@ export async function hybridRetrieve(
         similarity: kind === 'semantic' ? Number(c.similarity) : previous?.similarity,
       });
     });
-  const perMemory = new Map<string, number>();
-  const citations = [...merged.values()]
-    .sort((a, b) => b.rank - a.rank || a.id.localeCompare(b.id))
-    .filter((c) => {
-      const count = perMemory.get(c.id) || 0;
-      if (count >= 2) return false;
-      perMemory.set(c.id, count + 1);
-      return true;
-    })
-    .slice(0, 6);
+  const citations = diversifyCitations([...merged.values()]);
+  for (const citation of citations) citation.brainNodeId = citation.id;
   await assertCitationAccess(db, workspace, citations);
   return {
     mode: usedSemantic ? 'hybrid-retrieval' : 'keyword-retrieval',
     citations,
     semanticAvailable: usedSemantic,
+    evidence: {
+      status: citations.length ? ('retrieved' as const) : ('insufficient' as const),
+      keywordCandidates: keywords.length,
+      semanticCandidates: vectors.length,
+      distinctMemories: new Set(citations.map((c) => c.id)).size,
+      // A ranking score/similarity is not a confidence that an answer is true.
+      entailsAnswer: false as const,
+    },
   };
+}
+
+/** Cover distinct originals before spending the remaining context on second passages. */
+export function diversifyCitations(candidates: Citation[], limit = 6): Citation[] {
+  const ordered = [...candidates].sort(
+    (a, b) =>
+      b.rank - a.rank ||
+      a.id.localeCompare(b.id) ||
+      (a.chunkId || '').localeCompare(b.chunkId || ''),
+  );
+  const first: Citation[] = [],
+    extra: Citation[] = [];
+  const memories = new Set<string>(),
+    seen = new Set<string>();
+  for (const c of ordered) {
+    const key = `${c.id}:${c.version}:${hash(c.excerpt)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (!memories.has(c.id)) {
+      memories.add(c.id);
+      first.push(c);
+    } else if (!extra.some((e) => e.id === c.id)) extra.push(c);
+  }
+  return [...first, ...extra].slice(0, limit);
 }

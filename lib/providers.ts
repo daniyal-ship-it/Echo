@@ -125,6 +125,33 @@ export async function embedTexts(texts: string[], model: string, requestId: stri
     tokens: Number(result.usage?.total_tokens || 0),
   };
 }
+/** Validate injected/replayed results as well as the live adapter before persistence. */
+export function validateEmbeddingResult(
+  value: Awaited<ReturnType<typeof embedTexts>>,
+  count: number,
+  model: string,
+) {
+  if (
+    !value ||
+    value.model !== model ||
+    value.dimensions !== 1536 ||
+    !Array.isArray(value.vectors) ||
+    value.vectors.length !== count ||
+    value.vectors.some(
+      (v) =>
+        !Array.isArray(v) ||
+        v.length !== 1536 ||
+        v.some((n) => typeof n !== 'number' || !Number.isFinite(n)) ||
+        !v.some((n) => n !== 0),
+    ) ||
+    !Number.isFinite(value.tokens) ||
+    value.tokens < 0
+  )
+    throw new ProviderFailure(
+      'Embedding result does not match the requested model, dimensions or batch.',
+    );
+}
+
 export function providerStatus() {
   return [
     {
@@ -159,7 +186,17 @@ export async function callProvider(
   const input = JSON.stringify(
     options?.input ?? {
       question,
-      sources: citations.map((c, i) => ({ number: i + 1, title: c.title, excerpt: c.excerpt })),
+      sources: citations.map((c, i) => ({
+        number: i + 1,
+        title: c.title,
+        excerpt: c.excerpt,
+        memoryId: c.id,
+        version: c.version,
+        passageId: c.chunkId,
+        speakerRole: c.speakerRole,
+        messageId: c.messageId,
+        timestamp: c.timestamp,
+      })),
       ...(comparison
         ? {
             task: 'Compare the independent answers, identify disagreements, and synthesise a grounded answer. Do not treat model output as additional evidence.',

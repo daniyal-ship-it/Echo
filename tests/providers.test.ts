@@ -41,6 +41,10 @@ test('provider adapters use separate official APIs, bound output, preserve citat
         source: 'note',
         region: 'frontal' as const,
         rank: 1,
+        version: 3,
+        chunkId: 'passage',
+        speakerRole: 'assistant',
+        messageId: 'message',
       },
     ];
     const a = await callProvider('openai', 'What is supported?', citations);
@@ -52,6 +56,12 @@ test('provider adapters use separate official APIs, bound output, preserve citat
     assert.equal(requests[0].body.max_output_tokens, 1200);
     assert.equal(requests[0].body.store, false);
     assert.equal(requests[0].body.tools, undefined);
+    const supplied = JSON.parse(String(requests[0].body.input)).sources[0];
+    assert.equal(supplied.memoryId, 'source');
+    assert.equal(supplied.version, 3);
+    assert.equal(supplied.passageId, 'passage');
+    assert.equal(supplied.speakerRole, 'assistant');
+    assert.equal(supplied.messageId, 'message');
     assert.match(String(requests[0].body.instructions), /untrusted data/);
     assert.equal(requests[1].url, 'https://api.anthropic.com/v1/messages');
     assert.equal(requests[1].body.max_tokens, 1200);

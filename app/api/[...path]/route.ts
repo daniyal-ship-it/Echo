@@ -638,6 +638,10 @@ async function handleRequest(
         await assertCitationAccess(db, workspace, citations);
         const tokens = outputs.reduce((n, o) => n + o.inputTokens + o.outputTokens, 0);
         await db.transaction(async (tx) => {
+          // Match original edit/delete lock ordering. The final source check and
+          // publication must share a transaction so edits cannot slip between them.
+          await tx.query('SELECT id FROM workspaces WHERE id=$1 FOR UPDATE', [workspace]);
+          await assertCitationAccess(tx, workspace, citations);
           await tx.query(
             "UPDATE agent_runs SET status='completed',outputs=$1,tokens=$2 WHERE id=$3",
             [JSON.stringify(outputs), tokens, id],

@@ -510,3 +510,194 @@ test('saved intelligence work and exact passages survive database close/reopen w
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test('repeated source passages are embedded once, with both immutable message passages retained (mock transport)', async () => {
+  const w = await workspace(),
+    { services, calls } = mocks();
+  const item = source('repeated messages');
+  item.messages = ['first', 'second'].map((id) => ({
+    id,
+    role: 'user',
+    content: item.content,
+    timestamp: null,
+    parent: null,
+    active: true,
+  }));
+  const saved = await db.transaction((tx) => storeMemory(tx, w, item));
+  const job = await enqueueIntelligence(db, w, saved.id, 'openai', services);
+  const batches: number[] = [];
+  await finish(w, job.id, {
+    ...services,
+    embed: async (...args) => {
+      batches.push(args[0].length);
+      return services.embed(...args);
+    },
+  });
+  assert.deepEqual(batches, [1]);
+  assert.equal(calls.embed, 1);
+  const rows = await db.query('SELECT * FROM chunk_embeddings WHERE workspace_id=$1', [w]);
+  assert.equal(rows.length, 2);
+  assert.equal(
+    (await db.query('SELECT * FROM embedding_cache WHERE workspace_id=$1', [w])).length,
+    1,
+  );
+  const citations = (await hybridRetrieve(db, w, 'access codes')).citations;
+  assert.equal(citations.length, 1, 'identical passage text does not consume two context slots');
+});
+
+test('in-flight cancellation preserves durable success without publishing; resume replays without another call (mock transport)', async () => {
+  const w = await workspace(),
+    { services, calls } = mocks();
+  const saved = await db.transaction((tx) => storeMemory(tx, w, source('cancel in flight')));
+  const job = await enqueueIntelligence(db, w, saved.id, 'openai', services);
+  let begin!: () => void, release!: () => void;
+  const began = new Promise<void>((r) => {
+    begin = r;
+  });
+  const waiting = new Promise<void>((r) => {
+    release = r;
+  });
+  const running = runIntelligenceStep(db, w, job.id, {
+    ...services,
+    embed: async (...args) => {
+      begin();
+      await waiting;
+      return services.embed(...args);
+    },
+  });
+  await began;
+  await controlIntelligence(db, w, job.id, 'cancel');
+  release();
+  assert.equal((await running).status, 'cancelled');
+  assert.equal(
+    (await db.query('SELECT * FROM chunk_embeddings WHERE workspace_id=$1', [w])).length,
+    0,
+  );
+  await controlIntelligence(db, w, job.id, 'resume');
+  await finish(w, job.id, services);
+  assert.equal(calls.embed, 1);
+});
+
+test('query rate-limit rejection may be retried but uncertain outcomes never auto-repeat (mock transport)', async () => {
+  const w = await workspace(),
+    { services, calls } = mocks();
+  const saved = await db.transaction((tx) => storeMemory(tx, w, source('query retries')));
+  await finish(w, (await enqueueIntelligence(db, w, saved.id, 'openai', services)).id, services);
+  await assert.rejects(
+    hybridRetrieve(db, w, 'credentials secured', new URLSearchParams(), true, async () => {
+      throw new ProviderFailure('Rejected with 429', true, false);
+    }),
+    /429/,
+  );
+  assert.equal(
+    (await db.query('SELECT * FROM query_embeddings WHERE workspace_id=$1', [w])).length,
+    0,
+  );
+  await hybridRetrieve(db, w, 'credentials secured', new URLSearchParams(), true, services.embed);
+  const before = calls.embed;
+  await hybridRetrieve(
+    db,
+    w,
+    '  credentials secured  ',
+    new URLSearchParams(),
+    true,
+    services.embed,
+  );
+  assert.equal(calls.embed, before, 'trimmed query shares the durable cache');
+  await assert.rejects(
+    hybridRetrieve(db, w, 'another query', new URLSearchParams(), true, async () => {
+      throw new ProviderFailure('Interrupted', false, true);
+    }),
+    /Interrupted/,
+  );
+  await assert.rejects(
+    hybridRetrieve(db, w, 'another query', new URLSearchParams(), true, services.embed),
+    /unknown/,
+  );
+  assert.equal(calls.embed, before);
+});
+
+test('invalid or mismatched embedding results cannot populate the persisted index (mock transport)', async () => {
+  const w = await workspace(),
+    { services } = mocks();
+  const saved = await db.transaction((tx) => storeMemory(tx, w, source('wrong model')));
+  const job = await enqueueIntelligence(db, w, saved.id, 'openai', services);
+  const result = await runIntelligenceStep(db, w, job.id, {
+    ...services,
+    embed: async (...args) => ({ ...(await services.embed(...args)), model: 'unexpected-model' }),
+  });
+  assert.equal(result.status, 'failed');
+  assert.equal(
+    (await db.query('SELECT * FROM embedding_cache WHERE workspace_id=$1', [w])).length,
+    0,
+  );
+});
+
+test('semantic candidate refresh keeps score and explanation consistent, without changing confirmed links (mock transport)', async () => {
+  const w = await workspace(),
+    { services } = mocks();
+  const a = await db.transaction((tx) => storeMemory(tx, w, source('relationship A')));
+  const b = await db.transaction((tx) =>
+    storeMemory(tx, w, source('relationship B', 'The access codes remain in the desk.')),
+  );
+  for (const m of [a, b])
+    await finish(w, (await enqueueIntelligence(db, w, m.id, 'openai', services)).id, services);
+  const [edge] = await db.query<{ id: string }>(
+    'SELECT id FROM memory_edges WHERE workspace_id=$1',
+    [w],
+  );
+  await db.query("UPDATE memory_edges SET confidence=0.1,evidence='old score' WHERE id=$1", [
+    edge.id,
+  ]);
+  await finish(w, (await enqueueIntelligence(db, w, a.id, 'anthropic', services)).id, services);
+  const [refreshed] = await db.query<{
+    confidence: number;
+    evidence: string;
+    semantic_evidence: { similarity: number };
+  }>('SELECT * FROM memory_edges WHERE id=$1', [edge.id]);
+  assert.equal(refreshed.confidence, refreshed.semantic_evidence.similarity);
+  assert.match(refreshed.evidence, /not proof/);
+  await db.query(
+    "UPDATE memory_edges SET status='confirmed',evidence='User-confirmed explanation' WHERE id=$1",
+    [edge.id],
+  );
+  await finish(w, (await enqueueIntelligence(db, w, b.id, 'anthropic', services)).id, services);
+  assert.equal(
+    (
+      await db.query<{ evidence: string }>('SELECT evidence FROM memory_edges WHERE id=$1', [
+        edge.id,
+      ])
+    )[0].evidence,
+    'User-confirmed explanation',
+  );
+});
+
+test('semantic lookup refuses index mappings to another original even within the same workspace (mock transport)', async () => {
+  const w = await workspace(),
+    { services, calls } = mocks();
+  const a = await db.transaction((tx) =>
+    storeMemory(tx, w, { ...source('index A'), tags: ['only-a'] }),
+  );
+  const b = await db.transaction((tx) =>
+    storeMemory(tx, w, source('index B', 'An unrelated synthetic original.')),
+  );
+  for (const m of [a, b])
+    await finish(w, (await enqueueIntelligence(db, w, m.id, 'openai', services)).id, services);
+  await db.query(
+    `UPDATE chunk_embeddings SET cache_id=(SELECT id FROM embedding_cache WHERE workspace_id=$1 AND memory_id=$2 LIMIT 1)
+    WHERE workspace_id=$1 AND chunk_id IN (SELECT id FROM memory_chunks WHERE memory_id=$3)`,
+    [w, b.id, a.id],
+  );
+  // Filtering to A leaves no valid semantic entries; do not dispatch a question embedding.
+  const before = calls.embed;
+  const result = await hybridRetrieve(
+    db,
+    w,
+    'credentials secured',
+    new URLSearchParams({ tag: 'only-a' }),
+    true,
+    services.embed,
+  );
+  assert.equal(result.semanticAvailable, false);
+  assert.equal(calls.embed, before);
+});

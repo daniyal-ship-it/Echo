@@ -74,6 +74,9 @@ export type Edge = {
   target_title?: string;
   semantic_evidence?: {
     model: string;
+    scoreKind?: 'cosine-similarity';
+    requiresConfirmation?: boolean;
+    interpretation?: string;
     similarity: number;
     stale: boolean;
     passages: { memoryId: string; chunkId: string; version: number; quote: string }[];
@@ -138,6 +141,11 @@ export type Citation = {
   timestamp?: string | null;
   startOffset?: number;
   endOffset?: number;
+  /** The existing id is also the brain-node ID; this alias makes the contract explicit. */
+  brainNodeId?: string;
+  speakerRole?: string | null;
+  messageIndex?: number | null;
+  contentHash?: string;
   keywordRank?: number;
   similarity?: number;
 };
