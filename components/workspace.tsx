@@ -1,6 +1,13 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type CSSProperties,
+} from 'react';
 import {
   ArrowDownToLine,
   ArrowLeft,
@@ -10,6 +17,7 @@ import {
   BookOpen,
   BrainCircuit,
   Check,
+  ChevronDown,
   ChevronRight,
   Compass,
   Database,
@@ -21,6 +29,8 @@ import {
   Maximize2,
   Menu,
   Minimize2,
+  PanelRightClose,
+  PanelRightOpen,
   Plus,
   RotateCcw,
   Search,
@@ -55,6 +65,18 @@ import {
 } from './panels';
 import type { ViewCommand } from './brain';
 import TopicPanel from './topic-panel';
+import { CanvasNotice, LobeLegend, LobeOverview, MobileBar, TrailBack } from './brain-hud';
+import {
+  contextOf,
+  current as currentPlace,
+  depth,
+  initialTrail,
+  previous as previousPlace,
+  travel,
+  visit,
+  type Trail,
+  type TrailLocation,
+} from '@/lib/exploration-trail';
 const Brain = dynamic(() => import('./brain'), {
   ssr: false,
   loading: () => (
@@ -124,6 +146,14 @@ export default function Workspace() {
   const [pendingQuestion, setPendingQuestion] = useState('');
   const controller = useRef<AbortController | null>(null);
   const [toast, setToast] = useState('');
+  // Every place visited, shared by the breadcrumb, the Back control and the browser's Back.
+  const [trail, setTrail] = useState<Trail<Retrieval>>(initialTrail);
+  const trailRef = useRef<Trail<Retrieval>>(trail);
+  const historyRun = useRef('');
+  const [atlasLoaded, setAtlasLoaded] = useState(false);
+  const [panelHidden, setPanelHidden] = useState(false);
+  const [sheetTall, setSheetTall] = useState(false);
+  const askInput = useRef<HTMLInputElement>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const selectedRequest = useRef(0);
   const graphRequest = useRef(0);
@@ -141,6 +171,30 @@ export default function Workspace() {
     (cmd: Omit<ViewCommand, 'key'>) => setCommand((c) => ({ ...cmd, key: c.key + 1 })),
     [],
   );
+  const record = useCallback((location: TrailLocation<Retrieval>) => {
+    const before = trailRef.current;
+    const next = visit(before, location);
+    trailRef.current = next;
+    setTrail(next);
+    const state = {
+      ...(window.history.state ?? {}),
+      echo: next.index,
+      echoRun: historyRun.current,
+    };
+    if (next.index !== before.index) window.history.pushState(state, '');
+    else window.history.replaceState(state, '');
+  }, []);
+  const resetTrail = useCallback(() => {
+    const fresh = initialTrail<Retrieval>();
+    trailRef.current = fresh;
+    setTrail(fresh);
+    // Entries left in the browser from an earlier run or account must never be replayed.
+    historyRun.current = `${Date.now()}-${Math.random()}`;
+    window.history.replaceState(
+      { ...(window.history.state ?? {}), echo: 0, echoRun: historyRun.current },
+      '',
+    );
+  }, []);
   useEffect(() => {
     // The server ended the session (expiry, sign-out elsewhere): confirm, then drop stale state.
     const onUnauthorized = () => {
@@ -168,6 +222,8 @@ export default function Workspace() {
       localStorage.getItem('echo-reduced-motion') === 'true' ||
         matchMedia('(prefers-reduced-motion: reduce)').matches,
     );
+    resetTrail();
+    setPanelHidden(localStorage.getItem('echo-context-panel') === 'hidden');
     const saved = localStorage.getItem('echo-quality');
     if (saved === 'low' || saved === 'balanced' || saved === 'high') setQuality(saved);
     else if (window.innerWidth < 700) setQuality('low');
@@ -175,7 +231,7 @@ export default function Workspace() {
       controller.current?.abort();
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, [notify]);
+  }, [notify, resetTrail]);
   useEffect(() => {
     const timer = setTimeout(() => {
       setQuery(search);
@@ -212,8 +268,10 @@ export default function Workspace() {
         setGraph((previous) => ({ ...previous, nodes: [], edges: [] }));
       }
     } finally {
-      if (request === graphRequest.current && activeWorkspace.current === user.workspaceId)
+      if (request === graphRequest.current && activeWorkspace.current === user.workspaceId) {
         setGraphLoading(false);
+        setAtlasLoaded(true);
+      }
     }
   }, [user, region, query, source, tag, from, to, untagged, selected?.id, topicPage, topicSearch]);
   const refreshLibrary = useCallback(async () => {
@@ -266,21 +324,70 @@ export default function Workspace() {
     void refreshGraph();
     void refreshLibrary();
   }
-  async function openMemory(id: string, version?: number, passage?: string) {
+  const context = (): TrailLocation<Retrieval> =>
+    contextOf({ kind: 'whole', region, tag, untagged, topicPosition });
+  async function loadMemory(id: string, version?: number, passage?: string) {
     const req = ++selectedRequest.current;
+    const params = new URLSearchParams();
+    if (version) params.set('version', String(version));
+    if (passage) params.set('passage', passage);
+    const m = await api<MemoryDetail>(`memories/${id}?${params}`);
+    if (req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId)
+      return null;
+    setSelected(m);
+    setRetrieval(null);
+    setMobilePanel(true);
+    move({ type: 'memory', position: m.position });
+    return m;
+  }
+  async function openMemory(id: string, version?: number, passage?: string) {
     try {
-      const params = new URLSearchParams();
-      if (version) params.set('version', String(version));
-      if (passage) params.set('passage', passage);
-      const m = await api<MemoryDetail>(`memories/${id}?${params}`);
-      if (req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId) return;
-      setSelected(m);
-      setRetrieval(null);
-      setMobilePanel(true);
-      move({ type: 'memory', position: m.position });
+      const m = await loadMemory(id, version, passage);
+      if (m)
+        record({
+          ...context(),
+          kind: 'memory',
+          memory: { id: m.id, title: m.title, region: m.region, version, passage },
+        });
     } catch (e) {
       notify((e as Error).message);
     }
+  }
+  /** Shows a recorded place again without adding to the trail (Back, Forward). */
+  function revisit(place: TrailLocation<Retrieval>) {
+    selectedRequest.current++;
+    setRegion(place.region);
+    setTag(place.tag);
+    setUntagged(place.untagged);
+    setTopicPosition(place.topicPosition);
+    setPage(0);
+    setMobileNav(false);
+    setMobilePanel(place.kind !== 'whole');
+    const settle = () =>
+      move(
+        place.topicPosition && (place.tag || place.untagged)
+          ? { type: 'topic', position: place.topicPosition }
+          : place.region
+            ? { type: 'region', region: place.region }
+            : { type: 'reset' },
+      );
+    if (place.kind === 'memory' && place.memory) {
+      // Keep the current panel until the earlier memory has loaded, then swap.
+      loadMemory(place.memory.id, place.memory.version, place.memory.passage).catch((e) => {
+        setSelected(null);
+        settle();
+        notify(`That memory can no longer be opened. ${(e as Error).message}`);
+      });
+      return;
+    }
+    setSelected(null);
+    setRetrieval(place.kind === 'results' ? (place.results ?? null) : null);
+    settle();
+  }
+  const revisitLatest = useRef(revisit);
+  revisitLatest.current = revisit;
+  function goBack() {
+    if (trailRef.current.index > 0) window.history.back();
   }
   function focusRegion(value: Region | null) {
     selectedRequest.current++;
@@ -296,6 +403,13 @@ export default function Workspace() {
     setMobileNav(false);
     setMobilePanel(Boolean(value));
     move(value ? { type: 'region', region: value } : { type: 'reset' });
+    record({
+      kind: value ? 'region' : 'whole',
+      region: value,
+      tag: '',
+      untagged: false,
+      topicPosition: null,
+    });
   }
   function wholeBrain() {
     setSearch('');
@@ -310,6 +424,7 @@ export default function Workspace() {
     setSelected(null);
     setRetrieval(null);
     setMobilePanel(Boolean(region));
+    record(context());
     move(
       topicPosition
         ? { type: 'topic', position: topicPosition }
@@ -337,6 +452,13 @@ export default function Workspace() {
       setPage(0);
       setMobilePanel(true);
       move({ type: 'topic', position: node.position });
+      record({
+        kind: 'topic',
+        region: node.region,
+        tag: node.topic || '',
+        untagged: node.topic === null,
+        topicPosition: node.position,
+      });
     } else if (node.kind === 'spatial' || node.count > 1) {
       focusRegion(node.region);
       setTab('library');
@@ -351,6 +473,11 @@ export default function Workspace() {
     setRetrieval(null);
     setMobilePanel(true);
     move({ type: 'memory', position: memory.position });
+    record({
+      ...context(),
+      kind: 'memory',
+      memory: { id: memory.id, title: memory.title, region: memory.region },
+    });
     refresh();
     notify('Memory saved. Its original and position are preserved.');
   }
@@ -408,6 +535,9 @@ export default function Workspace() {
     setFilters(false);
     setQuestionFilters(false);
     setToast('');
+    setAtlasLoaded(false);
+    setSheetTall(false);
+    resetTrail();
     move({ type: 'reset' });
   }
   async function ask(e?: FormEvent) {
@@ -457,7 +587,9 @@ export default function Workspace() {
           signal: requestController.signal,
         });
         if (activeWorkspace.current !== user?.workspaceId) return;
-        setRetrieval({ question: value, ...r });
+        const found = { question: value, ...r };
+        setRetrieval(found);
+        record({ ...context(), kind: 'results', results: found, question: value });
         refresh();
       } else {
         const r = await api<{ citations: Citation[]; mode: string }>('retrieve', {
@@ -471,7 +603,9 @@ export default function Workspace() {
           signal: requestController.signal,
         });
         if (activeWorkspace.current !== user?.workspaceId) return;
-        setRetrieval({ question: value, ...r });
+        const found = { question: value, ...r };
+        setRetrieval(found);
+        record({ ...context(), kind: 'results', results: found, question: value });
         if (r.citations[0]) {
           const node = graph.nodes.find((n) => n.id === r.citations[0].id);
           if (node) move({ type: 'memory', position: node.position });
@@ -499,10 +633,95 @@ export default function Workspace() {
   const topicLabel = untagged ? 'Untagged memories' : tag ? `#${tag}` : '';
   const topicView = Boolean(region && !tag && !untagged && !selected && !retrieval);
   const hasProvider = settings?.providers.some((p) => p.configured);
+  const place = currentPlace(trail);
+  const backTo = previousPlace(trail);
+  const showingResults = Boolean(retrieval && !selected);
+  const level = showingResults
+    ? null
+    : depth({
+        kind: selected ? 'memory' : topicLabel ? 'topic' : region ? 'region' : 'whole',
+        region,
+        tag,
+        untagged,
+        topicPosition,
+      });
+  const lobeName = region ? REGION_INFO[region].name : '';
+  const emptyLobe =
+    topicView &&
+    !graphLoading &&
+    !graphError &&
+    !topicSearch &&
+    graph.mode === 'topics' &&
+    !graph.nodes.length;
+  // The panel holds memories and results, so those always reveal it; lobes and topics are
+  // also visible on the canvas and respect the reader's choice to hide it.
+  const panelCollapsed = panelHidden && Boolean(user) && authLoaded && !selected && !retrieval;
+  const announcement = selected
+    ? `Memory opened: ${selected.title}`
+    : showingResults
+      ? `${retrieval!.citations.length} retrieved ${retrieval!.citations.length === 1 ? 'source' : 'sources'}`
+      : topicLabel
+        ? `Topic ${topicLabel}, ${total} ${total === 1 ? 'memory' : 'memories'}`
+        : region
+          ? `${lobeName} lobe, ${graph.counts[region] || 0} ${(graph.counts[region] || 0) === 1 ? 'memory' : 'memories'}`
+          : 'Whole brain';
+  function togglePanel() {
+    const next = !panelHidden;
+    setPanelHidden(next);
+    localStorage.setItem('echo-context-panel', next ? 'hidden' : 'shown');
+  }
+  function closeResults() {
+    setRetrieval(null);
+    record(context());
+  }
+  const shortcuts = useRef<(event: KeyboardEvent) => void>(() => undefined);
+  shortcuts.current = (event) => {
+    if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
+    // Native dialogs handle their own Escape.
+    if (document.querySelector('dialog[open]')) return;
+    const target = event.target as HTMLElement | null;
+    const typing = Boolean(target?.closest('input, textarea, select, [contenteditable="true"]'));
+    if (event.key === '/' && !typing) {
+      event.preventDefault();
+      if (immersive) setImmersive(false);
+      setMobileNav(false);
+      setMobilePanel(false);
+      requestAnimationFrame(() => askInput.current?.focus());
+    } else if (event.key === 'Escape') {
+      if (typing) return target?.blur();
+      if (mobileNav) return setMobileNav(false);
+      if (trailRef.current.index > 0) {
+        event.preventDefault();
+        goBack();
+      }
+    }
+  };
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => shortcuts.current(event);
+    const onPop = (event: PopStateEvent) => {
+      const state = event.state as { echo?: number; echoRun?: string } | null;
+      const target =
+        state && state.echoRun === historyRun.current && typeof state.echo === 'number'
+          ? state.echo
+          : 0;
+      const next = travel(trailRef.current, target);
+      if (!next || next.index === trailRef.current.index) return;
+      trailRef.current = next;
+      setTrail(next);
+      revisitLatest.current(next.entries[next.index]);
+    };
+    window.addEventListener('keydown', onKey);
+    window.addEventListener('popstate', onPop);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('popstate', onPop);
+    };
+  }, []);
 
   return (
     <div
-      className={`app-shell ${immersive ? 'immersive' : ''} ${mobileNav ? 'nav-open' : ''} ${mobilePanel ? 'panel-open' : ''}`}
+      className={`app-shell ${immersive ? 'immersive' : ''} ${mobileNav ? 'nav-open' : ''} ${mobilePanel ? 'panel-open' : ''} ${panelCollapsed ? 'panel-collapsed' : ''} ${sheetTall || !user ? 'sheet-tall' : ''} ${selected || retrieval ? 'has-context' : ''}`}
+      data-place={showingResults ? 'results' : place.kind}
       data-reduced-motion={reducedMotion ? 'true' : undefined}
     >
       <header className="topbar">
@@ -830,8 +1049,14 @@ export default function Workspace() {
           </div>
         </div>
       </aside>
-      <main className="viewport">
+      <main
+        className="viewport"
+        style={
+          { '--place': activeRegion ? REGION_INFO[activeRegion].color : '#88b7f5' } as CSSProperties
+        }
+      >
         <div className="viewport-top">
+          <TrailBack to={backTo} onBack={goBack} />
           <nav className="breadcrumb" aria-label="Brain navigation">
             <button onClick={wholeBrain}>Whole brain</button>
             {activeRegion && (
@@ -857,29 +1082,65 @@ export default function Workspace() {
                 <span aria-current="page">Memory</span>
               </>
             )}
+            {showingResults && (
+              <>
+                <ChevronRight size={12} />
+                <span aria-current="page">Results</span>
+              </>
+            )}
           </nav>
           <div className="view-status">
+            {graphLoading && ready && (
+              <span className="view-updating">
+                <Loader2 size={10} className="spin" aria-hidden />
+                UPDATING VIEW
+              </span>
+            )}
             <span className={ready ? 'live-dot active' : 'live-dot'} />
             {ready ? '3D ANATOMICAL VIEW' : 'LOADING GEOMETRY'}
           </div>
         </div>
         <div className="scene-title">
-          <span className="eyebrow">YOUR KNOWLEDGE, IN PERSPECTIVE</span>
+          <span className="eyebrow depth-label">
+            {level ? (
+              <>
+                <span className="depth-meter" aria-hidden>
+                  {[1, 2, 3, 4].map((n) => (
+                    <i key={n} className={n <= level.level ? 'on' : ''} />
+                  ))}
+                </span>
+                {String(level.level).padStart(2, '0')} / {level.name.toUpperCase()}
+                <span className="sr-only">
+                  , level {level.level} of {level.of}
+                </span>
+              </>
+            ) : (
+              'SEARCH RESULTS'
+            )}
+          </span>
           <h1>
             {selected
               ? 'A memory in context'
-              : topicLabel || (region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas')}
+              : showingResults
+                ? 'Retrieved sources'
+                : topicLabel || (region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas')}
           </h1>
           <p>
             {selected
               ? 'Selected original + confirmed neighbours'
-              : topicLabel
-                ? 'Individual records · grouped by explicit tags'
-                : region
-                  ? 'Explore the topics and projects in this lobe.'
-                  : 'A living archive. An anatomical canvas.'}
+              : showingResults
+                ? `${retrieval!.citations.length} ${retrieval!.citations.length === 1 ? 'passage' : 'passages'} matched your question`
+                : topicLabel
+                  ? 'Individual records · grouped by explicit tags'
+                  : region
+                    ? 'Explore the topics and projects in this lobe.'
+                    : 'A living archive. An anatomical canvas.'}
           </p>
         </div>
+        <p className="sr-only" aria-live="polite" data-testid="place-announcement">
+          {announcement}
+        </p>
+        <LobeLegend counts={graph.counts} active={activeRegion} onSelect={focusRegion} />
         <div className="brain-canvas" data-testid="brain-viewport">
           <Brain
             graph={graphLoading ? { ...graph, nodes: [], edges: [] } : graph}
@@ -893,6 +1154,21 @@ export default function Workspace() {
             onReady={() => setReady(true)}
           />
         </div>
+        {emptyLobe && (
+          <CanvasNotice tone="empty">
+            <strong>No memories in the {lobeName} lobe yet.</strong>
+            <span>The scaffold is anatomy only. Nothing is drawn here until you add a record.</span>
+            <span className="canvas-notice-actions">
+              <button className="button secondary small" onClick={() => setModal('note')}>
+                <Plus size={13} aria-hidden />
+                Write a memory
+              </button>
+              <button className="text-button" onClick={wholeBrain}>
+                Return to the whole brain
+              </button>
+            </span>
+          </CanvasNotice>
+        )}
         <div className="canvas-tools">
           <button
             className="icon-button"
@@ -927,6 +1203,21 @@ export default function Workspace() {
           >
             <Compass size={17} />
           </button>
+          {user && (
+            <>
+              <span className="desktop-only" />
+              <button
+                className="icon-button desktop-only"
+                aria-label={panelCollapsed ? 'Show context panel' : 'Hide context panel'}
+                title={panelCollapsed ? 'Show context panel' : 'Hide context panel'}
+                aria-pressed={!panelCollapsed}
+                disabled={Boolean(selected || retrieval)}
+                onClick={togglePanel}
+              >
+                {panelCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
+              </button>
+            </>
+          )}
         </div>
         <div className="scene-caption">
           <div>
@@ -941,8 +1232,11 @@ export default function Workspace() {
               </>
             )}
           </div>
-          <p>
+          <p className="hint-pointer">
             Drag to rotate <span>·</span> Scroll to zoom <span>·</span> Double-click a region
+          </p>
+          <p className="hint-touch">
+            Drag to rotate <span>·</span> Pinch to zoom <span>·</span> Double-tap a lobe
           </p>
         </div>
         {immersive ? (
@@ -956,6 +1250,8 @@ export default function Workspace() {
               <div className="composer-input">
                 <Search size={18} />
                 <input
+                  ref={askInput}
+                  aria-keyshortcuts="/"
                   aria-label="Ask your memory"
                   placeholder={
                     user ? 'What would you like to remember?' : 'Your memory starts with a thought…'
@@ -1045,12 +1341,23 @@ export default function Workspace() {
         )}
       </main>
       <aside className="inspector">
+        {user && (
+          <button
+            className="sheet-handle mobile-only"
+            aria-label={sheetTall ? 'Shrink panel' : 'Expand panel'}
+            aria-expanded={sheetTall}
+            onClick={() => setSheetTall(!sheetTall)}
+          >
+            <span aria-hidden />
+          </button>
+        )}
         <button
           className="icon-button mobile-close mobile-only"
           aria-label="Close panel"
+          title="Put this panel away. Your place is kept."
           onClick={() => setMobilePanel(false)}
         >
-          <X size={19} />
+          <ChevronDown size={19} />
         </button>
         {!authLoaded ? (
           <div className="quiet-empty">
@@ -1085,7 +1392,7 @@ export default function Workspace() {
               <button
                 className="icon-button"
                 aria-label="Close search results"
-                onClick={() => setRetrieval(null)}
+                onClick={closeResults}
               >
                 <X size={16} />
               </button>
@@ -1215,6 +1522,8 @@ export default function Workspace() {
                     <FileText size={16} />
                     <span>
                       <strong>{memory.title}</strong>
+                      {/* The stored extractive preview: opening words of the original, not AI. */}
+                      {memory.summary && <em className="topic-preview">{memory.summary}</em>}
                       <small>{memory.source} · Open original</small>
                     </span>
                     <ArrowUpRight size={14} />
@@ -1251,6 +1560,20 @@ export default function Workspace() {
               </div>
             )}
           </section>
+        ) : !atlasLoaded ? (
+          <div className="quiet-empty" role="status">
+            <Loader2 className="spin" size={20} />
+            <p>Opening your atlas…</p>
+          </div>
+        ) : graph.total > 0 ? (
+          <LobeOverview
+            counts={graph.counts}
+            total={graph.total}
+            connections={graph.edges.length}
+            onSelect={focusRegion}
+            onImport={() => setModal('imports')}
+            onWrite={() => setModal('note')}
+          />
         ) : (
           <div className="field-guide">
             <div className="inspector-heading">
@@ -1320,16 +1643,35 @@ export default function Workspace() {
           </div>
         )}
       </aside>
-      <div className="mobile-dock mobile-only">
-        <button className="button secondary" onClick={() => setMobileNav(true)}>
-          <BookOpen size={15} />
-          Memories
-        </button>
-        <button className="button secondary" onClick={() => setMobilePanel(true)}>
-          {user ? <Focus size={15} /> : <ShieldCheck size={15} />}{' '}
-          {user ? 'Inspector' : 'Open workspace'}
-        </button>
-      </div>
+      <MobileBar
+        signedIn={Boolean(user)}
+        view={mobileNav ? 'memories' : mobilePanel ? 'context' : 'atlas'}
+        contextLabel={
+          selected
+            ? 'Memory'
+            : retrieval
+              ? 'Results'
+              : topicLabel
+                ? 'Topic'
+                : region
+                  ? 'Lobe'
+                  : 'Overview'
+        }
+        onAtlas={() => {
+          setMobileNav(false);
+          setMobilePanel(false);
+          setTab('brain');
+        }}
+        onMemories={() => {
+          setMobilePanel(false);
+          setMobileNav(true);
+        }}
+        onContext={() => {
+          setMobileNav(false);
+          setMobilePanel(true);
+        }}
+        onNew={() => setModal('note')}
+      />
       {toast && (
         <div className="toast" role="status">
           <span>{toast}</span>

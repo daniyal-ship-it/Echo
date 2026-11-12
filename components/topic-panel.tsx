@@ -36,6 +36,10 @@ export default function TopicPanel({
       </div>
       <div className="topic-intro">
         <span className="step-label">02 / LOBE → TOPIC</span>
+        <p className="lobe-identity" style={{ color: REGION_INFO[region].color }}>
+          <span className="region-dot" style={{ background: REGION_INFO[region].color }} />
+          {REGION_INFO[region].name} lobe · {REGION_INFO[region].meaning}
+        </p>
         <h2>Find a thread.</h2>
         <p>
           Explore topics and projects named by tags in your originals. A memory can belong to
