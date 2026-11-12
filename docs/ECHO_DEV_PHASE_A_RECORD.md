@@ -136,8 +136,7 @@ already recorded above as a fix before Production.
   both test notes are deleted. It never calls the assistant or a paid provider endpoint.
 - Local result: 19 of 19 passed over HTTP against this commit's code with a local database
   (PostgreSQL 18.6 engine) and two registered users.
-- Hosted result: **not yet run.** Needs a second account on echo-dev without opening
-  registration, which requires owner approval.
+- Hosted result: passed on 12 November 2026; see "Hosted isolation test" below.
 
 ### Provider adapters
 
@@ -153,3 +152,39 @@ Not yet verified on the hosted Preview. Budget: US$1 combined.
   interrupted run the removal SQL deleted user B, its session and the leftover test note,
   and left user A and A's own note intact.
 - The browser-console script refuses to run on any host other than the feature Preview.
+
+## Hosted isolation test — 12 November 2026
+
+Target: feature Preview at commit `dcb6691`, database echo-dev. Production, the original
+project and Vercel configuration were not touched. No paid provider call was made.
+
+| Time (UTC) | Event |
+|---|---|
+| 00:18 | Owner registered user A through the Preview. One user, one workspace on echo-dev. |
+| 00:19 | Temporary user B created with `echo-dev-isolation-user-b-create.sql` (owner-approved). Registration stayed closed. |
+| 00:37 | Owner ran `scripts/isolation/browser-console.js` on the Preview. Reported result: `ISOLATION PASS`. |
+| 00:38 | User B removed with `echo-dev-isolation-user-b-remove.sql`. |
+
+Database evidence, read before cleanup, consistent with a clean pass:
+
+- Audit trail: A `memory.created`, B `memory.created`, B `workspace.exported`, A
+  `memory.deleted`, B `memory.deleted`. No `edge.created`, no `memory.version_created`, and
+  only one deletion per workspace, so none of B's write attempts against A's note took effect.
+- No rows in `memory_edges`, `intelligence_jobs`, `agent_runs`, `embedding_cache` or
+  `query_embeddings`.
+
+The pass/fail table itself was observed by the owner in the browser; it was not captured here.
+
+Fresh-session verification after cleanup:
+
+- One user and one workspace remain: user A, same ids and creation time as before the test,
+  password hash unchanged in format.
+- User B, its workspace, sessions and audit events: none remain.
+- Notes, versions and edges: none. No isolation-test notes.
+- Sessions: none. The test signs out at the end, so user A must sign in again.
+- User A's audit trail keeps the test's `memory.created` and `memory.deleted` events.
+
+Residue and finding: one `data_sources` row remains in user A's workspace from the deleted test
+note. It holds only the provider name `note` and a random id. The application's note deletion
+does not remove this row, so every deleted note leaves one behind. Left in place; to be fixed
+in the application.
