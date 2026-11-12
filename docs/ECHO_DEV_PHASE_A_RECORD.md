@@ -188,3 +188,30 @@ Residue and finding: one `data_sources` row remains in user A's workspace from t
 note. It holds only the provider name `note` and a random id. The application's note deletion
 does not remove this row, so every deleted note leaves one behind. Left in place; to be fixed
 in the application.
+
+## Bug to fix before Production: orphaned `data_sources` rows
+
+Found during the hosted isolation test on 12 November 2026.
+
+- **Behaviour.** Saving a note or importing an item inserts a `data_sources` row and a
+  `memory_nodes` row that references it. Deleting the memory (`DELETE /api/memories/{id}`)
+  deletes only the `memory_nodes` row.
+- **Cascade direction.** `memory_nodes.source_id` references `data_sources(id) ON DELETE
+  CASCADE`, so deleting a source deletes its memory. Nothing runs in the other direction, so
+  deleting a memory leaves its source row behind.
+- **What does clean it up.** `data_sources.workspace_id` cascades from `workspaces`, which
+  cascades from `users`, so deleting the account removes every such row. That is why user B
+  left none.
+- **Impact.** Each deleted memory leaves one row holding the provider name and source key.
+  For notes the key is a random id. For imports it is the provider's own conversation or file
+  identifier, which is metadata about data the user asked to delete, and it stays in the
+  workspace until the account is deleted. Row count also grows without bound.
+- **Current residue on echo-dev.** One row in user A's workspace: provider `note`, random key.
+- **Fix.** In the memory delete handler, in one transaction, delete the `data_sources` row
+  for that memory instead of the `memory_nodes` row and let the existing cascade remove the
+  memory; add a test that a deleted memory leaves no `data_sources` row. Check re-import
+  first: `storeMemory` reuses the source row by `(workspace_id, provider, source_key)`, so
+  after the fix a re-imported item gets a new source row, which is the intended result.
+- **One-off cleanup** (per database, after review):
+  `DELETE FROM data_sources s WHERE NOT EXISTS (SELECT 1 FROM memory_nodes m WHERE m.source_id = s.id);`
+  Not executed.
