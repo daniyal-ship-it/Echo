@@ -1,0 +1,149 @@
+{
+  "corpus": "synthetic-retrieval-v1",
+  "corpusSha256": "b9e3bf1642a7da8092739d54cfaeffa09bd1fc80856a8f010a66aa4259797815",
+  "semantics": {
+    "status": "NOT RUN: real embedding artifact unavailable; no fabricated vectors or paid calls"
+  },
+  "limitations": [
+    "Synthetic corpus is small; metrics are retrieval relevance, not answer entailment.",
+    "Keyword lexical-trap false positives are reported, not hidden.",
+    "Artifact provenance is supplied by its producer, not independently certified by this runner."
+  ],
+  "results": [
+    {
+      "case": "codes-exact",
+      "kind": "exact-match",
+      "mode": "keyword",
+      "expected": [
+        "codes"
+      ],
+      "found": [
+        "codes"
+      ],
+      "recallAt6": 1,
+      "precisionAt6": 1,
+      "reciprocalRank": 1,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "practice-exact",
+      "kind": "exact-match",
+      "mode": "keyword",
+      "expected": [
+        "practice"
+      ],
+      "found": [
+        "practice"
+      ],
+      "recallAt6": 1,
+      "precisionAt6": 1,
+      "reciprocalRank": 1,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "codes-paraphrase",
+      "kind": "paraphrased",
+      "mode": "keyword",
+      "expected": [
+        "codes"
+      ],
+      "found": [
+        "software"
+      ],
+      "recallAt6": 0,
+      "precisionAt6": 0,
+      "reciprocalRank": 0,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "practice-paraphrase",
+      "kind": "paraphrased",
+      "mode": "keyword",
+      "expected": [
+        "practice"
+      ],
+      "found": [],
+      "recallAt6": 0,
+      "precisionAt6": null,
+      "reciprocalRank": 0,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "cross-launch",
+      "kind": "cross-memory",
+      "mode": "keyword",
+      "expected": [
+        "hardware",
+        "software"
+      ],
+      "found": [
+        "software",
+        "hardware"
+      ],
+      "recallAt6": 1,
+      "precisionAt6": 1,
+      "reciprocalRank": 1,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "source-filter",
+      "kind": "irrelevant-source",
+      "mode": "keyword",
+      "expected": [
+        "hardware"
+      ],
+      "found": [
+        "hardware",
+        "software"
+      ],
+      "recallAt6": 1,
+      "precisionAt6": 0.5,
+      "reciprocalRank": 1,
+      "correctAbstention": null,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "empty-filter",
+      "kind": "irrelevant-source",
+      "mode": "keyword",
+      "expected": [],
+      "found": [],
+      "recallAt6": null,
+      "precisionAt6": null,
+      "reciprocalRank": null,
+      "correctAbstention": true,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "no-source",
+      "kind": "insufficient-evidence",
+      "mode": "keyword",
+      "expected": [],
+      "found": [],
+      "recallAt6": null,
+      "precisionAt6": null,
+      "reciprocalRank": null,
+      "correctAbstention": true,
+      "citationIntegrity": "passed"
+    },
+    {
+      "case": "lexical-trap",
+      "kind": "insufficient-evidence",
+      "mode": "keyword",
+      "expected": [],
+      "found": [
+        "mercury-paint"
+      ],
+      "recallAt6": null,
+      "precisionAt6": 0,
+      "reciprocalRank": null,
+      "correctAbstention": false,
+      "citationIntegrity": "passed"
+    }
+  ]
+}

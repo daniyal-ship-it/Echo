@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-12",
+  "base": "9efffe27a7aa1189b65b792d6ee0208de49db968",
+  "implementation_commit": "c26aa7f434ca9a64fa0449619d64ca51c9b6fa59",
+  "unit_integration": {
+    "tests": 58,
+    "pass": 58,
+    "fail": 0,
+    "skipped": 0
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "image_digest": "sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966",
+    "exit_code": 0,
+    "connection": "isolated loopback Docker; no hosted credentials"
+  },
+  "pgvector": "0.8.2",
+  "browser": {
+    "existing_suite_passed": 6,
+    "final_assistant_publication_change_targeted_rerun_passed": 1,
+    "providers": "explicitly mocked; not live model-quality acceptance"
+  },
+  "typescript": "passed",
+  "production_build": "passed; serial, after browser server stopped",
+  "standalone_smoke_groups_passed": 4,
+  "anatomy_assets": "passed; checksums and geometry unchanged",
+  "semantic_quality": "NOT RUN: no genuine embedding artifact; official pretrained-model host proxy denied; no new paid API budget",
+  "lexical_evaluation": "phase2a-retrieval-evaluation.json; false positives preserved in report",
+  "hosted_database_tests": false,
+  "hosted_migrations": false,
+  "ai_calls": 0,
+  "ai_spending_usd": 0,
+  "disposable_postgres_container": "removed",
+  "frontend_source_changes": false,
+  "migration_sql_changes": false
+}

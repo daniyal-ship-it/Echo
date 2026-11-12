@@ -1,0 +1,25 @@
+{
+  "version": "synthetic-retrieval-v1",
+  "description": "Harmless synthetic originals and human-authored relevance labels. No generated embeddings or summaries.",
+  "memories": [
+    {"key":"codes","title":"Security note","content":"Keep the access codes in a sealed envelope inside the desk.","source":"note"},
+    {"key":"practice","title":"Music note","content":"The rehearsal begins at dawn.","source":"note"},
+    {"key":"hardware","title":"Orion hardware","content":"Orion hardware launch is scheduled for April 12. The circuit board needs a final inspection.","source":"note"},
+    {"key":"software","title":"Orion software","content":"Orion software launch is scheduled for May 3. The release needs a security review.","source":"note"},
+    {"key":"bread","title":"Recipe","content":"The sourdough starter needs flour and warm water before baking.","source":"note"},
+    {"key":"weather","title":"Weather","content":"Heavy rain is expected near the harbour on Friday.","source":"note"},
+    {"key":"mercury-paint","title":"Mercury colour","content":"Mercury is the silver paint colour chosen for the kitchen wall.","source":"note"},
+    {"key":"unrelated-chat","title":"Unrelated assistant suggestion","content":"An assistant suggested calling the prototype Orion. This conversation contains no hardware launch date.","source":"chatgpt"}
+  ],
+  "cases": [
+    {"key":"codes-exact","kind":"exact-match","question":"access codes sealed envelope","expected":["codes"]},
+    {"key":"practice-exact","kind":"exact-match","question":"rehearsal dawn","expected":["practice"]},
+    {"key":"codes-paraphrase","kind":"paraphrased","question":"Where were the credentials secured?","expected":["codes"]},
+    {"key":"practice-paraphrase","kind":"paraphrased","question":"What time does practice start?","expected":["practice"]},
+    {"key":"cross-launch","kind":"cross-memory","question":"Compare Orion hardware and software launch dates.","expected":["hardware","software"],"filters":{"source":"note"}},
+    {"key":"source-filter","kind":"irrelevant-source","question":"Orion hardware launch","expected":["hardware"],"filters":{"source":"note"}},
+    {"key":"empty-filter","kind":"irrelevant-source","question":"access codes","expected":[],"filters":{"source":"claude"}},
+    {"key":"no-source","kind":"insufficient-evidence","question":"What is the lunar expedition budget?","expected":[]},
+    {"key":"lexical-trap","kind":"insufficient-evidence","question":"What is Mercury's orbital period?","expected":[]}
+  ]
+}
