@@ -32,6 +32,7 @@ import {
   X,
 } from 'lucide-react';
 import { api, post, UNAUTHORIZED_EVENT } from '@/lib/client';
+import { SectionBoundary } from './error-boundary';
 import {
   REGION_INFO,
   REGIONS,
@@ -502,6 +503,7 @@ export default function Workspace() {
   return (
     <div
       className={`app-shell ${immersive ? 'immersive' : ''} ${mobileNav ? 'nav-open' : ''} ${mobilePanel ? 'panel-open' : ''}`}
+      data-reduced-motion={reducedMotion ? 'true' : undefined}
     >
       <header className="topbar">
         <div className="brand">
@@ -1067,13 +1069,15 @@ export default function Workspace() {
             }}
           />
         ) : selected ? (
-          <MemoryPanel
-            memory={selected}
-            onClose={closeMemory}
-            onNavigate={(id, v, passage) => void openMemory(id, v, passage)}
-            onChanged={refresh}
-            onError={notify}
-          />
+          <SectionBoundary name="This memory" resetKey={selected} onDismiss={closeMemory}>
+            <MemoryPanel
+              memory={selected}
+              onClose={closeMemory}
+              onNavigate={(id, v, passage) => void openMemory(id, v, passage)}
+              onChanged={refresh}
+              onError={notify}
+            />
+          </SectionBoundary>
         ) : retrieval ? (
           <>
             <div className="inspector-heading">

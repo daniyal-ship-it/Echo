@@ -5,7 +5,6 @@ import {
   ArrowUpRight,
   Check,
   FileText,
-  Link2,
   Loader2,
   LockKeyhole,
   Pencil,
@@ -17,6 +16,10 @@ import {
 } from 'lucide-react';
 import { api, post } from '@/lib/client';
 import MemoryIntelligence from './memory-intelligence';
+import MemoryConnections from './memory-connections';
+import SourcePassage from './source-passage';
+import { SectionBoundary } from './error-boundary';
+import { locatePassage } from '@/lib/intelligence-view';
 import {
   REGION_INFO,
   REGIONS,
@@ -485,11 +488,51 @@ export function MemoryPanel({
   const [link, setLink] = useState(false);
   const [editing, setEditing] = useState(false);
   const [targets, setTargets] = useState<Memory[]>([]);
+  // Passages cited by the analysis the reader came from, so citations can be stepped through.
+  const [trail, setTrail] = useState<{ version: number; ids: string[] } | null>(null);
+  const cited = useRef<HTMLElement>(null);
   useEffect(() => {
     setTab('original');
-    setBranch(false);
+    // A citation into an alternate conversation branch must stay visible in context.
+    setBranch(memory.passage ? !memory.passage.active : false);
     scroll.current?.scrollTo({ top: 0 });
-  }, [memory.id, memory.passage?.id]);
+  }, [memory.id, memory.passage?.id, memory.passage?.active]);
+  useEffect(() => setTrail(null), [memory.id]);
+  // The opened memory is a snapshot; the intelligence section reports newer publication state.
+  const [published, setPublished] = useState<boolean | null>(null);
+  useEffect(() => setPublished(null), [memory.id, memory.viewed_version]);
+  const indexing =
+    published === null || memory.viewed_version !== memory.version
+      ? memory.indexing_status
+      : published
+        ? 'semantic'
+        : memory.indexing_status === 'semantic'
+          ? 'keyword'
+          : memory.indexing_status;
+  const passage = memory.passage;
+  const passageTrail =
+    passage && trail && trail.version === passage.source_version && trail.ids.includes(passage.id)
+      ? trail.ids
+      : [];
+  // Only highlight when the saved offsets reproduce the cited text exactly.
+  const noteContext =
+    passage && !memory.messages.length ? locatePassage(memory.content, passage) : null;
+  const messageContext = (index: number, id: string, content: string) =>
+    passage && passage.message_index === index && passage.message_id === id
+      ? locatePassage(content, passage)
+      : null;
+  const inContext =
+    !!noteContext ||
+    memory.messages.some((m, index) => !!messageContext(index, m.id, m.content || ''));
+  const highlighted = (context: NonNullable<ReturnType<typeof locatePassage>>) => (
+    <>
+      {context.before}
+      <mark className="iq-mark" ref={cited} tabIndex={-1} aria-label="Cited passage in context">
+        {context.match}
+      </mark>
+      {context.after}
+    </>
+  );
   async function remove() {
     if (
       !confirm(
@@ -573,12 +616,28 @@ export function MemoryPanel({
           ))}
         </div>
       </div>
-      <div className="panel-tabs">
+      <div className="panel-tabs" role="group" aria-label="Memory sections">
         {(['original', 'intelligence', 'connections', 'versions'] as const).map((t) => (
-          <button className={tab === t ? 'active' : ''} key={t} onClick={() => setTab(t)}>
+          <button
+            className={tab === t ? 'active' : ''}
+            key={t}
+            aria-pressed={tab === t}
+            onClick={() => setTab(t)}
+          >
             {t === 'connections'
               ? `Links (${memory.edges.length})`
               : t.charAt(0).toUpperCase() + t.slice(1)}
+            {t === 'intelligence' && indexing !== 'keyword' && (
+              <span
+                className={`iq-tab-dot is-${indexing}`}
+                aria-hidden
+                title={
+                  indexing === 'semantic'
+                    ? 'Processed: indexed with a published summary'
+                    : 'Processing has been started'
+                }
+              />
+            )}
           </button>
         ))}
       </div>
@@ -593,21 +652,19 @@ export function MemoryPanel({
         )}
         {tab === 'original' && (
           <>
-            {memory.passage && (
-              <section className="source-passage" aria-label="Cited original passage">
-                <span className="eyebrow">
-                  CITED ORIGINAL · VERSION {memory.passage.source_version}
-                </span>
-                <blockquote>{memory.passage.content}</blockquote>
-                <small>
-                  {memory.passage.role || 'Original text'}
-                  {memory.passage.source_timestamp
-                    ? ` · ${new Date(memory.passage.source_timestamp).toLocaleString()}`
-                    : ''}{' '}
-                  · characters {memory.passage.start_offset}–{memory.passage.end_offset}
-                  {!memory.passage.active ? ' · alternate branch' : ''}
-                </small>
-              </section>
+            {passage && (
+              <SourcePassage
+                passage={passage}
+                trail={passageTrail}
+                inContext={inContext}
+                onStep={(chunkId) => onNavigate(memory.id, passage.source_version, chunkId)}
+                onShowInContext={() => {
+                  cited.current?.scrollIntoView({ block: 'center' });
+                  cited.current?.focus({ preventScroll: true });
+                }}
+                onReturn={passageTrail.length ? () => setTab('intelligence') : undefined}
+                onClear={() => onNavigate(memory.id, memory.viewed_version)}
+              />
             )}
             <div className="extract">
               <span className="eyebrow">EXTRACTIVE PREVIEW</span>
@@ -615,6 +672,12 @@ export function MemoryPanel({
               <span className="fine-print">
                 Opening text from the source. Not an AI-generated summary.
               </span>
+              {indexing === 'semantic' && memory.viewed_version === memory.version && (
+                <button className="text-button" onClick={() => setTab('intelligence')}>
+                  An AI-generated summary is published under Intelligence
+                  <ArrowUpRight size={12} aria-hidden />
+                </button>
+              )}
             </div>
             {memory.messages.length > 0 ? (
               <>
@@ -628,22 +691,35 @@ export function MemoryPanel({
                 </label>
                 <div className="messages">
                   {memory.messages
-                    .filter((m) => branch || m.active)
-                    .map((m, i) => (
-                      <article key={`${m.id}-${i}`} className="message">
-                        <div>
-                          <span>{m.role}</span>
-                          {!m.active && <small>alternate branch</small>}
-                          {m.timestamp && <time>{new Date(m.timestamp).toLocaleString()}</time>}
-                        </div>
-                        <p>{m.content || '[Non-text message; inspect the original JSON.]'}</p>
-                        {m.model && <small>{m.model}</small>}
-                      </article>
-                    ))}
+                    .map((m, index) => ({ m, index }))
+                    .filter(({ m }) => branch || m.active)
+                    .map(({ m, index }) => {
+                      const context = messageContext(index, m.id, m.content || '');
+                      return (
+                        <article
+                          key={`${m.id}-${index}`}
+                          className={`message${context ? ' is-cited' : ''}`}
+                        >
+                          <div>
+                            <span>{m.role}</span>
+                            {!m.active && <small>alternate branch</small>}
+                            {m.timestamp && <time>{new Date(m.timestamp).toLocaleString()}</time>}
+                          </div>
+                          <p>
+                            {context
+                              ? highlighted(context)
+                              : m.content || '[Non-text message; inspect the original JSON.]'}
+                          </p>
+                          {m.model && <small>{m.model}</small>}
+                        </article>
+                      );
+                    })}
                 </div>
               </>
             ) : (
-              <div className="original-content">{memory.content}</div>
+              <div className="original-content">
+                {noteContext ? highlighted(noteContext) : memory.content}
+              </div>
             )}
             {memory.source === 'note' && memory.viewed_version === memory.version && (
               <button
@@ -662,87 +738,28 @@ export function MemoryPanel({
           </>
         )}
         {tab === 'intelligence' && (
-          <MemoryIntelligence
-            key={`${memory.id}:${memory.viewed_version}`}
-            memory={memory}
-            onChanged={onChanged}
-            onOpen={(id, version, passage) => {
-              setTab('original');
-              onNavigate(id, version, passage);
-            }}
-          />
+          <SectionBoundary name="Memory intelligence">
+            <MemoryIntelligence
+              key={`${memory.id}:${memory.viewed_version}`}
+              memory={memory}
+              onChanged={onChanged}
+              onViewVersion={(version) => onNavigate(memory.id, version)}
+              onPublished={setPublished}
+              onOpen={(id, version, passage, cited) => {
+                setTrail(cited?.length ? { version, ids: cited } : null);
+                setTab('original');
+                onNavigate(id, version, passage);
+              }}
+            />
+          </SectionBoundary>
         )}
         {tab === 'connections' && (
-          <>
-            <p className="fine-print">
-              Every link has evidence. Candidate links remain invisible in the brain until
-              confirmed. Confidence is not proof.
-            </p>
-            {memory.edges.length === 0 && (
-              <div className="quiet-empty">
-                <Link2 size={24} />
-                <p>No connections yet.</p>
-                <span>
-                  Add a connection with an explanation, or import notes with shared explicit tags
-                  and links.
-                </span>
-              </div>
-            )}
-            {memory.edges.map((e) => (
-              <article className="edge-card" key={e.id}>
-                <div className="row">
-                  <span className="status-label">{e.status}</span>
-                  <span className="fine-print">
-                    {e.method === 'semantic'
-                      ? `Cosine ${e.confidence.toFixed(3)}`
-                      : `${Math.round(e.confidence * 100)}% confidence`}
-                  </span>
-                </div>
-                <button
-                  className="text-button link-title"
-                  onClick={() => onNavigate(e.source_id === memory.id ? e.target_id : e.source_id)}
-                >
-                  {e.source_id === memory.id ? e.target_title : e.source_title}
-                  <ArrowUpRight size={14} />
-                </button>
-                <strong>{e.relationship}</strong>
-                <p>{e.evidence}</p>
-                {e.semantic_evidence && (
-                  <div className="semantic-evidence">
-                    <p className="fine-print">
-                      Embedding similarity {e.semantic_evidence.similarity.toFixed(3)} ·{' '}
-                      {e.semantic_evidence.model}.{' '}
-                      {e.semantic_evidence.stale
-                        ? 'Source changed since this comparison; inspect the historical evidence.'
-                        : 'This is an inferred association, not an explicit tag or a truth assessment.'}
-                    </p>
-                    {e.semantic_evidence.passages.map((p) => (
-                      <button
-                        className="text-button"
-                        key={p.chunkId}
-                        onClick={() => onNavigate(p.memoryId, p.version, p.chunkId)}
-                      >
-                        Source v{p.version}: {p.quote.slice(0, 65)}…<ArrowUpRight size={12} />
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <div className="row">
-                  {e.status === 'candidate' && (
-                    <button className="button small" onClick={() => void edge(e.id, 'confirmed')}>
-                      <Check size={13} />
-                      Confirm link
-                    </button>
-                  )}
-                  <button className="text-button" onClick={() => void edge(e.id, 'dismissed')}>
-                    {e.status === 'candidate' ? 'Dismiss' : 'Disconnect'}
-                  </button>
-                </div>
-              </article>
-            ))}
-            <button
-              className="button secondary full"
-              onClick={async () => {
+          <SectionBoundary name="Connections">
+            <MemoryConnections
+              memory={memory}
+              onNavigate={onNavigate}
+              onDecide={(id, status) => void edge(id, status)}
+              onConnect={async () => {
                 try {
                   const d = await api<{ memories: Memory[] }>('memories');
                   setTargets(d.memories.filter((m) => m.id !== memory.id));
@@ -751,11 +768,8 @@ export function MemoryPanel({
                   onError((e as Error).message);
                 }
               }}
-            >
-              <Plus size={15} />
-              Connect another memory
-            </button>
-          </>
+            />
+          </SectionBoundary>
         )}
         {tab === 'versions' && (
           <>
