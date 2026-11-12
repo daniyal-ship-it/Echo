@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-12",
+  "scope": "local isolated integration only",
+  "branch": "integration/phase2a-2b",
+  "base": "9efffe27a7aa1189b65b792d6ee0208de49db968",
+  "validated_code_commit": "7bd65511d2a7c398f424de76fd384be476d33602",
+  "applied_commits": [
+    "c26aa7f434ca9a64fa0449619d64ca51c9b6fa59",
+    "c384068490b55283b848bff5f596432b0eab8743",
+    "db663281079d743ba18fa11dc4305d7cb2a95541"
+  ],
+  "frontend_patch": {
+    "sha256": "d55f5661dac6e274cf4e9bea498c267400e82f6e9c37b9ed0e7f9e6c65877126",
+    "bytes": 135392,
+    "commits": 1,
+    "conflicts": 0
+  },
+  "unit": {
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0,
+    "real_postgres_tests_enabled": true
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "image_digest": "sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966",
+    "exit_code": 0,
+    "connection": "isolated loopback Docker; no hosted credentials"
+  },
+  "pgvector": "0.8.2",
+  "browser": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "workers": 1,
+    "engine": "Chromium / SwiftShader",
+    "provider_transport": "mock",
+    "registrations": 8,
+    "registration_limit_unchanged": 10,
+    "subsequent_cost_copy_checks_passed": 2
+  },
+  "typecheck": "passed",
+  "serial_production_build": "passed",
+  "standalone_smoke": {
+    "passed": 4,
+    "database": "isolated PGlite",
+    "hosted": false
+  },
+  "anatomy": {
+    "passed": true,
+    "vertices": 20484,
+    "triangles": 40960,
+    "checksums_preserved": true,
+    "views_inspected": [
+      "front",
+      "side",
+      "three-quarter",
+      "mobile",
+      "summary",
+      "cited-passage"
+    ]
+  },
+  "migrations": {
+    "001_foundation.sql": "e2aa042caac73f5c9bfcc6670e1d2ebaf02fd16663af32cb92865d54965ec8d5",
+    "002_memory_intelligence.sql": "03a8133818c74bc51882a2c91f1b57019ae5080ab11a4b61e233e59da28d26c7",
+    "003_server_only_access.sql": "a480f12bad249982de869b4a992601edbd14a7d3e0a116d2badc75f707e01a78"
+  },
+  "paid_provider_calls": 0,
+  "hosted_database_operations": 0,
+  "pushes": 0,
+  "deployments": 0,
+  "raw_evidence_root": "/workspace/artifacts/echo-phase2-integration",
+  "log_sha256": {
+    "tests.log": "52142c54b3e5b1d116b174bc6864ce4e26aa0516f9fbd297876041c861ca73da",
+    "real-postgres.json": "e69ff718d4be1323ad8df71b8e1a3c5e74a6b9cad6f6aaf06d5db805e6275cc2",
+    "browser.log": "2be1390c03f1c6fff01e9ddad6dd4130171a945baaf1fc78cdecb9deeffd87f9",
+    "browser-cost-disclosure.log": "cfd10e7c549a1333cef9febe9beb05130f71f5375c0449f18dc226d772a2051e",
+    "typecheck.log": "840e5e0e118e53d26981f8b5ce014c8e4df7fd4418571f072cc6320edc826849",
+    "build.log": "021a7c3b04199d11ee9e777b00631048bd900a632d1825283793a5a142debff1",
+    "smoke.log": "996b36321b5582525b2435a54e7c391b41027454f9f89c8e047a50f77d3bb7cd",
+    "anatomy.log": "b4a51f632a50f3aa711bb176dda75805662e97b38c12831f1e776084c660ad05",
+    "production-smoke.json": "a2c623360e14986cd835e29acf27515f366da570a593c88648d3a4844dbcbdee"
+  },
+  "limitations": [
+    "All provider responses mocked; genuine semantic quality and live model access not measured.",
+    "Selected UX states and structured insights use explicitly stubbed or augmented responses.",
+    "PostgreSQL image is 17.10; hosted Supabase 17.11 was not contacted.",
+    "Full browser suite preceded final disclosure wording; both affected journeys were rerun afterwards.",
+    "Deployment requires separate approval."
+  ]
+}

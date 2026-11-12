@@ -1,5 +1,13 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest local update — 12 November 2026: [Phase 2A + 2B integration](PHASE2_INTEGRATION.md)
+passed 66 unit/integration tests (including real PostgreSQL/pgvector), 13 browser
+tests, TypeScript, a serial production build, four standalone smoke checks and
+anatomy verification. The two browser journeys affected by the final retry-cost
+wording also passed. Work is isolated on `integration/phase2a-2b`; nothing was
+pushed or deployed and no hosted database or environment was changed. Live
+provider quality remains unverified. Earlier checkpoint entries below are historical.
+
 Latest target update (11 November): the owner has created **echo-dev /
  dtcxlxehqiuhmhuypqbm / eu-central-1**. See [the new-target preflight](ECHO_DEV_PREFLIGHT.md)
 for accepted identity/version evidence, remaining read-only security/extension

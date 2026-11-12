@@ -1,5 +1,11 @@
 # Phase 2B — memory intelligence experience (frontend)
 
+Integration follow-up: see [Phase 2A + 2B validation](PHASE2_INTEGRATION.md). The
+combined branch preserves optional speaker/certainty metadata, clarifies that
+request estimates exclude retries, and adds a passing route-boundary retry test.
+The six-test report below describes the original frontend patch; the integrated
+suite has seven intelligence UX journeys and thirteen browser tests in total.
+
 Base commit: `9efffe2`. Frontend only. No change to `lib/intelligence.ts`, `lib/retrieval.ts`,
 migrations, API routes, backend tests or the mock provider fixture. No API response changed.
 
