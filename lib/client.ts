@@ -1,3 +1,4 @@
+export const UNAUTHORIZED_EVENT = 'echo:unauthorized';
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   const response = await fetch(`/api/${path}`, {
     ...options,
@@ -6,6 +7,9 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
       ...options.headers,
     },
   });
+  // A 401 outside the auth routes means the server no longer recognises this session.
+  if (response.status === 401 && !path.startsWith('auth/') && typeof window !== 'undefined')
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || `Request failed (${response.status}).`);
   return data as T;

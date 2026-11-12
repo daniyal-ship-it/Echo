@@ -31,7 +31,7 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import { api, post } from '@/lib/client';
+import { api, post, UNAUTHORIZED_EVENT } from '@/lib/client';
 import {
   REGION_INFO,
   REGIONS,
@@ -129,6 +129,8 @@ export default function Workspace() {
   const libraryRequest = useRef(0);
   const activeWorkspace = useRef<string | null>(null);
   activeWorkspace.current = user?.workspaceId ?? null;
+  const clearOnSessionEnd = useRef(clearWorkspace);
+  clearOnSessionEnd.current = clearWorkspace;
   const notify = useCallback((message: string) => {
     setToast(message);
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -138,6 +140,20 @@ export default function Workspace() {
     (cmd: Omit<ViewCommand, 'key'>) => setCommand((c) => ({ ...cmd, key: c.key + 1 })),
     [],
   );
+  useEffect(() => {
+    // The server ended the session (expiry, sign-out elsewhere): confirm, then drop stale state.
+    const onUnauthorized = () => {
+      api<{ user: Session | null }>('auth/status')
+        .then((r) => {
+          if (r.user || !activeWorkspace.current) return;
+          clearOnSessionEnd.current();
+          notify('Your session has ended. Sign in again.');
+        })
+        .catch(() => undefined);
+    };
+    window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
+  }, [notify]);
   useEffect(() => {
     api<{ user: Session | null; canRegister: boolean; firstUser: boolean }>('auth/status')
       .then((r) => {
