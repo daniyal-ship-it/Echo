@@ -19,6 +19,7 @@ export const MIGRATIONS = [
   '001_foundation',
   '002_memory_intelligence',
   '003_server_only_access',
+  '004_collaboration',
 ] as const;
 
 // Read-only inspection. Never create the history table just to inspect it.

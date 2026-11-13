@@ -43,6 +43,15 @@ import {
 import { getPassage, validateAnswerCitations } from '@/lib/chunks';
 import { assertCitationAccess, hybridRetrieve } from '@/lib/retrieval';
 import { REGIONS, type ImportItem, type Job } from '@/lib/types';
+import {
+  createCollaboration,
+  listCollaborations,
+  getCollaboration,
+  addCollaborationTurn,
+  advanceCollaboration,
+  cancelCollaboration,
+} from '@/lib/collaboration';
+import { COLLABORATION_VERSION } from '@/lib/collaboration-types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -201,6 +210,45 @@ async function handleRequest(
     }
     if (!session) throw new HttpError(401, 'Sign in to open your memory workspace.');
     const workspace = session.workspaceId;
+    if (route === 'collaborations') {
+      if (method === 'GET')
+        return json(
+          await listCollaborations(
+            db,
+            workspace,
+            request.nextUrl.searchParams.has('before')
+              ? validId(request.nextUrl.searchParams.get('before')!)
+              : undefined,
+          ),
+        );
+      if (method === 'POST') {
+        await rateLimit(db, `collaboration-create:${workspace}`, 20);
+        return json(await createCollaboration(db, workspace, await body(request)), 201);
+      }
+    }
+    const collaborationMatch = route.match(
+      /^collaborations\/([^/]+)(?:\/(advance|cancel|turns))?$/,
+    );
+    if (collaborationMatch) {
+      const id = validId(collaborationMatch[1]);
+      if (method === 'GET' && !collaborationMatch[2])
+        return json(await getCollaboration(db, workspace, id));
+      if (method === 'POST' && collaborationMatch[2]) {
+        await rateLimit(db, `collaboration-step:${workspace}`, 120);
+        const input = await body(request);
+        if (collaborationMatch[2] === 'advance')
+          return json(
+            await advanceCollaboration(db, workspace, id, input, undefined, request.signal),
+          );
+        if (collaborationMatch[2] === 'turns')
+          return json(await addCollaborationTurn(db, workspace, id, input), 201);
+        const cancel = z
+          .object({ version: z.literal(COLLABORATION_VERSION), turnId: z.uuid() })
+          .strict()
+          .parse(input);
+        return json(await cancelCollaboration(db, workspace, id, cancel.turnId));
+      }
+    }
     if (route === 'auth/logout' && method === 'POST') {
       await db.query('DELETE FROM sessions WHERE token_hash=$1', [
         hash(request.cookies.get(SESSION_COOKIE)?.value || ''),

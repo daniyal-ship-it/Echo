@@ -1,5 +1,16 @@
 # Validation record — 1 November 2026
 
+Latest local update — 13 November 2026: [Phase 4A collaboration backend](PHASE4_BACKEND.md)
+adds durable parallel/deliberate multi-provider threads, cross-review, follow-ups,
+consent/call limits, source checks and explicit interrupted-call recovery. Local
+validation passed 100 unit/integration tests (including real PostgreSQL/pgvector,
+zero skips), 23 existing browser tests, TypeScript, serial build, four standalone
+smoke checks and anatomy verification. Providers were mocked; no paid calls or
+hosted changes occurred. Work remains on `feat/phase4a-collaboration-engine`.
+Claude's frontend integration and separate approval for migration 004/Preview
+release remain required. See the [API contract](PHASE4_COLLABORATION_CONTRACT.md)
+and [security review](PHASE4_MIGRATION_SECURITY.md). Earlier entries are historical.
+
 Latest local update — 13 November 2026: [Phase 3A + 3B integration](PHASE3_INTEGRATION.md)
 passed 77 unit/integration tests (including real PostgreSQL/pgvector), all 23
 browser tests in one run, TypeScript, a serial production build, four standalone

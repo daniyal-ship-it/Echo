@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { scenarios } from './fixtures/collaboration-suite';
 import assert from 'node:assert/strict';
 import postgres from 'postgres';
 import { createDatabase, managedPostgresOptions, type Database } from '../lib/db';
@@ -19,7 +20,7 @@ const url = process.env.ECHO_TEST_POSTGRES_URL;
 test(
   'real PostgreSQL/pgvector: hardened migrations, immutable JSON citations, isolation and reopen persistence',
   { skip: !url },
-  async () => {
+  async (t) => {
     const target = new URL(url!);
     assert.ok(
       ['127.0.0.1', 'localhost', '[::1]'].includes(target.hostname),
@@ -45,7 +46,7 @@ test(
       const [{ count }] = await db.query<{ count: number }>(
         "SELECT count(*)::int AS count FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind='r' AND relrowsecurity",
       );
-      assert.equal(count, 22);
+      assert.equal(count, 26);
       const owner = uuid(),
         workspace = uuid();
       await db.query('INSERT INTO users(id,email,name,password_hash) VALUES($1,$2,$3,$4)', [
@@ -144,8 +145,19 @@ test(
       }>(`SELECT has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
       OR has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') AS unsafe
       FROM pg_roles r CROSS JOIN pg_class c WHERE r.rolname IN ('anon','authenticated','service_role','authenticator') AND c.relnamespace='public'::regnamespace AND c.relkind='r'`);
-      assert.equal(privileges.length, 88);
+      assert.equal(privileges.length, 104);
       assert.ok(privileges.every((p) => !p.unsafe));
+      for (const [name, run] of Object.entries(scenarios))
+        await t.test(`real PostgreSQL collaboration: ${name}`, () => run(db!));
+      const [beforeReopen] = await db.query<{ count: number }>(
+        'SELECT count(*)::int AS count FROM collaboration_calls',
+      );
+      await db.close();
+      db = await createDatabase(undefined, { applyManagedMigrations: true });
+      const [afterReopen] = await db.query<{ count: number }>(
+        'SELECT count(*)::int AS count FROM collaboration_calls',
+      );
+      assert.equal(afterReopen.count, beforeReopen.count);
     } finally {
       await db?.close();
       await setup.end();
