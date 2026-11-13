@@ -13,7 +13,8 @@ const shot = (page: Page, name: string) =>
   page.locator('.inspector').screenshot({ path: `${shots}/${name}.png` });
 
 // The server allows ten registrations per fifteen minutes across the whole browser suite, so
-// these tests share two workspaces instead of registering one each. Titles never collide.
+// these tests share one workspace instead of registering one each (Phase 4B added a spec that
+// needs its own account). Titles never collide.
 const accounts = new Map<string, { email: string; password: string }>();
 async function signIn(page: Page, workspace: 'first' | 'second') {
   const known = accounts.get(workspace);
@@ -216,7 +217,7 @@ test('REAL: queued → cancelled → resumed → completed, then outdated after 
   page,
 }) => {
   const errors = pageErrors(page);
-  await signIn(page, 'second');
+  await signIn(page, 'first');
   const saved = await note(
     page,
     'Recovery plan',
@@ -388,7 +389,7 @@ test('AUGMENTED real analysis: decisions, questions and commitments with numbere
   page,
 }) => {
   const errors = pageErrors(page);
-  await signIn(page, 'second');
+  await signIn(page, 'first');
   const archive = [
     {
       id: 'phase-2b-conversation',
