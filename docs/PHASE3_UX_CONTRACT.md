@@ -39,6 +39,10 @@ closes the phone drawer. Shortcuts are ignored while a dialog is open or a field
 Unchanged `Brain` props: `graph`, `selected`, `region`, `command`, `quality`, `reducedMotion`,
 `onSelect`, `onRegion`, `onReady`.
 
+Integration adds optional `onStatus(loading | ready | unavailable)` and the workspace
+uses it for its scene-status label. It reports resource availability, not R3's
+camera-settled event. Existing props and camera commands remain compatible.
+
 | Interaction                | Command sent                   |
 | -------------------------- | ------------------------------ |
 | Whole brain, reset         | `{ type: 'reset' }`            |
@@ -84,6 +88,11 @@ cards, the sidebar or a double-click.
 `env(safe-area-inset-*)` is used for the bottom navigation, sheet and side rail. It resolves to
 zero until the page's viewport declares `viewport-fit=cover`, which belongs in
 `app/layout.tsx`. That file is outside this phase's ownership and was not changed.
+
+Resolved during local integration: `app/layout.tsx` now declares `viewportFit: 'cover'`.
+The header, drawer, expanded sheet and landscape rail/sheet also account for the
+top inset. Browser checks include simulated top/bottom inset values; physical
+iOS Safari and keyboard/safe-area behaviour still require device acceptance.
 
 ## 5. Limits
 

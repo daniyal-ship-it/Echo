@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
 
 // Phase 3B: the brain exploration experience around the anatomical canvas.
 // Everything runs against the real application state of one isolated test workspace. The only
@@ -9,6 +10,12 @@ const headers = { origin };
 // across the browser suite.
 let account: { email: string; password: string } | null = null;
 const ids: Record<string, string> = {};
+async function capture(page: Page, name: string) {
+  const directory = process.env.ECHO_PHASE3_SCREENSHOT_DIR || 'test-results/phase3-integration';
+  await mkdir(directory, { recursive: true });
+  await page.waitForTimeout(1000);
+  await page.screenshot({ path: `${directory}/${name}.png` });
+}
 
 async function signIn(page: Page) {
   if (account) {
@@ -109,6 +116,7 @@ test('whole brain → lobe → topic → memory → linked memory, and back thro
   await expect(depth(page)).toContainText('01 / WHOLE BRAIN');
   await expect(page.locator('.scene-title h1')).toHaveText('Memory atlas');
   await expect(page.locator('.trail-back')).toHaveCount(0);
+  await capture(page, 'desktop-whole');
 
   await page.getByRole('button', { name: 'Enter Frontal lobe, 3 memories' }).click();
   await expect(depth(page)).toContainText('02 / LOBE');
@@ -132,6 +140,7 @@ test('whole brain → lobe → topic → memory → linked memory, and back thro
     'Memory opened: Aurora launch decision',
   );
   await expect(back(page, '#aurora')).toBeVisible();
+  await capture(page, 'desktop-memory');
 
   // Following a real connection must not lose the memory the reader came from.
   await page.getByRole('button', { name: /Links \(2\)/ }).click();
@@ -141,6 +150,7 @@ test('whole brain → lobe → topic → memory → linked memory, and back thro
     .click();
   await expect(page.locator('.memory-intro h2')).toHaveText('Optical design ideas');
   await expect(trail(page)).toContainText('Occipital');
+  await capture(page, 'desktop-linked-memory');
   await back(page, 'memory').click();
   await expect(page.locator('.memory-intro h2')).toHaveText('Aurora launch decision');
   await expect(trail(page)).toContainText('#aurora');
@@ -164,6 +174,37 @@ test('whole brain → lobe → topic → memory → linked memory, and back thro
   await page.goBack();
   await expect(page.getByRole('region', { name: 'Whole brain overview' })).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test('a late failed history request cannot clear a newer selected memory', async ({ page }) => {
+  await open(page);
+  const choose = async (title: string) => {
+    await page
+      .locator('.memory-list')
+      .getByRole('button', { name: new RegExp(title) })
+      .click();
+    await expect(page.locator('.memory-intro h2')).toHaveText(title);
+  };
+  await choose('Aurora launch decision');
+  await choose('Optical design ideas');
+  let captured!: () => void;
+  const started = new Promise<void>((resolve) => (captured = resolve));
+  let release!: () => void;
+  const blocked = new Promise<void>((resolve) => (release = resolve));
+  await page.route(`**/api/memories/${ids['Aurora launch decision']}?*`, async (route) => {
+    captured();
+    await blocked;
+    await route.fulfill({ status: 503, json: { error: 'DELAYED TEST FAILURE' } });
+  });
+  await back(page, 'memory').click();
+  await started;
+  await choose('Quarterly goals');
+  const delivered = page.waitForResponse((r) => r.status() === 503);
+  release();
+  await delivered;
+  await page.waitForTimeout(200);
+  await expect(page.locator('.memory-intro h2')).toHaveText('Quarterly goals');
+  await expect(page.getByTestId('place-announcement')).toHaveText('Memory opened: Quarterly goals');
 });
 
 test('keyboard: search with /, open a source, and Escape returns to the same results', async ({
@@ -352,6 +393,7 @@ test('phone portrait: bottom navigation, lobe chips and a sheet that leaves the 
   await page.getByRole('button', { name: 'Versions', exact: true }).click();
   await page.getByRole('button', { name: 'Original', exact: true }).click();
   await expect(page.locator('.original-content')).toContainText('review is in October');
+  await capture(page, 'phone-portrait-memory');
 
   // Putting the sheet away keeps the selected memory; the bar brings it back.
   await page.getByRole('button', { name: 'Close panel', exact: true }).click();
@@ -368,6 +410,23 @@ test('phone portrait: bottom navigation, lobe chips and a sheet that leaves the 
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
     true,
   );
+  await expect(page.locator('meta[name="viewport"]')).toHaveAttribute(
+    'content',
+    /viewport-fit=cover/,
+  );
+  // Simulated inset values verify CSS geometry; this is not an iOS device test.
+  await page.evaluate(() => {
+    document.documentElement.style.setProperty('--safe-top', '44px');
+    document.documentElement.style.setProperty('--safe-bottom', '34px');
+  });
+  const header = (await page.locator('.topbar').boundingBox())!;
+  expect(header.height).toBe(104);
+  expect(
+    (await page.getByRole('button', { name: 'Toggle navigation' }).boundingBox())!.y,
+  ).toBeGreaterThanOrEqual(44);
+  await dock.getByRole('button', { name: 'Memories', exact: true }).click();
+  expect((await page.locator('.sidebar').boundingBox())!.y).toBeGreaterThanOrEqual(104);
+  await capture(page, 'phone-simulated-safe-area');
   expect(errors).toEqual([]);
 });
 
@@ -403,6 +462,7 @@ test('phone landscape: side rail, side sheet and no vertical overflow', async ({
   expect(sheet.height).toBeGreaterThan(300);
   expect(beside.width).toBeGreaterThan(150);
   expect(beside.x + beside.width).toBeLessThanOrEqual(sheet.x + 1);
+  await capture(page, 'phone-landscape-memory');
   await expect(page.getByRole('button', { name: 'Expand panel' })).toBeHidden();
   await page.locator('.trail-back').click();
   await expect(depth(page)).toContainText('01 / WHOLE BRAIN');
@@ -452,6 +512,8 @@ test('without WebGL every level is still reachable through the panels and trail'
   });
   await open(page);
   await expect(page.getByText('3D view unavailable', { exact: true })).toBeVisible();
+  await expect(page.locator('.view-status')).toContainText('3D VIEW UNAVAILABLE');
+  await capture(page, 'webgl-unavailable');
   await page.getByRole('button', { name: 'Enter Frontal lobe, 3 memories' }).click();
   await page.getByRole('button', { name: 'Explore #goals, 1 memory' }).click();
   await topicPanel(page)

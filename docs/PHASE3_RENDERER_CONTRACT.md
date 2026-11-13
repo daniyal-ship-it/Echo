@@ -5,8 +5,11 @@ Branch: `feat/phase3a-brain-renderer`. Local implementation only.
 
 ## Public interface
 
-`Brain` props and `ViewCommand` are unchanged. Claude can retain all existing
-workspace controls, callbacks, CSS and panel components. No migration, provider,
+Existing `Brain` props and `ViewCommand` remain compatible. Phase 3 integration
+adds optional `onStatus(status)` with `loading | ready | unavailable` so the
+workspace does not advertise an available scene after context/asset failure.
+`onReady` is retained for existing consumers. Status describes resource availability,
+not camera settling or a guarantee of a rendered frame. No migration, provider,
 authentication or graph API change is required.
 
 - Commands: reset/front/side/quarter, region, topic and memory. Increment `key`

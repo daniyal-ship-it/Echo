@@ -230,8 +230,13 @@ test('renderer: isolated density, aspect ratios, lobe focus, motion and context/
       exact: true,
     }),
   ).toBeVisible();
+  await expect(page.locator('.view-status')).toContainText('3D VIEW UNAVAILABLE');
   await page.getByRole('button', { name: 'Toggle navigation', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  // The supported recovery path is a reload, not automatic context restoration.
+  await page.reload();
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('.view-status')).toContainText('3D ANATOMICAL VIEW');
   await page.route('**/anatomy/brain.bin', (route) =>
     route.fulfill({ status: 503, body: 'Unavailable fixture' }),
   );
@@ -239,4 +244,5 @@ test('renderer: isolated density, aspect ratios, lobe focus, motion and context/
   await expect(
     page.getByText('Anatomical asset could not be loaded.', { exact: true }),
   ).toBeVisible();
+  await expect(page.locator('.view-status')).toContainText('3D VIEW UNAVAILABLE');
 });

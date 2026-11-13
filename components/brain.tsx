@@ -32,6 +32,7 @@ export type ViewCommand = {
   region?: Region;
   position?: [number, number, number];
 };
+export type RendererStatus = 'loading' | 'ready' | 'unavailable';
 type Props = {
   graph: Graph;
   selected: string | null;
@@ -42,6 +43,8 @@ type Props = {
   onSelect: (node: GraphNode) => void;
   onRegion: (region: Region) => void;
   onReady?: () => void;
+  /** Resource availability only; does not signal that a camera transition has settled. */
+  onStatus?: (status: RendererStatus) => void;
 };
 type Asset = {
   geometry: BufferGeometry;
@@ -430,9 +433,25 @@ class SceneBoundary extends Component<
     return this.state.failed ? this.props.fallback : this.props.children;
   }
 }
+function SceneFallback({ onStatus, message }: { onStatus?: Props['onStatus']; message?: string }) {
+  useEffect(() => onStatus?.('unavailable'), [onStatus]);
+  return (
+    <div className="scene-fallback">
+      <span>{message || '3D view unavailable'}</span>
+      <p>
+        {message
+          ? 'The library remains available. No substitute geometry has been loaded.'
+          : 'Your memories are still accessible from the library. Enable WebGL or try another browser.'}
+      </p>
+    </div>
+  );
+}
 export default function Brain(props: Props) {
   const [asset, setAsset] = useState<Asset | null>(null);
   const [error, setError] = useState('');
+  useEffect(() => {
+    if (!asset && !error) props.onStatus?.('loading');
+  }, [asset, error, props.onStatus]);
   useEffect(() => {
     let live = true;
     let loaded: Asset | undefined;
@@ -450,21 +469,8 @@ export default function Brain(props: Props) {
       loaded?.geometry.dispose();
     };
   }, []);
-  const fallback = (
-    <div className="scene-fallback">
-      <span>3D view unavailable</span>
-      <p>
-        Your memories are still accessible from the library. Enable WebGL or try another browser.
-      </p>
-    </div>
-  );
-  if (error)
-    return (
-      <div className="scene-fallback">
-        <span>{error}</span>
-        <p>The library remains available. No substitute geometry has been loaded.</p>
-      </div>
-    );
+  const fallback = <SceneFallback onStatus={props.onStatus} />;
+  if (error) return <SceneFallback onStatus={props.onStatus} message={error} />;
   if (!asset)
     return (
       <div className="scene-fallback loading">
@@ -481,7 +487,10 @@ export default function Brain(props: Props) {
         frameloop="demand"
         gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
         fallback={fallback}
-        onCreated={() => props.onReady?.()}
+        onCreated={() => {
+          props.onReady?.();
+          props.onStatus?.('ready');
+        }}
       >
         <ContextGuard
           onLost={() => setError('Graphics context lost. Reload to restore the anatomical view.')}

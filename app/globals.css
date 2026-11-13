@@ -169,7 +169,7 @@ small {
   min-height: 640px;
   display: grid;
   grid-template-columns: 236px minmax(320px, 1fr) 320px;
-  grid-template-rows: 72px 1fr;
+  grid-template-rows: calc(72px + var(--safe-top)) 1fr;
   overflow: hidden;
 }
 .topbar {
@@ -177,7 +177,7 @@ small {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 27px;
+  padding: var(--safe-top) calc(27px + var(--safe-right)) 0 calc(27px + var(--safe-left));
   border-bottom: 1px solid var(--line);
   position: relative;
   z-index: 20;
@@ -1702,11 +1702,11 @@ nav {
 @media (max-width: 760px), (max-width: 960px) and (max-height: 520px) {
   .app-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: 60px 1fr;
+    grid-template-rows: calc(60px + var(--safe-top)) 1fr;
     min-height: 500px;
   }
   .topbar {
-    padding: 0 15px;
+    padding: var(--safe-top) calc(15px + var(--safe-right)) 0 calc(15px + var(--safe-left));
   }
   .brand {
     gap: 8px;
@@ -1733,7 +1733,7 @@ nav {
   }
   .sidebar {
     position: fixed;
-    inset: 60px auto 0 0;
+    inset: calc(60px + var(--safe-top)) auto 0 0;
     width: 265px;
     display: none;
     z-index: 40;
@@ -2951,6 +2951,7 @@ nav {
     ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial,
     sans-serif;
   --echo-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
@@ -3527,7 +3528,7 @@ body {
     animation: sheet-in 0.2s ease both;
   }
   .sheet-tall .inspector {
-    height: calc(100dvh - 68px - var(--dock) - var(--safe-bottom));
+    height: calc(100dvh - 68px - var(--safe-top) - var(--dock) - var(--safe-bottom));
   }
   @keyframes sheet-in {
     from {
@@ -3604,7 +3605,7 @@ body {
 @media (max-width: 960px) and (max-height: 520px) {
   .app-shell {
     min-height: 0;
-    grid-template-rows: 44px 1fr;
+    grid-template-rows: calc(44px + var(--safe-top)) 1fr;
   }
   .viewport-top {
     top: 8px;
@@ -3660,7 +3661,7 @@ body {
     display: none;
   }
   .mobile-dock {
-    top: 44px;
+    top: calc(44px + var(--safe-top));
     right: auto;
     width: calc(var(--dock) + var(--safe-left));
     height: auto;
@@ -3671,13 +3672,13 @@ body {
     border-right: 1px solid #1c2939;
   }
   .sidebar {
-    inset: 44px auto 0 calc(var(--dock) + var(--safe-left));
+    inset: calc(44px + var(--safe-top)) auto 0 calc(var(--dock) + var(--safe-left));
     bottom: 0;
     padding-left: 17px;
   }
   .inspector,
   .immersive.has-context .inspector {
-    inset: 44px 0 0 auto;
+    inset: calc(44px + var(--safe-top)) 0 0 auto;
     width: min(48vw, 400px);
     height: auto;
     padding-bottom: var(--safe-bottom);

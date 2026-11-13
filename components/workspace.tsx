@@ -63,7 +63,7 @@ import {
   SettingsDialog,
   type Settings,
 } from './panels';
-import type { ViewCommand } from './brain';
+import type { RendererStatus, ViewCommand } from './brain';
 import TopicPanel from './topic-panel';
 import { CanvasNotice, LobeLegend, LobeOverview, MobileBar, TrailBack } from './brain-hud';
 import {
@@ -136,7 +136,8 @@ export default function Workspace() {
   const [questionFilters, setQuestionFilters] = useState(false);
   const [quality, setQuality] = useState<'low' | 'balanced' | 'high'>('balanced');
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [rendererStatus, setRendererStatus] = useState<RendererStatus>('loading');
+  const ready = rendererStatus === 'ready';
   const [settings, setSettings] = useState<Settings | null>(null);
   const [question, setQuestion] = useState('');
   const [retrieval, setRetrieval] = useState<Retrieval | null>(null);
@@ -331,8 +332,13 @@ export default function Workspace() {
     const params = new URLSearchParams();
     if (version) params.set('version', String(version));
     if (passage) params.set('passage', passage);
-    const m = await api<MemoryDetail>(`memories/${id}?${params}`);
-    if (req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId)
+    const m = await api<MemoryDetail>(`memories/${id}?${params}`).catch((error) => {
+      // A superseded Back/Forward request must not clear a newer selection on failure.
+      if (req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId)
+        return null;
+      throw error;
+    });
+    if (!m || req !== selectedRequest.current || activeWorkspace.current !== user?.workspaceId)
       return null;
     setSelected(m);
     setRetrieval(null);
@@ -1097,7 +1103,11 @@ export default function Workspace() {
               </span>
             )}
             <span className={ready ? 'live-dot active' : 'live-dot'} />
-            {ready ? '3D ANATOMICAL VIEW' : 'LOADING GEOMETRY'}
+            {ready
+              ? '3D ANATOMICAL VIEW'
+              : rendererStatus === 'unavailable'
+                ? '3D VIEW UNAVAILABLE'
+                : 'LOADING GEOMETRY'}
           </div>
         </div>
         <div className="scene-title">
@@ -1151,7 +1161,7 @@ export default function Workspace() {
             reducedMotion={reducedMotion}
             onSelect={chooseNode}
             onRegion={focusRegion}
-            onReady={() => setReady(true)}
+            onStatus={setRendererStatus}
           />
         </div>
         {emptyLobe && (
