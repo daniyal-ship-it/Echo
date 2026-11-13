@@ -636,7 +636,7 @@ test('MOCK CONTRACT: keyboard-only use, announcements and reduced motion', async
   expect(await pulse()).toBe('none');
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.evaluate(() => localStorage.setItem('echo-reduced-motion', 'true'));
-  await page.reload();
+  await openWorkspace(page);
   await page.getByRole('button', { name: 'Collaborations', exact: true }).click();
   await page.getByRole('button', { name: /Motion check/ }).click();
   await expect(state(page)).toHaveText('Running');
