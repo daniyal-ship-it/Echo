@@ -1,5 +1,14 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest local update — 13 November 2026: [Phase 3A + 3B integration](PHASE3_INTEGRATION.md)
+passed 77 unit/integration tests (including real PostgreSQL/pgvector), all 23
+browser tests in one run, TypeScript, a serial production build, four standalone
+smoke checks and anatomy verification. Three compatibility fixes cover stale
+history failures, truthful renderer status and safe-area integration. Work remains
+local on `integration/phase3a-3b`; no push, deployment or hosted change occurred.
+R1–R7 renderer proposals are explicitly partial/deferred; physical-device and
+60-FPS acceptance remain outstanding. Earlier checkpoint entries are historical.
+
 Latest local update — 12 November 2026: [Phase 2A + 2B integration](PHASE2_INTEGRATION.md)
 passed 66 unit/integration tests (including real PostgreSQL/pgvector), 13 browser
 tests, TypeScript, a serial production build, four standalone smoke checks and

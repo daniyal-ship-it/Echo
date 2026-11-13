@@ -1,0 +1,156 @@
+{
+  "date": "2026-11-13",
+  "branch": "integration/phase3a-3b",
+  "tested_code_commit": "700986a4a6a70cfcd575a7e1f2a8858ee274b4a4",
+  "base": "5d35bceae979df03a11c135bfa24d211b698e2b5",
+  "phase3a": "b15b84275e098e2e702dfcf1863b85ccbe9404ae",
+  "phase3b_source_identifier": "12e4ffb4a6896c2290dafc0cd0429d5b9a8dbac5",
+  "provenance": {
+    "phase3b_patch_id": "ce715b1f4887b789a504448e1aff739d95b7d816",
+    "applied_commit": "7cbb0fd760a42be742e4026f5f3b029c6d3664e9",
+    "original_refs_preserved": [
+      "723b469cdc43ac4efa0e4a6caa265520fa7949eb refs/heads/backup/echo-before-claude-723b469",
+      "dcb66912cf2f49a35bfc9fc5a1bc514f0984b42a refs/heads/backup/echo-before-preview-fixes-dcb6691",
+      "c384068490b55283b848bff5f596432b0eab8743 refs/heads/backup/phase2a-before-frontend-c384068",
+      "5d35bceae979df03a11c135bfa24d211b698e2b5 refs/heads/feat/core-memory-exploration",
+      "c384068490b55283b848bff5f596432b0eab8743 refs/heads/feat/phase2a-memory-backend",
+      "b15b84275e098e2e702dfcf1863b85ccbe9404ae refs/heads/feat/phase3a-brain-renderer",
+      "dcb66912cf2f49a35bfc9fc5a1bc514f0984b42a refs/heads/integration/claude-phase-a-723b469",
+      "5d35bceae979df03a11c135bfa24d211b698e2b5 refs/heads/integration/phase2a-2b",
+      "9efffe27a7aa1189b65b792d6ee0208de49db968 refs/heads/integration/preview-fixes-dcb6691",
+      "6f19c18bab3656e90de77f168cda88fe409f126a refs/heads/work"
+    ]
+  },
+  "unit_integration": {
+    "passed": 77,
+    "failed": 0,
+    "skipped": 0
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "image_digest": "sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966",
+    "exit_code": 0,
+    "connection": "isolated loopback Docker; no hosted credentials"
+  },
+  "browser": {
+    "passed": 23,
+    "failed": 0,
+    "skipped": 0,
+    "single_complete_run": true,
+    "duration_minutes": 4.8,
+    "registrations": 10,
+    "authentication_limits_unchanged": true,
+    "transport": "labelled local mock providers"
+  },
+  "regression": {
+    "stale_history_error": "reproduced failure before fix; passed after fix"
+  },
+  "typescript": "passed",
+  "production_build": {
+    "status": "passed",
+    "serial_after_browser_teardown": true
+  },
+  "smoke": {
+    "timestamp": "2026-11-13T16:35:16.756Z",
+    "checks": [
+      "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+      "Production HTML, static assets and anatomical geometry",
+      "Production-mode account, session, original persistence, graph and export",
+      "Session revocation"
+    ],
+    "result": "passed",
+    "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+  },
+  "anatomy": {
+    "status": "passed",
+    "vertices": 20484,
+    "triangles": 40960,
+    "source_checksums": "unchanged"
+  },
+  "renderer_performance": {
+    "environment": "Chromium SwiftShader; RAF wall-clock intervals, not GPU time or hardware FPS",
+    "metrics": [
+      {
+        "records": 0,
+        "renderedNodes": 0,
+        "rafMedianMs": 83.39999999999964,
+        "rafP95Ms": 166.70000000000073,
+        "drawCalls": 116,
+        "jsHeapBytes": 30647669,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 73.75534899999998,
+        "gpuDrawSumP95Ms": 85.355422,
+        "gpuMeasuredIntervals": 27,
+        "unavailableQueries": 4,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100,
+        "renderedNodes": 100,
+        "rafMedianMs": 99.90000000000009,
+        "rafP95Ms": 166.70000000000073,
+        "drawCalls": 180,
+        "jsHeapBytes": 42589749,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 80.65208599999998,
+        "gpuDrawSumP95Ms": 96.60563699999999,
+        "gpuMeasuredIntervals": 28,
+        "unavailableQueries": 4,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 1500,
+        "renderedNodes": 1500,
+        "rafMedianMs": 250.0999999999999,
+        "rafP95Ms": 499.89999999999964,
+        "drawCalls": 180,
+        "jsHeapBytes": 56183913,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 242.44463900000002,
+        "gpuDrawSumP95Ms": 326.74857000000003,
+        "gpuMeasuredIntervals": 27,
+        "unavailableQueries": 12,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100000,
+        "renderedNodes": 1500,
+        "rafMedianMs": 300,
+        "rafP95Ms": 566.6000000000004,
+        "drawCalls": 180,
+        "jsHeapBytes": 32463375,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 274.772338,
+        "gpuDrawSumP95Ms": 325.38277700000003,
+        "gpuMeasuredIntervals": 28,
+        "unavailableQueries": 6,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      }
+    ]
+  },
+  "renderer_requests": {
+    "R1": "partial: local memory hover only; no external callback",
+    "R2": "deferred",
+    "R3": "partial: transitions without settled event",
+    "R4": "partial: keyboard controls/lists, not scene focus",
+    "R5": "deferred",
+    "R6": "partial: actual canvas resize, not inset prop",
+    "R7": "deferred"
+  },
+  "hosted_actions": false,
+  "paid_provider_requests": 0,
+  "ready_for_preview_approval": true,
+  "limitations": [
+    "No physical device, iOS Safari, on-screen keyboard or screen-reader certification",
+    "60 FPS not achieved on software renderer",
+    "GPU query draw sums can omit draws and exclude clears/presentation; not full GPU frame times",
+    "JS heap is not GPU memory; sustained leak testing not performed",
+    "Recovery requires reload; no automatic context restoration",
+    "No hosted acceptance or live-provider quality claim"
+  ]
+}
