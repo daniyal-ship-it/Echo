@@ -10,7 +10,11 @@ export function fitAnatomy(
   aspect: number,
 ): Point {
   const offset = desired.map((v, i) => v - target[i]);
-  const distance = Math.hypot(...offset);
+  let distance = Math.hypot(...offset);
+  if (distance < 1e-6) {
+    offset[2] = 1;
+    distance = 1;
+  }
   const direction = offset.map((v) => v / distance);
   const horizontal = Math.hypot(direction[0], direction[2]);
   const right =
@@ -35,4 +39,19 @@ export function fitAnatomy(
     fit = Math.max(fit, z + (Math.abs(x) * 1.12) / tanH, z + (Math.abs(y) * 1.12) / tanV);
   }
   return direction.map((v, i) => target[i] + v * fit) as Point;
+}
+
+/** Conservative orbit radius around a possibly panned target. Keeps the cortex outside the near plane. */
+export function orbitClearance(positions: ArrayLike<number>, target: Point = [0, 0, 0]) {
+  let radius = 0;
+  for (let i = 0; i < positions.length; i += 3)
+    radius = Math.max(
+      radius,
+      Math.hypot(
+        positions[i] - target[0],
+        positions[i + 1] - target[1],
+        positions[i + 2] - target[2],
+      ),
+    );
+  return radius + 0.3;
 }

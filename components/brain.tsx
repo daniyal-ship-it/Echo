@@ -1,7 +1,7 @@
 'use client';
 import { Component, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
-import { OrbitControls, Line, Billboard } from '@react-three/drei';
+import { OrbitControls, Billboard } from '@react-three/drei';
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -16,7 +16,15 @@ import {
 } from 'three';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { REGION_INFO, type Graph, type GraphNode, type Region } from '@/lib/types';
-import { cameraFov, fitAnatomy } from '@/lib/brain-camera';
+import {
+  validateAtlasBuffer,
+  cortexVertex,
+  cortexFragment,
+  glowVertex,
+  glowFragment,
+  filamentGeometry,
+} from '@/lib/brain-rendering';
+import { cameraFov, fitAnatomy, orbitClearance } from '@/lib/brain-camera';
 
 export type ViewCommand = {
   key: number;
@@ -48,8 +56,7 @@ async function loadAsset(): Promise<Asset> {
   const response = await fetch('/anatomy/brain.bin');
   if (!response.ok) throw new Error('Anatomical asset could not be loaded.');
   const buffer = await response.arrayBuffer();
-  const header = new Uint32Array(buffer, 0, 4);
-  if (header[0] !== 1) throw new Error('Unsupported anatomical asset.');
+  const header = validateAtlasBuffer(buffer);
   const positions = new Float32Array(buffer, 16, header[1] * 3);
   const indices = new Uint32Array(buffer, 16 + header[1] * 12, header[2]);
   const regions = new Uint8Array(buffer, 16 + header[1] * 12 + header[2] * 4, header[1]);
@@ -60,6 +67,7 @@ async function loadAsset(): Promise<Asset> {
   geometry.setAttribute('position', new BufferAttribute(positions, 3));
   geometry.setAttribute('color', new BufferAttribute(colors, 3));
   geometry.setIndex(new BufferAttribute(indices, 1));
+  geometry.setAttribute('regionId', new BufferAttribute(Float32Array.from(regions), 1));
   geometry.computeVertexNormals();
   geometry.computeBoundingSphere();
   return { geometry, positions, colors, regions };
@@ -77,26 +85,30 @@ function Cortex({
   region: Region | null;
 }) {
   const { gl } = useThree();
+  const uniforms = useMemo(() => ({ focusRegion: { value: 0 } }), []);
+  uniforms.focusRegion.value = region ? REGION_INFO[region].index : 0;
   const points = useMemo(() => {
     // Keep enough genuine vertices to read sulci on a phone; low still uses half
     // the points and a single device pixel ratio instead of the desktop preset.
     const stride = quality === 'low' ? 2 : 1;
     const p: number[] = [],
       n: number[] = [],
-      c: number[] = [];
+      c: number[] = [],
+      r: number[] = [];
     const normals = asset.geometry.getAttribute('normal');
     for (let i = 0; i < asset.regions.length; i += stride) {
       p.push(...asset.positions.slice(i * 3, i * 3 + 3));
       n.push(normals.getX(i), normals.getY(i), normals.getZ(i));
-      const emphasis = !region || asset.regions[i] === REGION_INFO[region].index ? 1 : 0.32;
-      c.push(...Array.from(asset.colors.slice(i * 3, i * 3 + 3), (x) => x * emphasis));
+      c.push(...asset.colors.slice(i * 3, i * 3 + 3));
+      r.push(asset.regions[i]);
     }
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(new Float32Array(p), 3));
     geo.setAttribute('color', new BufferAttribute(new Float32Array(c), 3));
     geo.setAttribute('normal', new BufferAttribute(new Float32Array(n), 3));
+    geo.setAttribute('regionId', new BufferAttribute(new Float32Array(r), 1));
     return geo;
-  }, [asset, quality, region]);
+  }, [asset, quality]);
   useEffect(() => () => points.dispose(), [points]);
   const focus = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
@@ -113,25 +125,14 @@ function Cortex({
         <meshBasicMaterial colorWrite={false} depthWrite side={FrontSide} />
       </mesh>
       <mesh geometry={asset.geometry} raycast={() => null} renderOrder={0}>
-        <meshPhongMaterial
-          color="#7891a7"
-          transparent
-          opacity={0.028}
-          shininess={8}
-          side={FrontSide}
-          depthWrite={false}
-          specular="#7d9eb0"
-        />
-      </mesh>
-      <mesh geometry={asset.geometry} scale={1.001} raycast={() => null} renderOrder={1}>
         <shaderMaterial
           transparent
           depthWrite={false}
           side={FrontSide}
-          blending={AdditiveBlending}
           vertexColors
-          vertexShader={`varying vec3 vColor; varying vec3 vNormal; varying vec3 vView; void main(){vColor=color; vec4 mv=modelViewMatrix*vec4(position,1.);vNormal=normalize(normalMatrix*normal);vView=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`}
-          fragmentShader={`varying vec3 vColor; varying vec3 vNormal; varying vec3 vView; void main(){float rim=pow(1.-abs(dot(normalize(vNormal),normalize(vView))),3.);gl_FragColor=vec4(vColor,rim*0.025);}`}
+          uniforms={uniforms}
+          vertexShader={cortexVertex}
+          fragmentShader={cortexFragment}
         />
       </mesh>
       <points geometry={points} raycast={() => null} renderOrder={2}>
@@ -140,8 +141,12 @@ function Cortex({
           depthWrite={false}
           blending={AdditiveBlending}
           vertexColors
-          uniforms={{ size: { value: 2.9 }, pixelRatio: { value: gl.getPixelRatio() } }}
-          vertexShader={`uniform float size; uniform float pixelRatio; varying vec3 vColor; varying float vFacing; void main(){vColor=color;vec4 mv=modelViewMatrix*vec4(position,1.);vFacing=abs(dot(normalize(normalMatrix*normal),normalize(-mv.xyz)));gl_PointSize=clamp(size*pixelRatio*5.5/-mv.z,1.2,5.);gl_Position=projectionMatrix*mv;gl_Position.z-=0.00008*gl_Position.w;}`}
+          uniforms={{
+            ...uniforms,
+            size: { value: quality === 'high' ? 2.6 : 2.3 },
+            pixelRatio: { value: gl.getPixelRatio() },
+          }}
+          vertexShader={`uniform float focusRegion; attribute float regionId; uniform float size; uniform float pixelRatio; varying vec3 vColor; varying float vFacing; void main(){vColor=color*(focusRegion<.5 || abs(regionId-focusRegion)<.5 ? 1. : .25);vec4 mv=modelViewMatrix*vec4(position,1.);vFacing=abs(dot(normalize(normalMatrix*normal),normalize(-mv.xyz)));gl_PointSize=clamp(size*pixelRatio*5.5/-mv.z,1.2,5.);gl_Position=projectionMatrix*mv;gl_Position.z-=0.00008*gl_Position.w;}`}
           fragmentShader={`varying vec3 vColor;varying float vFacing;void main(){float d=length(gl_PointCoord-vec2(.5));if(d>.5)discard;float a=smoothstep(.24,.04,d)*.72+exp(-d*d*16.)*.25;gl_FragColor=vec4(vColor*(.55+.75*vFacing),min(.95,a));
           #include <colorspace_fragment>
           }`}
@@ -161,6 +166,13 @@ function Memories({
 }) {
   const ref = useRef<InstancedMesh>(null);
   const halo = useRef<InstancedMesh>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  useEffect(
+    () => () => {
+      document.body.style.cursor = 'auto';
+    },
+    [],
+  );
   const nodes = useMemo(() => graph.nodes.filter((n) => n.kind !== 'topic'), [graph.nodes]);
   const { invalidate } = useThree();
   useEffect(() => {
@@ -170,7 +182,7 @@ function Memories({
       const size =
         node.count > 1
           ? Math.min(0.075, 0.025 + Math.log10(node.count) * 0.014)
-          : node.id === selected
+          : node.id === selected || node.id === hovered
             ? 0.038
             : 0.024;
       dummy.position.set(...node.position);
@@ -193,7 +205,7 @@ function Memories({
     ref.current.computeBoundingSphere();
     halo.current.computeBoundingSphere();
     invalidate();
-  }, [nodes, selected, invalidate]);
+  }, [nodes, selected, hovered, invalidate]);
   if (!nodes.length) return null;
   return (
     <group>
@@ -208,8 +220,10 @@ function Memories({
         onPointerOver={(e) => {
           e.stopPropagation();
           document.body.style.cursor = 'pointer';
+          if (e.instanceId !== undefined) setHovered(nodes[e.instanceId].id);
         }}
         onPointerOut={() => {
+          setHovered(null);
           document.body.style.cursor = 'auto';
         }}
       >
@@ -223,12 +237,14 @@ function Memories({
         renderOrder={4}
       >
         <sphereGeometry args={[1, 10, 6]} />
-        <meshBasicMaterial
+        <shaderMaterial
           transparent
-          opacity={0.075}
-          blending={AdditiveBlending}
           depthWrite={false}
           depthTest={false}
+          blending={AdditiveBlending}
+          vertexColors
+          vertexShader={glowVertex}
+          fragmentShader={glowFragment}
         />
       </instancedMesh>
     </group>
@@ -276,44 +292,25 @@ function TopicGlyphs({ graph, onSelect }: { graph: Graph; onSelect: Props['onSel
   );
 }
 function Pathways({ graph, selected }: { graph: Graph; selected: string | null }) {
-  const nodes = useMemo(() => new Map(graph.nodes.map((n) => [n.id, n])), [graph.nodes]);
+  const geometry = useMemo(
+    () => filamentGeometry(graph, selected),
+    [graph.nodes, graph.edges, selected],
+  );
+  useEffect(() => () => geometry.dispose(), [geometry]);
   return (
-    <group>
-      {graph.edges
-        .filter((edge) => !selected || edge.source_id === selected || edge.target_id === selected)
-        .map((edge) => {
-          const a = nodes.get(edge.source_id),
-            b = nodes.get(edge.target_id);
-          if (!a || !b) return null;
-          const mid = new Vector3(...a.position)
-            .add(new Vector3(...b.position))
-            .multiplyScalar(0.5);
-          mid.multiplyScalar(1.12);
-          const points = Array.from({ length: 25 }, (_, i) => {
-            const t = i / 24;
-            return new Vector3(...a.position)
-              .multiplyScalar((1 - t) ** 2)
-              .add(mid.clone().multiplyScalar(2 * (1 - t) * t))
-              .add(new Vector3(...b.position).multiplyScalar(t * t));
-          });
-          return (
-            <Line
-              key={edge.id}
-              points={points}
-              color={REGION_INFO[a.region].color}
-              transparent
-              opacity={selected ? 0.65 : 0.22}
-              lineWidth={selected ? 1.2 : 0.65}
-              depthTest={false}
-              depthWrite={false}
-              renderOrder={3}
-              raycast={() => null}
-            />
-          );
-        })}
-    </group>
+    <lineSegments geometry={geometry} raycast={() => null} renderOrder={3}>
+      <lineBasicMaterial
+        vertexColors
+        transparent
+        opacity={selected ? 0.72 : 0.24}
+        blending={AdditiveBlending}
+        depthWrite={false}
+        depthTest
+      />
+    </lineSegments>
   );
 }
+
 function Controls({
   command,
   reducedMotion,
@@ -325,6 +322,7 @@ function Controls({
 }) {
   const ref = useRef<OrbitControlsImpl>(null);
   const { camera, invalidate, size } = useThree();
+  const clearance = useMemo(() => orbitClearance(positions), [positions]);
   const destination = useRef<{ position: Vector3; target: Vector3 } | null>(null);
   useEffect(() => {
     if (camera instanceof PerspectiveCamera) {
@@ -371,6 +369,7 @@ function Controls({
     invalidate();
   }, [command, reducedMotion, camera, invalidate, positions, size.width, size.height]);
   useFrame((_, dt) => {
+    if (ref.current) ref.current.minDistance = clearance + ref.current.target.length();
     if (!destination.current || !ref.current) return;
     const { position, target } = destination.current;
     const alpha = 1 - Math.exp(-dt * 5);
@@ -397,8 +396,8 @@ function Controls({
       makeDefault
       enableDamping={!reducedMotion}
       dampingFactor={0.08}
-      minDistance={1.4}
-      maxDistance={9}
+      minDistance={clearance}
+      maxDistance={18}
       zoomSpeed={0.8}
       panSpeed={0.6}
       onStart={() => {
@@ -406,6 +405,18 @@ function Controls({
       }}
     />
   );
+}
+function ContextGuard({ onLost }: { onLost: () => void }) {
+  const { gl } = useThree();
+  useEffect(() => {
+    const lost = (event: Event) => {
+      event.preventDefault();
+      onLost();
+    };
+    gl.domElement.addEventListener('webglcontextlost', lost);
+    return () => gl.domElement.removeEventListener('webglcontextlost', lost);
+  }, [gl, onLost]);
+  return null;
 }
 class SceneBoundary extends Component<
   { children: ReactNode; fallback: ReactNode },
@@ -431,7 +442,9 @@ export default function Brain(props: Props) {
         if (live) setAsset(a);
         else a.geometry.dispose();
       })
-      .catch((e) => setError(e.message));
+      .catch((e) => {
+        if (live) setError(e.message);
+      });
     return () => {
       live = false;
       loaded?.geometry.dispose();
@@ -470,6 +483,9 @@ export default function Brain(props: Props) {
         fallback={fallback}
         onCreated={() => props.onReady?.()}
       >
+        <ContextGuard
+          onLost={() => setError('Graphics context lost. Reload to restore the anatomical view.')}
+        />
         <ambientLight intensity={0.6} />
         <directionalLight position={[-3, 5, -4]} intensity={2} />
         <directionalLight position={[3, 1, 2]} intensity={0.9} color="#739fc4" />

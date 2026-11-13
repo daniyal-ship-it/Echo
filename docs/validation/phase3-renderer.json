@@ -1,0 +1,175 @@
+{
+  "date": "2026-11-13",
+  "base": "5d35bceae979df03a11c135bfa24d211b698e2b5",
+  "branch": "feat/phase3a-brain-renderer",
+  "scope": "isolated local renderer validation; no hosted actions or paid requests",
+  "unit_integration": {
+    "passed": 70,
+    "failed": 0,
+    "skipped": 0
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "image_digest": "sha256:feb68f4f15446397d8cac7f4fe48fe4586de83160d1fc48b46283312d1a33966",
+    "exit_code": 0,
+    "connection": "isolated loopback Docker; no hosted credentials"
+  },
+  "browser": {
+    "unique_journeys_passed": 14,
+    "full_run": {
+      "passed": 13,
+      "failed": 1,
+      "reason": "new reduced-motion screenshot assertion; OS preference sampled on mount and byte-identical PNG comparison unsuitable"
+    },
+    "corrected_renderer_rerun": {
+      "passed": 1,
+      "failed": 0,
+      "checks": "OS preference active after mount; actual modelView matrices stable in reduced-motion views, keyboard camera activation, density, lobes, aspect ratios, context and asset failures"
+    },
+    "transport": "labelled mock providers; synthetic local graph response for renderer density only"
+  },
+  "anatomy": {
+    "passed": true,
+    "vertices": 20484,
+    "triangles": 40960,
+    "source_checksums": "unchanged"
+  },
+  "production_smoke": {
+    "timestamp": "2026-11-13T10:17:01.536Z",
+    "checks": [
+      "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+      "Production HTML, static assets and anatomical geometry",
+      "Production-mode account, session, original persistence, graph and export",
+      "Session revocation"
+    ],
+    "result": "passed",
+    "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+  },
+  "render_performance": {
+    "environment": "Chromium SwiftShader; RAF wall-clock intervals, not GPU time or hardware FPS",
+    "metrics": [
+      {
+        "records": 0,
+        "renderedNodes": 0,
+        "rafMedianMs": 66.69999999999982,
+        "rafP95Ms": 150,
+        "drawCalls": 124,
+        "jsHeapBytes": 32462628,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 61.75251899999999,
+        "gpuDrawSumP95Ms": 83.209301,
+        "gpuMeasuredIntervals": 28,
+        "unavailableQueries": 4,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100,
+        "renderedNodes": 100,
+        "rafMedianMs": 83.30000000000018,
+        "rafP95Ms": 150,
+        "drawCalls": 180,
+        "jsHeapBytes": 38731332,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 71.514865,
+        "gpuDrawSumP95Ms": 109.932047,
+        "gpuMeasuredIntervals": 27,
+        "unavailableQueries": 6,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 1500,
+        "renderedNodes": 1500,
+        "rafMedianMs": 266.60000000000036,
+        "rafP95Ms": 466.60000000000036,
+        "drawCalls": 180,
+        "jsHeapBytes": 55137850,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 250.451023,
+        "gpuDrawSumP95Ms": 313.986309,
+        "gpuMeasuredIntervals": 27,
+        "unavailableQueries": 12,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100000,
+        "renderedNodes": 1500,
+        "rafMedianMs": 283.3000000000011,
+        "rafP95Ms": 716.6000000000004,
+        "drawCalls": 180,
+        "jsHeapBytes": 30895851,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 284.41297399999996,
+        "gpuDrawSumP95Ms": 411.626299,
+        "gpuMeasuredIntervals": 27,
+        "unavailableQueries": 12,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      }
+    ]
+  },
+  "data_path": {
+    "timestamp": "2026-11-12T21:27:38.331Z",
+    "runtime": "v24.19.0",
+    "storage": "PGlite in-memory isolated synthetic fixtures",
+    "limitations": "Server data-path benchmark only. No hardware GPU FPS claim. Records are not retained in any user workspace.",
+    "results": [
+      {
+        "records": 100,
+        "insertBatchMs": 20,
+        "graphMs": 8,
+        "returnedNodes": 100,
+        "aggregated": false,
+        "searchMs": 3,
+        "libraryMs": 3,
+        "graphBytes": 21084
+      },
+      {
+        "records": 1000,
+        "insertBatchMs": 116,
+        "graphMs": 24,
+        "returnedNodes": 1000,
+        "aggregated": false,
+        "searchMs": 3,
+        "libraryMs": 4,
+        "graphBytes": 210517
+      },
+      {
+        "records": 10000,
+        "insertBatchMs": 718,
+        "graphMs": 92,
+        "returnedNodes": 639,
+        "aggregated": true,
+        "searchMs": 25,
+        "libraryMs": 10,
+        "graphBytes": 121864
+      },
+      {
+        "records": 100000,
+        "insertBatchMs": 6521,
+        "graphMs": 1021,
+        "returnedNodes": 1272,
+        "aggregated": true,
+        "searchMs": 215,
+        "libraryMs": 87,
+        "graphBytes": 242794
+      }
+    ]
+  },
+  "limitations": [
+    "SwiftShader instrumentation, not representative hardware FPS",
+    "GPU values are available-query draw sums, can omit draws and exclude clears/presentation; not total GPU frame time",
+    "JS heap is not GPU memory; sustained leak testing not performed",
+    "No paired baseline performance run",
+    "60 FPS not achieved",
+    "Before screenshots retained from Phase 2 integration test captures; different account/anchors from after captures"
+  ],
+  "typescript": "passed",
+  "production_build": {
+    "status": "passed",
+    "serial_after_browser_teardown": true
+  }
+}
