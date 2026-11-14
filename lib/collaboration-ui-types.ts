@@ -50,6 +50,7 @@ export type WireDisagreement = {
 };
 export type WireResult = {
   jointConclusions: WirePoint[];
+  agreements?: WirePoint[];
   disagreements: WireDisagreement[];
   openQuestions: WirePoint[];
   unverified: WirePoint[];
@@ -67,6 +68,9 @@ export type WireTurn = {
   citations: Citation[];
   result?: WireResult | null;
   error?: string | null;
+  contextCurrent?: boolean;
+  billingUncertain?: boolean;
+  reportedTokens?: number | null;
 };
 export type WireCollaboration = {
   id: string;
@@ -77,6 +81,7 @@ export type WireCollaboration = {
   limits: { maxProviderCalls: number; usedProviderCalls: number };
   /** Whether POST /turns is accepted in the current state. */
   canFollowUp: boolean;
+  canRetry?: boolean;
   /** The saved conversation memory, when the backend has stored one. */
   savedMemoryId?: string | null;
   createdAt: string;
@@ -101,6 +106,7 @@ export type WireList = {
 export type CreateRequest = {
   task: string;
   mode: CollaborationMode;
+  models: Record<CollaborationProvider, string>;
   consent: true;
   /** The same optional library scope the assistant endpoint accepts. */
   filters?: Record<string, string>;

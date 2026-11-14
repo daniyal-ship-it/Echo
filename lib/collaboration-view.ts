@@ -2,6 +2,7 @@
 // shapes it does not understand, and derives every label from saved state. It never invents a
 // stage, a model, progress or a result.
 import type { Citation } from './types';
+import { collaborationLimits } from './collaboration-adapter';
 import type {
   CollaborationMode,
   CollaborationProvider,
@@ -131,6 +132,7 @@ function readTurn(raw: unknown, where: string): WireTurn {
     if (!isObj(raw.result)) throw new ContractError(`${where}.result is not an object`);
     const r = raw.result;
     result = {
+      agreements: r.agreements ? readPoints(r.agreements, `${where}.result.agreements`) : [],
       jointConclusions: readPoints(r.jointConclusions, `${where}.result.jointConclusions`),
       openQuestions: readPoints(r.openQuestions, `${where}.result.openQuestions`),
       unverified: readPoints(r.unverified, `${where}.result.unverified`),
@@ -163,6 +165,14 @@ function readTurn(raw: unknown, where: string): WireTurn {
     citations,
     result,
     error: optionalText(raw.error),
+    contextCurrent: raw.contextCurrent !== false,
+    billingUncertain: raw.billingUncertain === true,
+    reportedTokens:
+      raw.reportedTokens === null
+        ? null
+        : typeof raw.reportedTokens === 'number'
+          ? raw.reportedTokens
+          : undefined,
   };
 }
 /** Validates a collaboration from the API. Throws ContractError rather than guess. */
@@ -180,6 +190,7 @@ export function readCollaboration(raw: unknown): WireCollaboration {
       usedProviderCalls: count(limits.usedProviderCalls),
     },
     canFollowUp: raw.canFollowUp === true,
+    canRetry: raw.canRetry !== false,
     savedMemoryId: optionalText(raw.savedMemoryId),
     createdAt: str(raw, 'createdAt', 'collaboration'),
     updatedAt: str(raw, 'updatedAt', 'collaboration'),
@@ -232,9 +243,9 @@ export const MODE_INFO: Record<CollaborationMode, ModeInfo> = {
   parallel: {
     id: 'parallel',
     name: 'Parallel analysis',
-    summary: 'Both models answer independently, then one synthesis compares them.',
-    sequence: ['Each model analyses the task on its own', 'One synthesis of both answers'],
-    plannedCalls: 3,
+    summary: 'Both models answer independently from the same authorised sources.',
+    sequence: ['Each model analyses the task on its own; no synthesis in this mode'],
+    plannedCalls: 2,
   },
   deliberate: {
     id: 'deliberate',
@@ -250,10 +261,8 @@ export const MODE_INFO: Record<CollaborationMode, ModeInfo> = {
 };
 /** The call bound to disclose before sending: the server's figure when published, else the plan. */
 export function callBound(mode: CollaborationMode, published?: WireList['modes']) {
-  const server = published?.[mode]?.maxProviderCalls;
-  return server
-    ? { calls: server, source: 'server' as const }
-    : { calls: MODE_INFO[mode].plannedCalls, source: 'planned' as const };
+  void published;
+  return { calls: collaborationLimits(mode).maxCalls, source: 'requested' as const };
 }
 
 export type Tone = 'idle' | 'active' | 'held' | 'done' | 'problem' | 'caution';
@@ -397,12 +406,12 @@ export function controls(collaboration: WireCollaboration, driving: boolean): Co
   const open = s === 'queued' || s === 'running';
   return {
     drive: open && driving,
-    cancel: open || s === 'awaiting_continuation',
+    cancel: open || ['awaiting_continuation', 'needs_review', 'failed'].includes(s),
     resume: open && !driving,
     continueStage: s === 'awaiting_continuation',
-    retry: s === 'failed' || s === 'needs_review',
+    retry: (s === 'failed' || s === 'needs_review') && collaboration.canRetry !== false,
     acknowledge: s === 'needs_review',
-    followUp: s === 'completed' && collaboration.canFollowUp,
+    followUp: collaboration.canFollowUp,
   };
 }
 /** Stages still to run are only ever started automatically for these statuses. */
@@ -416,6 +425,7 @@ const cite = (turn: WireTurn, refs: number[] = []) =>
     .map((number) => ({ number, citation: turn.citations[number - 1] }));
 export type ResultView = {
   jointConclusions: CitedPoint[];
+  agreements: CitedPoint[];
   disagreements: {
     topic: string;
     positions: { provider: CollaborationProvider; text: string }[];
@@ -438,6 +448,7 @@ export function resultView(turn: WireTurn): ResultView | null {
   const openQuestions = points(turn.result.openQuestions);
   return {
     jointConclusions: points(turn.result.jointConclusions),
+    agreements: points(turn.result.agreements || []),
     disagreements,
     openQuestions,
     unverified: points(turn.result.unverified),
@@ -469,6 +480,7 @@ export function messagesOf(turn: WireTurn, provider?: CollaborationProvider): Me
 }
 /** Tokens the provider reported for a turn. Null when no message reported usage. */
 export function reportedTokens(turn: WireTurn) {
+  if (turn.reportedTokens !== undefined) return turn.reportedTokens;
   const reported = turn.messages.filter((m) => m.usage);
   return reported.length
     ? reported.reduce((n, m) => n + m.usage!.inputTokens + m.usage!.outputTokens, 0)

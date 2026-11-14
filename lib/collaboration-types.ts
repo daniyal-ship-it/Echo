@@ -22,6 +22,18 @@ export const turnInput = z
     mode: z.enum(['parallel', 'deliberate']),
     models: z.object({ openai: modelId, anthropic: modelId }).strict(),
     consent: z.literal(true),
+    filters: z
+      .object({
+        region: z.string().max(20).optional(),
+        source: z.string().max(40).optional(),
+        tag: z.string().max(80).optional(),
+        from: z.string().max(10).optional(),
+        to: z.string().max(10).optional(),
+        q: z.string().max(500).optional(),
+        untagged: z.string().max(1).optional(),
+      })
+      .strict()
+      .optional(),
     limits: z
       .object({
         maxCalls: z.number().int().min(2).max(8),

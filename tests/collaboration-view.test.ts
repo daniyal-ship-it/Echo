@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { CollaborationError, createCollaborationClient } from '../lib/collaboration-client';
+import {
+  CollaborationError,
+  createCollaborationClient,
+} from './fixtures/legacy-collaboration-client';
 import {
   ContractError,
   MODE_INFO,
@@ -33,7 +36,12 @@ async function run(mode: 'parallel' | 'deliberate', options = {}) {
   const backend = createMockBackend({ citations: [source], ...options });
   const client = createCollaborationClient(backend.transport);
   let c = readCollaboration(
-    await client.create({ task: 'Where are the codes?', mode, consent: true }),
+    await client.create({
+      task: 'Where are the codes?',
+      mode,
+      consent: true,
+      models: { openai: 'mock-openai-model', anthropic: 'mock-anthropic-model' },
+    }),
   );
   const seen: CollaborationStatus[] = [c.status];
   for (let i = 0; i < 8 && (c.status === 'queued' || c.status === 'running'); i++) {
@@ -116,7 +124,14 @@ test('MOCK CONTRACT: the combined result keeps disagreements and unverified poin
 test('MOCK CONTRACT: an uncertain billing outcome is never retried without acknowledgement', async () => {
   const backend = createMockBackend({ citations: [source] });
   const client = createCollaborationClient(backend.transport);
-  let c = readCollaboration(await client.create({ task: 'Task', mode: 'parallel', consent: true }));
+  let c = readCollaboration(
+    await client.create({
+      task: 'Task',
+      mode: 'parallel',
+      consent: true,
+      models: { openai: 'mock-openai-model', anthropic: 'mock-anthropic-model' },
+    }),
+  );
   c = readCollaboration(await client.advance(c.id, { action: 'continue' }));
   backend.failNextStage('uncertain');
   c = readCollaboration(await client.advance(c.id, { action: 'continue' }));
@@ -149,10 +164,10 @@ test('MOCK CONTRACT: cancel, follow-up turns and history', async () => {
   const list = readList(await client.list());
   assert.equal(list.collaborations.length, 1);
   assert.equal(list.collaborations[0].turnCount, 2);
-  assert.deepEqual(callBound('deliberate', list.modes), { calls: 5, source: 'server' });
+  assert.deepEqual(callBound('deliberate', list.modes), { calls: 8, source: 'requested' });
   assert.deepEqual(callBound('deliberate'), {
-    calls: MODE_INFO.deliberate.plannedCalls,
-    source: 'planned',
+    calls: 8,
+    source: 'requested',
   });
   assert.equal(backend.store.size, 1);
 });

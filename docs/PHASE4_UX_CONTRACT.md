@@ -1,5 +1,32 @@
 # Phase 4B — collaboration experience: frontend API contract
 
+## Integration resolution — 14 November 2026
+
+The proposal below is historical. The integrated application uses the authoritative
+[Phase 4 API contract](PHASE4_COLLABORATION_CONTRACT.md) through a strict adapter,
+with frontend presentation types now in `lib/collaboration-ui-types.ts`.
+See [the full integration report](PHASE4_INTEGRATION.md).
+
+| Original question | Verified integration answer |
+| --- | --- |
+| 1. Does advance run one stage or background work? | One explicit request runs one stage; no background worker. Running work is refreshed with GET only. |
+| 2. Does deliberate pause before review? | Yes: `awaiting-next-step`, mapped to `awaiting_continuation`; review and synthesis each require Continue. |
+| 3. Limit per run or turn? | Per turn. UI requests 5 parallel / 8 deliberate maximum, including up to three explicit retries, and labels reserved calls per turn. Normal execution uses 2 / 5 calls. |
+| 4. Does retrieval add embeddings? | No: scoped keyword retrieval only. No embedding cost is hidden. |
+| 5. Which synthesis model? | The consented OpenAI model, fixed in v1 deliberate mode. Parallel has no synthesis. |
+| 6. Is a memory saved? | No automatic memory node; durable collaboration tables store history. `savedMemoryId` is null. |
+| 7. Thread turn limit? | 100; follow-up availability follows current backend terminal state and this ceiling. |
+
+Requests include version, idempotency key, current turn ID where required, consented
+models, bounds and optional whitelisted scope filters. Follow-ups require new
+consent and include bounded previous discussion. Unknown billing requires an
+explicit acknowledgement; successful recovery retains prior billing uncertainty.
+Only validated current outputs are shown. Source-grounded synthesis and reported
+agreements do not assert that both models have verified a claim. Citation clicks
+use actual source versions/passages and retain navigation back to the run.
+
+## Original Phase 4B proposal (preserved for provenance)
+
 Base commit: `256a036`. Branch: `feat/phase4b-collaboration-ux`. Frontend only.
 
 This is what the collaboration interface sends and what it needs back. It was written before

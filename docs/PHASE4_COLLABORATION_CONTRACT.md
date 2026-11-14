@@ -1,5 +1,15 @@
 # Phase 4A collaboration API — v1
 
+Integration update — 14 November 2026: see [PHASE4_INTEGRATION.md](PHASE4_INTEGRATION.md).
+`TurnInput.filters` optionally accepts the existing whitelisted region/source/tag/
+date/query/untagged scope; it is enforced by workspace-scoped retrieval. List rows
+add real `mode`, `status`, `models`, `updated_at` and `turn_count` while retaining
+`id`, `question` and `created_at`; `before` is a scoped chronological cursor.
+The UI explicitly requests 5/8 maximum calls for parallel/deliberate (2/5 normal
+calls plus up to three explicit retries), 1200 output tokens and 48,000 input bytes
+per call. No monetary estimate or hidden embedding request is introduced.
+
+
 Backend implementation on `feat/phase4a-collaboration-engine`, based on
 `256a036449db1e1de6a2c484a39d98258239d922`. This contract is for Claude's
 frontend integration. No Phase 4 UI, deployment, hosted migration or live model

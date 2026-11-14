@@ -176,7 +176,12 @@ async function append(db: Database, w: string, threadId: string, input: TurnInpu
     });
   }
   // No hidden embedding charge. Existing version-aware keyword retrieval is reused.
-  const retrieved = await hybridRetrieve(db, w, input.question);
+  const retrieved = await hybridRetrieve(
+    db,
+    w,
+    input.question,
+    new URLSearchParams(input.filters as Record<string, string> | undefined),
+  );
   await evidence(db, w, retrieved.citations);
   const id = uuid();
   await db.query(
@@ -264,8 +269,11 @@ export async function listCollaborations(db: Database, w: string, before?: strin
   return {
     version: COLLABORATION_VERSION,
     threads: await db.query(
-      `SELECT t.id,t.created_at,(SELECT question FROM collaboration_turns WHERE workspace_id=$1 AND thread_id=t.id ORDER BY ordinal LIMIT 1) AS question
-    FROM collaboration_threads t WHERE t.workspace_id=$1 AND ($2::uuid IS NULL OR t.id < $2::uuid) ORDER BY t.id DESC LIMIT 50`,
+      `SELECT t.id,t.created_at,first.question,last.mode,last.status,last.config->'models' AS models,last.updated_at,last.ordinal AS turn_count
+    FROM collaboration_threads t
+    JOIN LATERAL (SELECT question FROM collaboration_turns WHERE workspace_id=$1 AND thread_id=t.id ORDER BY ordinal LIMIT 1) first ON true
+    JOIN LATERAL (SELECT mode,status,config,updated_at,ordinal FROM collaboration_turns WHERE workspace_id=$1 AND thread_id=t.id ORDER BY ordinal DESC LIMIT 1) last ON true
+    WHERE t.workspace_id=$1 AND ($2::uuid IS NULL OR (t.created_at,t.id) < (SELECT created_at,id FROM collaboration_threads WHERE workspace_id=$1 AND id=$2::uuid)) ORDER BY t.created_at DESC,t.id DESC LIMIT 50`,
       [w, before ?? null],
     ),
   };

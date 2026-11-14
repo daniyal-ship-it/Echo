@@ -100,5 +100,15 @@ requires a separate reviewed plan and approval; no DROP/reset is authorized.
 
 **Assessment:** local security/compatibility validation is suitable for review.
 Hosted execution/deployment remains **NO-GO pending separate approval, fresh target
-and recovery checks, and frontend integration validation**. No claim of hosted
+and recovery checks**. No claim of hosted
 migration or live-provider acceptance is made.
+
+## Integration review — 14 November 2026
+
+The combined Phase 4A + 4B validation is now complete locally; that former gate
+is closed. See [integration evidence](validation/phase4-integration.json). Migration
+004 is unchanged: SHA-256
+`22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289`.
+No hosted connection was opened. Separate execution approval and fresh echo-dev
+target/ownership/ACL/readiness/recovery checks remain mandatory; no backup or
+hosted acceptance is claimed. Local approval readiness does not authorize execution.

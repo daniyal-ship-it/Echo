@@ -6,6 +6,8 @@ import { createDatabase } from '../lib/db';
 import { createSession, SESSION_COOKIE } from '../lib/security';
 import { workspace, note, input, advance } from './fixtures/collaboration-suite';
 import { storeMemory } from '../lib/memories';
+import { createCollaborationClient } from '../lib/collaboration-client';
+import { adaptCollaboration } from '../lib/collaboration-adapter';
 import { COLLABORATION_VERSION } from '../lib/collaboration-types';
 
 test('authenticated API and actual adapters with mock HTTP: consent, peer review, history, origin and workspace isolation', async (t) => {
@@ -140,6 +142,88 @@ test('authenticated API and actual adapters with mock HTTP: consent, peer review
     assert.equal((await cancelled.json()).turns[1].status, 'cancelled');
     assert.equal(requests.length, 5);
     assert.ok(!JSON.stringify(result).includes('mock-api-key'));
+    const client = createCollaborationClient((path, init) =>
+      request(
+        path.replace('/api/', ''),
+        session,
+        init?.body ? JSON.parse(String(init.body)) : undefined,
+      ),
+    );
+    const native = await client.create({
+      task: 'Where is the notebook?',
+      mode: 'deliberate',
+      consent: true,
+      models: { openai: 'mock-gpt', anthropic: 'mock-claude' },
+    });
+    assert.equal(native.status, 'queued');
+    let ui = await client.advance(native.id, { action: 'continue' });
+    assert.equal(ui.status, 'awaiting_continuation');
+    assert.equal(ui.turns[0].messages.length, 2);
+    ui = await client.advance(native.id, { action: 'continue' });
+    assert.equal(ui.turns[0].messages.filter((m) => m.stage === 'cross_review').length, 2);
+    ui = await client.advance(native.id, { action: 'continue' });
+    assert.equal(ui.status, 'completed');
+    assert.equal(ui.turns[0].result!.jointConclusions.length, 1);
+    assert.equal((await client.get(native.id)).turns[0].messages.length, 5);
+    assert.equal((await client.list()).collaborations[0].id, native.id);
+    const next = await client.addTurn(native.id, {
+      prompt: 'Is the notebook still there?',
+      consent: true,
+    });
+    assert.equal(next.turns.length, 2);
+    assert.equal((await client.cancel(native.id)).status, 'cancelled');
+    const scoped = await client.create({
+      task: 'notebook',
+      mode: 'parallel',
+      consent: true,
+      models: { openai: 'mock-gpt', anthropic: 'mock-claude' },
+      filters: { region: 'occipital' },
+    });
+    assert.equal(scoped.turns[0].citations.length, 0, 'scope must constrain retrieved sources');
+    const invalid = structuredClone(result);
+    invalid.turns[0].calls[0].result.groundedClaims[0].citations[0].source = 999;
+    assert.throws(() => adaptCollaboration(invalid), /Invalid collaboration evidence/);
+    const stale = structuredClone(result);
+    stale.turns[0].contextCurrent = false;
+    assert.equal(adaptCollaboration(stale).turns[0].messages.length, 0);
+    assert.equal(adaptCollaboration(stale).turns[0].result, null);
+    let hold = false,
+      ready!: () => void,
+      release!: () => void;
+    const waiting = new Promise<void>((r) => {
+        ready = r;
+      }),
+      gate = new Promise<void>((r) => {
+        release = r;
+      });
+    const delayed = createCollaborationClient(async (path, init) => {
+      const response = await request(
+        path.replace('/api/', ''),
+        session,
+        init?.body ? JSON.parse(String(init.body)) : undefined,
+      );
+      if (hold && !init?.method) {
+        ready();
+        await gate;
+      }
+      return response;
+    });
+    const pendingThread = await delayed.create({
+      task: 'notebook slow read',
+      mode: 'parallel',
+      consent: true,
+      models: { openai: 'mock-gpt', anthropic: 'mock-claude' },
+    });
+    hold = true;
+    const pendingRead = delayed.get(pendingThread.id);
+    await waiting;
+    assert.equal((await delayed.cancel(pendingThread.id)).status, 'cancelled');
+    release();
+    assert.equal(
+      (await pendingRead).status,
+      'cancelled',
+      'late GET must retain the newer cancellation',
+    );
   } finally {
     for (const key of keys)
       if (saved[key] === undefined) delete process.env[key];

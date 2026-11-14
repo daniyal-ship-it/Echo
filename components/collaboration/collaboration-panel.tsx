@@ -49,6 +49,7 @@ import {
   type WorkflowStep,
 } from '@/lib/collaboration-view';
 import type { Citation } from '@/lib/types';
+import { collaborationLimits } from '@/lib/collaboration-adapter';
 import type { Settings } from '../panels';
 
 export type CollaborationPlace =
@@ -270,13 +271,22 @@ function Composer({
   ].filter(Boolean);
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (sending) return;
+    if (sending || !consent || !settings || missing.length || !task.trim()) return;
     setSending(true);
     setError(null);
     try {
       onCreated(
         readCollaboration(
-          await client.create({ task: task.trim(), mode, consent: true, filters: scope }),
+          await client.create({
+            task: task.trim(),
+            mode,
+            consent: true,
+            filters: scope,
+            models: {
+              openai: settings!.providers.find((p) => p.id === 'openai')!.model!,
+              anthropic: settings!.providers.find((p) => p.id === 'anthropic')!.model!,
+            },
+          }),
         ),
       );
     } catch (e) {
@@ -350,12 +360,12 @@ function Composer({
         <div>
           <dt>Provider requests</dt>
           <dd>
-            {bound.source === 'server' ? 'At most' : 'About'} {bound.calls} for{' '}
-            {MODE_INFO[mode].name.toLowerCase()}:{' '}
-            {MODE_INFO[mode].sequence.map((s) => s.toLowerCase()).join('; ')}.
-            {bound.source === 'planned' &&
-              ' This is the planned sequence; the server sets the enforced limit and reports it once the run exists.'}{' '}
-            Retrieval may add one embedding request.
+            At most {bound.calls} for {MODE_INFO[mode].name.toLowerCase()}:{' '}
+            {MODE_INFO[mode].sequence.map((s) => s.toLowerCase()).join('; ')}. This includes{' '}
+            {MODE_INFO[mode].plannedCalls} planned requests and up to 3 explicitly approved retries.
+            Keyword retrieval makes no embedding request. Each request is limited to{' '}
+            {collaborationLimits(mode).maxOutputTokens} output tokens and{' '}
+            {collaborationLimits(mode).maxInputBytes.toLocaleString()} input bytes.
           </dd>
         </div>
         <div>
@@ -401,7 +411,7 @@ function Composer({
       <button
         className="button primary full"
         aria-describedby={blockers.length ? `${ids}-blockers` : undefined}
-        disabled={!task.trim() || !consent || sending || blockers.length > 0}
+        disabled={!task.trim() || !consent || !settings || sending || blockers.length > 0}
       >
         {sending ? 'Starting…' : 'Start collaboration'}
       </button>
@@ -496,6 +506,7 @@ function Run({
   const [followUp, setFollowUp] = useState('');
   const [followConsent, setFollowConsent] = useState(false);
   const live = useRef(true);
+  const generation = useRef(0);
   const focusSource = useRef(onFocusSource);
   focusSource.current = onFocusSource;
   const load = useCallback(
@@ -504,12 +515,14 @@ function Run({
   );
   useEffect(() => {
     live.current = true;
+    const epoch = ++generation.current;
     const controller = new AbortController();
     setLoadFault(null);
     load(controller.signal)
-      .then((c) => live.current && setCollaboration(c))
+      .then((c) => live.current && generation.current === epoch && setCollaboration(c))
       .catch((error) => {
-        if (live.current && (error as Error).name !== 'AbortError') setLoadFault(fault(error));
+        if (live.current && generation.current === epoch && (error as Error).name !== 'AbortError')
+          setLoadFault(fault(error));
       });
     return () => {
       live.current = false;
@@ -520,7 +533,7 @@ function Run({
   // Advance one saved stage at a time while this view is open. A failed request is never
   // repeated automatically: the saved state is read back instead.
   useEffect(() => {
-    if (!driving || !status || !isAdvancing(status)) return;
+    if (!driving || status !== 'queued') return;
     let active = true;
     const controller = new AbortController();
     void (async () => {
@@ -528,7 +541,11 @@ function Run({
         const next = readCollaboration(
           await client.advance(id, { action: 'continue' }, controller.signal),
         );
-        if (active) setCollaboration(next);
+        if (active) {
+          setCollaboration(next);
+          setDriving(false);
+          driven.delete(id);
+        }
       } catch (error) {
         if (!active || (error as Error).name === 'AbortError') return;
         setDriving(false);
@@ -550,6 +567,25 @@ function Run({
       driven.delete(id);
     }
   }, [status, driving, driven, id]);
+  // Running means another request owns the stage. Refresh saved state without billing.
+  useEffect(() => {
+    if (status !== 'running') return;
+    let active = true;
+    const controller = new AbortController();
+    const timer = setInterval(() => {
+      const epoch = generation.current;
+      load(controller.signal)
+        .then((c) => {
+          if (active && generation.current === epoch) setCollaboration(c);
+        })
+        .catch(() => undefined);
+    }, 1500);
+    return () => {
+      active = false;
+      clearInterval(timer);
+      controller.abort();
+    };
+  }, [status, load]);
   const turns = collaboration?.turns ?? [];
   const turn: WireTurn | undefined = turns[turnIndex ?? turns.length - 1] ?? turns.at(-1);
   const firstSource = turn?.status === 'completed' ? turn.citations[0] : undefined;
@@ -558,10 +594,15 @@ function Run({
   }, [firstSource?.id, turn?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function act(request: () => Promise<unknown>, thenDrive: boolean) {
+    if (acting) return;
+    ++generation.current;
+    setDriving(false);
+    driven.delete(id);
     setActing(true);
     setActionFault(null);
     try {
       const next = readCollaboration(await request());
+      ++generation.current;
       if (!live.current) return;
       setCollaboration(next);
       setAck(false);
@@ -573,8 +614,9 @@ function Run({
     } catch (error) {
       if (!live.current) return;
       setActionFault(fault(error));
+      const epoch = ++generation.current;
       load()
-        .then((c) => live.current && setCollaboration(c))
+        .then((c) => live.current && generation.current === epoch && setCollaboration(c))
         .catch(() => undefined);
     } finally {
       if (live.current) setActing(false);
@@ -655,13 +697,19 @@ function Run({
       {steps.length > 0 && <Lanes steps={steps} participants={collaboration.participants} />}
       <p className="collab-usage">
         {collaboration.limits.maxProviderCalls > 0
-          ? `${collaboration.limits.usedProviderCalls} of at most ${collaboration.limits.maxProviderCalls} provider requests used.`
-          : `${collaboration.limits.usedProviderCalls} provider requests used.`}{' '}
+          ? `${collaboration.limits.usedProviderCalls} of at most ${collaboration.limits.maxProviderCalls} provider requests reserved for this turn.`
+          : `${collaboration.limits.usedProviderCalls} provider requests reserved for this turn.`}{' '}
         {tokens !== null
           ? `${tokens.toLocaleString()} tokens reported for this turn.`
           : 'No token usage has been reported for this turn.'}
       </p>
 
+      {turn?.billingUncertain && (
+        <p className="collab-alert" role="status">
+          Some provider billing is still unknown. Successful recovery does not erase an earlier
+          uncertain charge.
+        </p>
+      )}
       {turn?.error && (
         <div className="collab-alert" role="alert">
           <TriangleAlert size={16} aria-hidden />
@@ -680,11 +728,7 @@ function Run({
           <button
             className="button secondary"
             disabled={acting}
-            onClick={() => {
-              driven.add(id);
-              setActionFault(null);
-              setDriving(true);
-            }}
+            onClick={() => void act(() => client.advance(id, { action: 'continue' }), false)}
           >
             Resume run
           </button>
@@ -725,8 +769,9 @@ function Run({
       </div>
       {(can.cancel || can.resume) && (
         <p className="fine-print">
-          Stages advance only while this collaboration is open here. Cancelling stops further
-          stages; a request already with a provider may still finish and be billed.
+          Stages start only on an explicit start, resume or continue action. Running requests are
+          refreshed without starting new work. Cancelling stops further stages; a request already
+          with a provider may still finish and be billed.
         </p>
       )}
 
@@ -775,9 +820,9 @@ function Run({
                     </p>
                   )}
                   <ResultSection
-                    title="Joint conclusions"
-                    empty="The models reached no joint conclusion."
-                    note="Both models support these. Agreement is not proof."
+                    title="Source-grounded synthesis"
+                    empty="No source-grounded synthesis claims were recorded."
+                    note="Claims written by the synthesizing model with checked source quotations. They are not verified consensus."
                     count={result.jointConclusions.length}
                   >
                     {result.jointConclusions.map((p, i) => (
@@ -788,9 +833,22 @@ function Run({
                     ))}
                   </ResultSection>
                   <ResultSection
+                    title="Reported agreements"
+                    empty="No agreement was recorded."
+                    note="Agreement reported by the synthesizing model is not proof."
+                    count={result.agreements.length}
+                  >
+                    {result.agreements.map((p, i) => (
+                      <li key={i}>
+                        <p>{p.text}</p>
+                        {cited(p.sources)}
+                      </li>
+                    ))}
+                  </ResultSection>
+                  <ResultSection
                     title="Disagreements"
                     empty="No disagreement was recorded."
-                    note="Each model’s position is shown in its own words."
+                    note="Differences reported by the synthesizing model. Inspect both independent analyses and reviews."
                     count={result.disagreements.length}
                     tone="caution"
                   >
@@ -932,7 +990,9 @@ function Run({
               checked={followConsent}
               onChange={(e) => setFollowConsent(e.target.checked)}
             />
-            Send this follow-up and matching passages to the same providers. New API charges apply.
+            Send this follow-up, matching passages and bounded previous discussion to the same
+            providers. The same per-turn call, output-token and input-byte limits apply. New API
+            charges apply.
           </label>
           <button
             className="button primary"

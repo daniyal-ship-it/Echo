@@ -1,0 +1,158 @@
+{
+  "date": "2026-11-14",
+  "branch": "integration/phase4a-4b",
+  "base": "256a036449db1e1de6a2c484a39d98258239d922",
+  "backend": "bfae2aba3695ec1c059d3042e9635dd74c14b35d",
+  "frontend_patch": {
+    "bytes": 172340,
+    "sha256": "3b477c46fa698ded3cd4d62456167b8b859f651d8e3dab12117f851cc6218d5a",
+    "commits": 3,
+    "applied": [
+      "644118e",
+      "a999d94",
+      "352ca6c"
+    ],
+    "original_ancestry": "Original objects unavailable; exact transferred series applies on base; reconstructed ancestry verified"
+  },
+  "unit_integration": {
+    "passed": 108,
+    "failed": 0,
+    "skipped": 0,
+    "duration_ms": 21699.384438,
+    "command": "npm test with disposable ECHO_TEST_POSTGRES_URL"
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "exit_code": 0,
+    "connection": "disposable loopback Docker; no hosted credentials"
+  },
+  "browser": {
+    "command": "npm run test:e2e",
+    "passed": 31,
+    "failed": 0,
+    "skipped": 0,
+    "duration": "5.2 minutes",
+    "collaboration_journeys": 8,
+    "renderer_seconds": 59.1,
+    "renderer_timeout_seconds": 150,
+    "renderer_changed": false,
+    "mocking": "Provider-only mock transport for seven integrated collaboration journeys; one browser API-fault fixture; existing renderer synthetic density and fault fixtures explicitly labelled."
+  },
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exit_code": 0
+  },
+  "build": {
+    "command": "npm run build",
+    "exit_code": 0,
+    "serial_after_browser": true
+  },
+  "production_smoke": {
+    "timestamp": "2026-11-14T02:54:07.049Z",
+    "checks": [
+      "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+      "Production HTML, static assets and anatomical geometry",
+      "Production-mode account, session, original persistence, graph and export",
+      "Session revocation"
+    ],
+    "result": "passed",
+    "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+  },
+  "anatomy": {
+    "command": "npm run assets:verify",
+    "exit_code": 0,
+    "vertices": 20484,
+    "triangles": 40960,
+    "both_hemispheres_and_source_checksums_verified": true
+  },
+  "renderer": {
+    "environment": "Chromium SwiftShader; RAF wall-clock intervals, not GPU time or hardware FPS",
+    "metrics": [
+      {
+        "records": 0,
+        "renderedNodes": 0,
+        "rafMedianMs": 66.69999999999982,
+        "rafP95Ms": 183.30000000000018,
+        "drawCalls": 128,
+        "jsHeapBytes": 34212161,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 64.323871,
+        "gpuDrawSumP95Ms": 90.743824,
+        "gpuMeasuredIntervals": 29,
+        "unavailableQueries": 0,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100,
+        "renderedNodes": 100,
+        "rafMedianMs": 83.30000000000018,
+        "rafP95Ms": 166.5999999999999,
+        "drawCalls": 186,
+        "jsHeapBytes": 47185900,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 64.706451,
+        "gpuDrawSumP95Ms": 102.252448,
+        "gpuMeasuredIntervals": 29,
+        "unavailableQueries": 0,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 1500,
+        "renderedNodes": 1500,
+        "rafMedianMs": 250,
+        "rafP95Ms": 333.39999999999964,
+        "drawCalls": 180,
+        "jsHeapBytes": 66638353,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 238.805442,
+        "gpuDrawSumP95Ms": 300.68712099999993,
+        "gpuMeasuredIntervals": 28,
+        "unavailableQueries": 11,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      },
+      {
+        "records": 100000,
+        "renderedNodes": 1500,
+        "rafMedianMs": 333.1999999999989,
+        "rafP95Ms": 866.6000000000004,
+        "drawCalls": 180,
+        "jsHeapBytes": 35074684,
+        "gpuTimerAvailable": true,
+        "gpuDrawSumMedianMs": 329.230855,
+        "gpuDrawSumP95Ms": 470.22949700000004,
+        "gpuMeasuredIntervals": 28,
+        "unavailableQueries": 6,
+        "disjointQueries": 0,
+        "gpuTimeMeaning": "Sum of timer-query draw durations per RAF interval, excludes clears/presentation; software GPU, not complete hardware frame time."
+      }
+    ]
+  },
+  "migration_004": {
+    "sha256": "22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289",
+    "unchanged_from_backend": true,
+    "hosted_applied": false,
+    "hosted_assessment": "NO-GO pending separate approval and echo-dev target, permission and recovery preflight"
+  },
+  "paid_provider_calls": 0,
+  "hosted_database_access": false,
+  "pushed": false,
+  "deployed": false,
+  "screenshots": [
+    "docs/screenshots/phase4-integration/cited-original.png",
+    "docs/screenshots/phase4-integration/deliberate-synthesis.png",
+    "docs/screenshots/phase4-integration/phone-landscape.png",
+    "docs/screenshots/phase4-integration/phone-portrait.png",
+    "docs/screenshots/phase4-integration/uncertain-billing.png"
+  ],
+  "evidence_directory": "/workspace/artifacts/echo-phase4-integration",
+  "limitations": [
+    "No live provider quality or hosted migration acceptance",
+    "Software rendering is not real-device performance certification",
+    "Prior renderer timeout did not recur; root cause not established",
+    "Original frontend commit parent graph unavailable from mail patch"
+  ]
+}

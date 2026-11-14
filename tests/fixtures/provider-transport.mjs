@@ -21,6 +21,7 @@ if (process.env.ECHO_MOCK_PROVIDER_TRANSPORT === 'isolated-browser-tests') {
   process.env.ECHO_ANTHROPIC_API_KEY = 'MOCK-ONLY-NOT-A-CREDENTIAL';
   process.env.ECHO_OPENAI_MODEL = 'mock-openai-model';
   process.env.ECHO_ANTHROPIC_MODEL = 'mock-anthropic-model';
+  const collaborationFailures = new Set();
   const fetchReal = globalThis.fetch;
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(
@@ -51,7 +52,50 @@ if (process.env.ECHO_MOCK_PROVIDER_TRANSPORT === 'isolated-browser-tests') {
       });
     const content = JSON.parse(data.input || data.messages[0].content);
     let text;
-    if (content.passages) {
+    if (content.task?.stage) {
+      const provider = url.hostname === 'api.openai.com' ? 'openai' : 'anthropic';
+      const { stage, question } = content.task;
+      const failureKey = question + provider + stage;
+      if (stage === 'review' && !content.otherAnalysis)
+        throw new Error('Mock cross-review did not receive the peer analysis');
+      if (
+        stage === 'synthesis' &&
+        (content.analyses?.length !== 2 || content.reviews?.length !== 2)
+      )
+        throw new Error('Mock synthesis did not receive both analyses/reviews');
+      if (
+        provider === 'anthropic' &&
+        question.includes('[TEST UNCERTAIN]') &&
+        !collaborationFailures.has(failureKey)
+      ) {
+        collaborationFailures.add(failureKey);
+        throw new Error('Isolated interrupted mock request');
+      }
+      if (
+        provider === 'anthropic' &&
+        question.includes('[TEST RATE LIMIT]') &&
+        !collaborationFailures.has(failureKey)
+      ) {
+        collaborationFailures.add(failureKey);
+        return Response.json({ error: 'MOCK rate limit' }, { status: 429 });
+      }
+      if (question.includes('[TEST SLOW]'))
+        await new Promise((resolve) => setTimeout(resolve, 1800));
+      text = JSON.stringify({
+        groundedClaims: content.sources.length
+          ? [
+              {
+                text: `[MOCK ${provider} ${stage}] The original records the notebook location.`,
+                citations: [{ source: 1, quote: content.sources[0].excerpt.slice(0, 120) }],
+              },
+            ]
+          : [],
+        interpretations: ['[MOCK] Current location is not independently verified.'],
+        agreements: ['[MOCK] Both responses refer to the historical source.'],
+        disagreements: [`[MOCK ${stage}] The historical source does not resolve present location.`],
+        uncertainty: ['[MOCK] Check the present location before relying on it.'],
+      });
+    } else if (content.passages) {
       const passage = content.passages[0];
       text = JSON.stringify({
         summary: [
