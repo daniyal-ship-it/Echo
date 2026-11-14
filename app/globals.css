@@ -4140,8 +4140,8 @@ body {
   right: 14px;
   height: 0;
 }
+/* The lane colour comes from the step's lane-* class, so each model keeps its own. */
 .collab-step {
-  --lane: var(--lane-shared);
   display: grid;
   grid-template-columns: 12px 1fr;
   column-gap: 9px;
@@ -4387,7 +4387,6 @@ body {
   border-color: var(--iq-cyan);
 }
 .collab-message {
-  --lane: var(--lane-shared);
   padding: 14px 16px;
   margin-bottom: 12px;
   border: 1px solid color-mix(in srgb, var(--lane) 28%, var(--iq-edge));
