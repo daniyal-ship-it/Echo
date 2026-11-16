@@ -1,5 +1,11 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest local update — 16 November 2026: [Session route preflight](SESSION_POOLER_MIGRATION_PREFLIGHT.md)
+records blocked direct IPv6 connectivity, a bounded read-only identity precheck,
+and five real-driver guarded-transaction scenarios. All 116 unit/integration tests
+passed with zero skips, including disposable PostgreSQL/pgvector; TypeScript passed.
+Hosted migration remains NO-GO; no pooler allowlist or hosted configuration changed.
+
 Latest local update — 16 November 2026: [development migration identity guard](DEVELOPMENT_MIGRATION_GUARD.md)
 requires explicit echo-dev authorization, pinned direct TLS attribution and exact
 cluster identity on the actual migration transaction before DDL. No hosted

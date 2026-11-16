@@ -25,15 +25,19 @@ const rejectCode = (code: string) => (e: unknown) => {
 };
 function fixture(rows: unknown[] = [identity], txRows = rows) {
   const events: string[] = [];
+  let transactions = 0;
   const make = (transaction: boolean): Database => ({
     async query<T>(sql: string) {
       events.push((transaction ? 'tx:' : 'pool:') + sql);
-      return (sql.includes('pg_control_system') ? (transaction ? txRows : rows) : []) as T[];
+      return (
+        sql.includes('pg_control_system') ? (transaction && transactions > 1 ? txRows : rows) : []
+      ) as T[];
     },
     async exec(sql) {
       events.push('exec:' + sql);
     },
     async transaction(fn) {
+      transactions++;
       events.push('begin');
       try {
         const result = await fn(make(true));
@@ -136,7 +140,7 @@ test('managed migration checks the actual transaction after locking, prevents ch
       await tx.exec('DDL fixture');
     });
     const lock = good.events.findIndex((e) => e.includes('pg_advisory_xact_lock'));
-    const check = good.events.findIndex(
+    const check = good.events.findLastIndex(
       (e) => e.startsWith('tx:') && e.includes('pg_control_system'),
     );
     assert.ok(lock > 0 && check > lock && good.events.indexOf('exec:DDL fixture') > check);

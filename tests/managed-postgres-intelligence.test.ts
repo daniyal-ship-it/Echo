@@ -1,3 +1,4 @@
+import { testMigrationGuardPostgres } from './fixtures/migration-guard-postgres';
 import { verifyDevelopmentIdentity } from '../lib/migration-target';
 import { readFile } from 'node:fs/promises';
 import { MIGRATIONS } from '../lib/db';
@@ -197,6 +198,7 @@ test(
         'SELECT count(*)::int AS count FROM collaboration_calls',
       );
       assert.equal(afterReopen.count, beforeReopen.count);
+      await testMigrationGuardPostgres(t, db);
     } finally {
       await db?.close();
       await setup.end();

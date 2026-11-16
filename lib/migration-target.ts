@@ -74,7 +74,14 @@ export async function developmentMigrationTransaction(
 ) {
   if (requireDevelopmentTarget(target) !== connectionUrl)
     throw databaseConfigError('DB_MIGRATION_TARGET_INVALID');
-  await verifyDevelopmentIdentity(db);
+  // Bound the initial identity query on its own read-only transaction connection.
+  // SET LOCAL cannot leak these settings into the later DDL transaction or pool.
+  await db.transaction(async (tx) => {
+    await tx.exec(
+      "SET TRANSACTION READ ONLY; SET LOCAL statement_timeout = '3s'; SET LOCAL lock_timeout = '1s'",
+    );
+    await verifyDevelopmentIdentity(tx);
+  });
   await db.transaction(async (tx) => {
     await tx.exec("SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s'");
     await tx.query('SELECT pg_advisory_xact_lock(68182041)');

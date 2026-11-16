@@ -1,5 +1,10 @@
 # Development migration identity guard — 16 November 2026
 
+Update: [Session route preflight and real-driver guard validation](SESSION_POOLER_MIGRATION_PREFLIGHT.md)
+adds a bounded read-only precheck and full guarded-transaction tests. The direct-only
+allowlist remains unchanged; Session routing is conditionally suitable but not yet
+enabled or verified from this environment. Earlier test descriptions below are historical.
+
 Based on Phase 4 integration 331eeb20eed303f0fc2b62ca422fd81355b9a2e4.
 Local implementation only. No hosted connection, migration, credential change,
 Preview deployment or push is authorized by this patch.
