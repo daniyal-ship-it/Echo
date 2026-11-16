@@ -1,5 +1,10 @@
 # Session-pooler migration route preflight — 16 November 2026
 
+Latest update: [approved exact Session-pooler guard candidate](SESSION_POOLER_GUARD_REVIEW.md)
+now permits the owner-specified host/login/port pair locally. Earlier statements
+that all poolers are rejected or that the exact hostname is unknown are historical.
+No hosted preflight or execution has occurred.
+
 ## Actual connectivity evidence
 
 Credential-free investigation from the current Codex execution environment targeted

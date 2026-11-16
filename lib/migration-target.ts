@@ -3,20 +3,28 @@ import { databaseConfigError } from './database-diagnostics';
 
 export const DEVELOPMENT_PROJECT = 'dtcxlxehqiuhmhuypqbm';
 export const DEVELOPMENT_SYSTEM_IDENTIFIER = '7703760980994770283';
+const sessionHostname = 'aws-0-eu-central-1.pooler.supabase.com';
 const hostname = `db.${DEVELOPMENT_PROJECT}.supabase.co`;
 type Environment = Readonly<Record<string, string | undefined>>;
 
-// No caller-supplied project/system-ID allowlist and no test bypass. Direct TLS
-// endpoint attribution plus the cluster ID are required; shared poolers are rejected.
+// No caller-supplied project/system-ID allowlist and no test bypass. The shared
+// Session endpoint must be paired with the exact tenant login; hostname alone
+// cannot attribute a project. Both routes still require verified TLS and cluster ID.
 export function requireDevelopmentTarget(target: unknown, env: Environment = process.env) {
   if (target !== 'echo-dev') throw databaseConfigError('DB_MIGRATION_AUTH_REQUIRED');
   try {
     const url = new URL(env.DATABASE_URL || '');
+    const direct =
+      url.hostname === hostname &&
+      url.username === 'postgres' &&
+      (!url.port || url.port === '5432');
+    const session =
+      url.hostname === sessionHostname &&
+      url.username === `postgres.${DEVELOPMENT_PROJECT}` &&
+      url.port === '5432';
     if (
       !['postgres:', 'postgresql:'].includes(url.protocol) ||
-      url.hostname !== hostname ||
-      (url.port && url.port !== '5432') ||
-      url.username !== 'postgres' ||
+      !(direct || session) ||
       !url.password ||
       url.pathname !== '/postgres' ||
       url.search ||

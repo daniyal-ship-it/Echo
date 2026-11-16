@@ -8,10 +8,16 @@ import {
   DEVELOPMENT_SYSTEM_IDENTIFIER,
 } from '../../lib/migration-target';
 
-export async function testMigrationGuardPostgres(t: TestContext, db: Database) {
+export async function testMigrationGuardPostgres(
+  t: TestContext,
+  db: Database,
+  route: 'direct' | 'session' = 'direct',
+) {
   const saved = { ...process.env };
   const attributedUrl =
-    'postgresql://postgres:synthetic-test-only@db.dtcxlxehqiuhmhuypqbm.supabase.co:5432/postgres';
+    route === 'direct'
+      ? 'postgresql://postgres:synthetic-test-only@db.dtcxlxehqiuhmhuypqbm.supabase.co:5432/postgres'
+      : 'postgresql://postgres.dtcxlxehqiuhmhuypqbm:synthetic-test-only@aws-0-eu-central-1.pooler.supabase.com:5432/postgres';
   try {
     for (const k of [
       'DATABASE_SSL',

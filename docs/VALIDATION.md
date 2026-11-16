@@ -1,5 +1,12 @@
 # Validation record — 1 November 2026
 
+Latest local update — 16 November 2026: [exact Session-pooler guard candidate](SESSION_POOLER_GUARD_REVIEW.md)
+adds the approved echo-dev Session hostname/login/port pair while preserving direct
+support, verified TLS and same-transaction cluster checks. All 123 tests passed
+with zero skips; TypeScript and serial build passed. No hosted connectivity was
+attempted. Candidate for separately authorized read-only preflight; migrations
+remain unapproved. Earlier direct-only statements are historical.
+
 Latest local update — 16 November 2026: [Session route preflight](SESSION_POOLER_MIGRATION_PREFLIGHT.md)
 records blocked direct IPv6 connectivity, a bounded read-only identity precheck,
 and five real-driver guarded-transaction scenarios. All 116 unit/integration tests

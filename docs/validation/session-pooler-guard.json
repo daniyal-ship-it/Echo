@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-16",
+  "base": "de8900148587e95c311dca464a4883c62f611fec",
+  "branch": "security/echo-dev-migration-guard",
+  "tests": {
+    "passed": 123,
+    "failed": 0,
+    "skipped": 0,
+    "session_real_driver_scenarios": 5,
+    "direct_real_driver_scenarios": 5
+  },
+  "postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "exit_code": 0,
+    "connection": "disposable loopback Docker; no hosted credentials"
+  },
+  "typecheck": "passed",
+  "serial_production_build": "passed",
+  "tls_tests": "passed; existing local CA/hostname rejection tests",
+  "session_instrumentation": "Policy uses exact approved Session tuple. Network connections stay on disposable loopback. Only cluster ID and database name in actual identity query responses are simulated inside tests. No Supavisor or hosted TLS claim.",
+  "hosted_connections": false,
+  "push": false,
+  "deploy": false,
+  "credential_changes": false,
+  "migration_004_sha256": "22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289",
+  "readiness": "Candidate for independent review and separately authorized read-only preflight; hosted migration unapproved"
+}

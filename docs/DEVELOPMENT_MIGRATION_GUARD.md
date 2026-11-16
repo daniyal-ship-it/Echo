@@ -1,5 +1,10 @@
 # Development migration identity guard — 16 November 2026
 
+Latest update: [approved exact Session-pooler guard candidate](SESSION_POOLER_GUARD_REVIEW.md)
+now permits the owner-specified host/login/port pair locally. Earlier statements
+that all poolers are rejected or that the exact hostname is unknown are historical.
+No hosted preflight or execution has occurred.
+
 Update: [Session route preflight and real-driver guard validation](SESSION_POOLER_MIGRATION_PREFLIGHT.md)
 adds a bounded read-only precheck and full guarded-transaction tests. The direct-only
 allowlist remains unchanged; Session routing is conditionally suitable but not yet

@@ -199,6 +199,12 @@ test(
       );
       assert.equal(afterReopen.count, beforeReopen.count);
       await testMigrationGuardPostgres(t, db);
+      await t.test(
+        'Session-pooler policy with the real driver and test-only identity responses',
+        async (sessionTest) => {
+          await testMigrationGuardPostgres(sessionTest, db!, 'session');
+        },
+      );
     } finally {
       await db?.close();
       await setup.end();

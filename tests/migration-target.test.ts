@@ -93,6 +93,53 @@ test('migration attribution requires explicit authorization and pinned direct TL
     );
 });
 
+test('Session route accepts only the pinned host, tenant login and explicit Session port', () => {
+  const session =
+    'postgresql://postgres.dtcxlxehqiuhmhuypqbm:synthetic-test-only@aws-0-eu-central-1.pooler.supabase.com:5432/postgres';
+  assert.equal(requireDevelopmentTarget('echo-dev', { DATABASE_URL: session }), session);
+  for (const bad of [
+    session.replace(':5432/', ':6543/'),
+    session.replace(':5432/', '/'),
+    session.replace('postgres.dtcxlxehqiuhmhuypqbm:', 'postgres:'),
+    session.replace('dtcxlxehqiuhmhuypqbm', 'pyidklztsnowarqumtki'),
+    session.replace('dtcxlxehqiuhmhuypqbm', 'unknown-tenant'),
+    session.replace('aws-0-', 'aws-1-'),
+    session.replace('eu-central-1', 'eu-west-1'),
+    session.replace('.supabase.com:', '.supabase.com.attacker.invalid:'),
+    session.replace(
+      'aws-0-eu-central-1.pooler.supabase.com',
+      'db.dtcxlxehqiuhmhuypqbm.supabase.co',
+    ),
+    session.replace('/postgres', '/other'),
+    session.replace(':synthetic-test-only@', '@'),
+    session + '?host=another',
+    session + '?sslmode=disable',
+    session + '#ignored',
+  ])
+    assert.throws(
+      () => requireDevelopmentTarget('echo-dev', { DATABASE_URL: bad }),
+      rejectCode('DB_MIGRATION_TARGET_INVALID'),
+    );
+  for (const extra of [
+    { DATABASE_SSL: 'disable' },
+    { NODE_TLS_REJECT_UNAUTHORIZED: '0' },
+    { PGHOST: 'another' },
+    { PGPORT: '6543' },
+    { PGUSER: 'postgres' },
+    { VERCEL_ENV: 'production' },
+    { VERCEL_TARGET_ENV: 'production' },
+    { VERCEL_GIT_COMMIT_REF: 'main' },
+  ])
+    assert.throws(
+      () => requireDevelopmentTarget('echo-dev', { DATABASE_URL: session, ...extra }),
+      rejectCode('DB_MIGRATION_TARGET_INVALID'),
+    );
+  assert.throws(
+    () => requireDevelopmentTarget(undefined, { DATABASE_URL: session }),
+    rejectCode('DB_MIGRATION_AUTH_REQUIRED'),
+  );
+});
+
 test('cluster identity is exact text; missing, multiple, changed and unauthorized identities fail closed', async () => {
   await verifyDevelopmentIdentity(fixture().db);
   for (const rows of [
