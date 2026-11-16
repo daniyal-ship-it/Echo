@@ -1,5 +1,11 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest local update — 16 November 2026: [development migration identity guard](DEVELOPMENT_MIGRATION_GUARD.md)
+requires explicit echo-dev authorization, pinned direct TLS attribution and exact
+cluster identity on the actual migration transaction before DDL. No hosted
+execution is approved; the existing Phase 4 source checkpoint is preserved.
+Earlier entries below are historical.
+
 Latest local update — 14 November 2026: [Phase 4A + 4B integration](PHASE4_INTEGRATION.md)
 is complete on `integration/phase4a-4b`. The strict v1 adapter reconciles all seven
 UX contract questions; consent, staged peer review/synthesis, history, scoped

@@ -1,3 +1,6 @@
+import { verifyDevelopmentIdentity } from '../lib/migration-target';
+import { readFile } from 'node:fs/promises';
+import { MIGRATIONS } from '../lib/db';
 import { test } from 'node:test';
 import { scenarios } from './fixtures/collaboration-suite';
 import assert from 'node:assert/strict';
@@ -38,7 +41,31 @@ test(
       GRANT anon,authenticated,service_role TO authenticator;
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated,service_role;
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated,service_role;`);
-      db = await createDatabase(undefined, { applyManagedMigrations: true });
+      await setup.begin(async (tx) => {
+        await tx.unsafe("SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s'");
+        await tx.unsafe(
+          'CREATE TABLE IF NOT EXISTS schema_migrations(version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
+        );
+        for (const version of MIGRATIONS) {
+          const rows = await tx.unsafe('SELECT version FROM schema_migrations WHERE version=$1', [
+            version,
+          ]);
+          if (!rows.length) await tx.unsafe(await readFile(`db/migrations/${version}.sql`, 'utf8'));
+        }
+      });
+      db = await createDatabase();
+      // A real disposable cluster must never pass the pinned hosted identity guard.
+      await assert.rejects(
+        db.transaction(async (tx) => {
+          await tx.exec('CREATE TABLE guard_rollback_fixture(id integer)');
+          await verifyDevelopmentIdentity(tx);
+        }),
+        (error: unknown) => (error as { code: string }).code === 'DB_MIGRATION_IDENTITY_REJECTED',
+      );
+      const [guardRollback] = await db.query<{ absent: boolean }>(
+        "SELECT to_regclass('public.guard_rollback_fixture') IS NULL AS absent",
+      );
+      assert.equal(guardRollback.absent, true);
       const [{ extversion }] = await db.query<{ extversion: string }>(
         "SELECT extversion FROM pg_extension WHERE extname='vector'",
       );
@@ -153,7 +180,19 @@ test(
         'SELECT count(*)::int AS count FROM collaboration_calls',
       );
       await db.close();
-      db = await createDatabase(undefined, { applyManagedMigrations: true });
+      await setup.begin(async (tx) => {
+        await tx.unsafe("SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s'");
+        await tx.unsafe(
+          'CREATE TABLE IF NOT EXISTS schema_migrations(version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
+        );
+        for (const version of MIGRATIONS) {
+          const rows = await tx.unsafe('SELECT version FROM schema_migrations WHERE version=$1', [
+            version,
+          ]);
+          if (!rows.length) await tx.unsafe(await readFile(`db/migrations/${version}.sql`, 'utf8'));
+        }
+      });
+      db = await createDatabase();
       const [afterReopen] = await db.query<{ count: number }>(
         'SELECT count(*)::int AS count FROM collaboration_calls',
       );

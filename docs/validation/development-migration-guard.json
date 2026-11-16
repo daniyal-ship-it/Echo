@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-16",
+  "base": "331eeb20eed303f0fc2b62ca422fd81355b9a2e4",
+  "branch": "security/echo-dev-migration-guard",
+  "tests": {
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "exit_code": 0,
+    "connection": "disposable loopback Docker; no hosted credentials"
+  },
+  "identity_positive_case": "mocked expected rows only; no hosted connection",
+  "identity_negative_case": "real PostgreSQL rejected and fixture DDL rolled back",
+  "typecheck": "passed",
+  "serial_build": "passed",
+  "standalone_smoke": {
+    "timestamp": "2026-11-16T00:20:38.349Z",
+    "checks": [
+      "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+      "Production HTML, static assets and anatomical geometry",
+      "Production-mode account, session, original persistence, graph and export",
+      "Session revocation"
+    ],
+    "result": "passed",
+    "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+  },
+  "browser_tests": "not rerun: no UI change",
+  "migration_004_sha256": "22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289",
+  "hosted_access": false,
+  "pushed": false,
+  "deployed": false,
+  "hosted_migration": "NO-GO; unapproved and live guard prerequisites unverified"
+}
