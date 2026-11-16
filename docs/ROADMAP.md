@@ -1,5 +1,30 @@
 # ECHO requirement ledger
 
+Latest local update — 14 November 2026: [Phase 4A + 4B integration](PHASE4_INTEGRATION.md)
+is complete on `integration/phase4a-4b`. The strict v1 adapter reconciles all seven
+UX contract questions; consent, staged peer review/synthesis, history, scoped
+citations and uncertain recovery use the real backend with test-only provider
+transports. Validation passed **108 unit/integration tests, zero skips**, including
+real disposable PostgreSQL 17.10 / pgvector 0.8.2; **31 browser tests**, TypeScript,
+a serial production build, four standalone smoke checks and anatomy verification.
+The unchanged renderer benchmark passed in 59.1 seconds; physical-device
+performance remains unverified. [Machine-readable evidence](validation/phase4-integration.json).
+Migration 004 remains unchanged. Hosted migration/Preview release are **NO-GO**
+until separate approval and echo-dev identity/permissions/recovery preflight.
+No push, deployment, hosted database access or paid provider calls occurred.
+Earlier entries below describe historical checkpoints.
+
+Latest local update — 13 November 2026: [Phase 4A collaboration backend](PHASE4_BACKEND.md)
+adds durable parallel/deliberate multi-provider threads, cross-review, follow-ups,
+consent/call limits, source checks and explicit interrupted-call recovery. Local
+validation passed 100 unit/integration tests (including real PostgreSQL/pgvector,
+zero skips), 23 existing browser tests, TypeScript, serial build, four standalone
+smoke checks and anatomy verification. Providers were mocked; no paid calls or
+hosted changes occurred. Work remains on `feat/phase4a-collaboration-engine`.
+Claude's frontend integration and separate approval for migration 004/Preview
+release remain required. See the [API contract](PHASE4_COLLABORATION_CONTRACT.md)
+and [security review](PHASE4_MIGRATION_SECURITY.md). Earlier entries are historical.
+
 Latest local update — 13 November 2026: [Phase 3A + 3B integration](PHASE3_INTEGRATION.md)
 passed 77 unit/integration tests (including real PostgreSQL/pgvector), all 23
 browser tests in one run, TypeScript, a serial production build, four standalone

@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-13",
+  "branch": "feat/phase4a-collaboration-engine",
+  "base": "256a036449db1e1de6a2c484a39d98258239d922",
+  "unit_integration": {
+    "command": "npm test with ECHO_TEST_POSTGRES_URL on a disposable loopback container",
+    "passed": 100,
+    "failed": 0,
+    "skipped": 0,
+    "provider_transport": "labelled mocks only"
+  },
+  "real_postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "exit_code": 0,
+    "connection": "disposable loopback Docker; no hosted credentials"
+  },
+  "browser": {
+    "command": "npm run test:e2e",
+    "passed": 23,
+    "failed": 0,
+    "duration": "4.6 minutes",
+    "scope": "existing Phase 2/3 regression suite; no Phase 4 UI yet",
+    "timing": "before final collaboration-only superseded-lease fix; that fix passed the final full unit/PG suite and build",
+    "renderer": "system Chromium / SwiftShader; no hardware-device claim"
+  },
+  "typecheck": "passed",
+  "serial_production_build": "passed",
+  "smoke": {
+    "timestamp": "2026-11-13T21:52:25.939Z",
+    "checks": [
+      "Standalone server, traced PostgreSQL/pgvector extension, and transactional migration",
+      "Production HTML, static assets and anatomical geometry",
+      "Production-mode account, session, original persistence, graph and export",
+      "Session revocation"
+    ],
+    "result": "passed",
+    "limitations": "Local standalone build with isolated PGlite; not a managed database, Docker deployment or cloud publication."
+  },
+  "anatomy": {
+    "passed": true,
+    "vertices": 20484,
+    "triangles": 40960,
+    "checksums": "unchanged"
+  },
+  "regression": "Late superseded worker response first reproduced; final regression passes on PGlite and real PostgreSQL and preserves raw output/usage without changing publication.",
+  "migration_004_sha256": "22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289",
+  "hosted_migrations": false,
+  "paid_provider_calls": 0,
+  "pushed": false,
+  "deployed": false,
+  "limits": [
+    "Collaboration uses keyword retrieval; no query embedding charge.",
+    "Semantic correctness, model availability and live quality unverified.",
+    "No Phase 4 frontend browser acceptance.",
+    "Hosted migration, recovery preflight and Preview release require separate approval."
+  ]
+}

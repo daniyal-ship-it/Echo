@@ -4,6 +4,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { vector } from '@electric-sql/pglite-pgvector';
 import postgres from 'postgres';
 import * as tls from 'node:tls';
+import { requireDevelopmentTarget, developmentMigrationTransaction } from './migration-target';
 import { databaseTlsOptions } from './database-tls';
 import { identityDiagnosticEnabled, inspectDatabaseIdentity } from './database-identity-diagnostic';
 import {
@@ -19,6 +20,7 @@ export const MIGRATIONS = [
   '001_foundation',
   '002_memory_intelligence',
   '003_server_only_access',
+  '004_collaboration',
 ] as const;
 
 // Read-only inspection. Never create the history table just to inspect it.
@@ -73,7 +75,7 @@ export function managedPostgresOptions() {
 }
 export async function createDatabase(
   directory?: string,
-  options: { requestId?: string; applyManagedMigrations?: boolean } = {},
+  options: { requestId?: string; applyManagedMigrations?: boolean; migrationTarget?: string } = {},
 ): Promise<Database> {
   let db: Database | undefined;
   const initializationId = newDiagnosticId();
@@ -94,6 +96,11 @@ export async function createDatabase(
       );
   };
   try {
+    if (options.applyManagedMigrations && !managed)
+      throw databaseConfigError('DB_MIGRATION_TARGET_INVALID');
+    const migrationUrl = options.applyManagedMigrations
+      ? requireDevelopmentTarget(options.migrationTarget)
+      : undefined;
     if (managed) {
       validateDatabaseUrl(process.env.DATABASE_URL);
       const host = new URL(process.env.DATABASE_URL!).hostname.toLowerCase();
@@ -118,7 +125,7 @@ export async function createDatabase(
       if (process.env.NODE_ENV === 'production' && process.env.DATABASE_SSL === 'disable') {
         throw databaseConfigError('DB_TLS_REQUIRED');
       }
-      const sql = postgres(process.env.DATABASE_URL!, managedPostgresOptions());
+      const sql = postgres(migrationUrl ?? process.env.DATABASE_URL!, managedPostgresOptions());
       const wrap = (client: typeof sql): Database => ({
         async query<T>(text: string, params: unknown[] = []) {
           return (await client.unsafe(text, params as never[])) as unknown as T[];
@@ -220,14 +227,11 @@ export async function createDatabase(
       }
     }
     stage = 'migration.apply';
-    await db.transaction(async (tx) => {
+    const apply = async (tx: Database) => {
       await tx.exec("SET LOCAL lock_timeout = '5s'; SET LOCAL statement_timeout = '60s'");
       const [namespace] = await tx.query<{ name: string }>('SELECT current_schema() AS name');
       if (namespace.name !== 'public')
         throw new Error('ECHO migrations require public creation schema');
-      if (process.env.DATABASE_URL && !directory) {
-        await tx.query('SELECT pg_advisory_xact_lock(68182041)');
-      }
       await tx.exec(
         'CREATE TABLE IF NOT EXISTS schema_migrations (version text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())',
       );
@@ -245,7 +249,12 @@ export async function createDatabase(
           await tx.exec(migration);
         }
       }
-    });
+    };
+    if (managed) {
+      await developmentMigrationTransaction(db, options.migrationTarget, migrationUrl!, apply);
+    } else {
+      await db.transaction(apply);
+    }
     return db;
   } catch (error) {
     const safe = sanitiseDatabaseError(error);

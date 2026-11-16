@@ -1,0 +1,37 @@
+{
+  "date": "2026-11-16",
+  "base": "9b6813c5a4b9c71d1ee1c4b5615e9f79938621e1",
+  "ipv6": {
+    "host": "db.dtcxlxehqiuhmhuypqbm.supabase.co",
+    "port": 5432,
+    "dns_error": "EAI_AGAIN (-3)",
+    "global_route_present": false,
+    "dns_https_fallback": "proxy tunnel HTTP 403",
+    "tcp_handshake_completed": false,
+    "credentials_sent": false
+  },
+  "session_pooler": "conditionally suitable; exact trusted hostname pending, allowlist unchanged, no hosted pooler test",
+  "tests": {
+    "passed": 116,
+    "failed": 0,
+    "skipped": 0,
+    "real_guard_scenarios": 5,
+    "lock_timeout_ms": 5034.702282,
+    "precheck_timeout_ms": 3015.09132
+  },
+  "postgres": {
+    "server": "PostgreSQL 17.10 (Debian 17.10-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit",
+    "image": "pgvector/pgvector:0.8.2-pg17",
+    "exit_code": 0,
+    "connection": "disposable loopback Docker; no hosted credentials"
+  },
+  "typecheck": "passed",
+  "serial_build": "passed",
+  "simulated": "Only cluster ID and database name in test-only wrapper around real identity query; not hosted or Supavisor acceptance",
+  "migration_004_sha256": "22c8e5343d3ac76ba16085df7c3c66bfa707e82f28966ee66f703dee012f1289",
+  "hosted_sql": false,
+  "credential_changes": false,
+  "push": false,
+  "deploy": false,
+  "decision": "NO-GO for hosted execution"
+}

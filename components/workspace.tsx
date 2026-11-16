@@ -39,6 +39,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Upload,
+  Waypoints,
   X,
 } from 'lucide-react';
 import { api, post, UNAUTHORIZED_EVENT } from '@/lib/client';
@@ -65,6 +66,7 @@ import {
 } from './panels';
 import type { RendererStatus, ViewCommand } from './brain';
 import TopicPanel from './topic-panel';
+import CollaborationPanel, { type CollaborationPlace } from './collaboration/collaboration-panel';
 import { CanvasNotice, LobeLegend, LobeOverview, MobileBar, TrailBack } from './brain-hud';
 import {
   contextOf,
@@ -100,6 +102,11 @@ type Retrieval = {
   }[];
   tokens?: number;
 };
+
+/** What a "results" place on the trail holds: retrieved sources or a collaboration view. */
+type Results = Retrieval | CollaborationPlace;
+const isCollaboration = (value: unknown): value is CollaborationPlace =>
+  typeof value === 'object' && value !== null && 'collab' in value;
 
 export default function Workspace() {
   const [user, setUser] = useState<Session | null>(null);
@@ -141,6 +148,9 @@ export default function Workspace() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [question, setQuestion] = useState('');
   const [retrieval, setRetrieval] = useState<Retrieval | null>(null);
+  const [collab, setCollab] = useState<CollaborationPlace | null>(null);
+  // One object per collaboration view, so returning to it updates the trail entry in place.
+  const collabPlaces = useRef(new Map<string, CollaborationPlace>());
   const [busy, setBusy] = useState(false);
   const [model, setModel] = useState('search');
   const [consent, setConsent] = useState(false);
@@ -148,8 +158,8 @@ export default function Workspace() {
   const controller = useRef<AbortController | null>(null);
   const [toast, setToast] = useState('');
   // Every place visited, shared by the breadcrumb, the Back control and the browser's Back.
-  const [trail, setTrail] = useState<Trail<Retrieval>>(initialTrail);
-  const trailRef = useRef<Trail<Retrieval>>(trail);
+  const [trail, setTrail] = useState<Trail<Results>>(initialTrail);
+  const trailRef = useRef<Trail<Results>>(trail);
   const historyRun = useRef('');
   const [atlasLoaded, setAtlasLoaded] = useState(false);
   const [panelHidden, setPanelHidden] = useState(false);
@@ -172,7 +182,7 @@ export default function Workspace() {
     (cmd: Omit<ViewCommand, 'key'>) => setCommand((c) => ({ ...cmd, key: c.key + 1 })),
     [],
   );
-  const record = useCallback((location: TrailLocation<Retrieval>) => {
+  const record = useCallback((location: TrailLocation<Results>) => {
     const before = trailRef.current;
     const next = visit(before, location);
     trailRef.current = next;
@@ -186,7 +196,7 @@ export default function Workspace() {
     else window.history.replaceState(state, '');
   }, []);
   const resetTrail = useCallback(() => {
-    const fresh = initialTrail<Retrieval>();
+    const fresh = initialTrail<Results>();
     trailRef.current = fresh;
     setTrail(fresh);
     // Entries left in the browser from an earlier run or account must never be replayed.
@@ -325,7 +335,7 @@ export default function Workspace() {
     void refreshGraph();
     void refreshLibrary();
   }
-  const context = (): TrailLocation<Retrieval> =>
+  const context = (): TrailLocation<Results> =>
     contextOf({ kind: 'whole', region, tag, untagged, topicPosition });
   async function loadMemory(id: string, version?: number, passage?: string) {
     const req = ++selectedRequest.current;
@@ -342,6 +352,7 @@ export default function Workspace() {
       return null;
     setSelected(m);
     setRetrieval(null);
+    setCollab(null);
     setMobilePanel(true);
     move({ type: 'memory', position: m.position });
     return m;
@@ -360,7 +371,7 @@ export default function Workspace() {
     }
   }
   /** Shows a recorded place again without adding to the trail (Back, Forward). */
-  function revisit(place: TrailLocation<Retrieval>) {
+  function revisit(place: TrailLocation<Results>) {
     selectedRequest.current++;
     setRegion(place.region);
     setTag(place.tag);
@@ -387,7 +398,9 @@ export default function Workspace() {
       return;
     }
     setSelected(null);
-    setRetrieval(place.kind === 'results' ? (place.results ?? null) : null);
+    const results = place.kind === 'results' ? place.results : undefined;
+    setRetrieval(results && !isCollaboration(results) ? results : null);
+    setCollab(isCollaboration(results) ? results : null);
     settle();
   }
   const revisitLatest = useRef(revisit);
@@ -399,6 +412,7 @@ export default function Workspace() {
     selectedRequest.current++;
     setSelected(null);
     setRetrieval(null);
+    setCollab(null);
     setRegion(value);
     setTag('');
     setUntagged(false);
@@ -429,6 +443,7 @@ export default function Workspace() {
     selectedRequest.current++;
     setSelected(null);
     setRetrieval(null);
+    setCollab(null);
     setMobilePanel(Boolean(region));
     record(context());
     move(
@@ -439,10 +454,38 @@ export default function Workspace() {
           : { type: 'reset' },
     );
   }
+  /** Opens a collaboration view in the context panel and records it on the trail. */
+  function goCollab(next: CollaborationPlace) {
+    if (!user) {
+      setMobilePanel(true);
+      notify('Sign in to collaborate with your private memory.');
+      return;
+    }
+    const key = next.collab === 'run' ? `run:${next.id}` : next.collab;
+    const known = collabPlaces.current.get(key);
+    const place =
+      known && (next.collab !== 'compose' || (known as { task?: string }).task === next.task)
+        ? known
+        : next;
+    collabPlaces.current.set(key, place);
+    selectedRequest.current++;
+    setSelected(null);
+    setRetrieval(null);
+    setCollab(place);
+    setMobileNav(false);
+    setMobilePanel(true);
+    record({
+      ...context(),
+      kind: 'results',
+      results: place,
+      question: place.collab === 'history' ? 'Collaborations' : place.task,
+    });
+  }
   function changeFilter() {
     selectedRequest.current++;
     setSelected(null);
     setRetrieval(null);
+    setCollab(null);
     setPage(0);
     setTopicPage(0);
   }
@@ -451,6 +494,7 @@ export default function Workspace() {
       selectedRequest.current++;
       setSelected(null);
       setRetrieval(null);
+      setCollab(null);
       setRegion(node.region);
       setTag(node.topic || '');
       setUntagged(node.topic === null);
@@ -477,6 +521,7 @@ export default function Workspace() {
     if (!user || activeWorkspace.current !== user.workspaceId) return;
     setSelected(memory);
     setRetrieval(null);
+    setCollab(null);
     setMobilePanel(true);
     move({ type: 'memory', position: memory.position });
     record({
@@ -518,6 +563,7 @@ export default function Workspace() {
     setTotal(0);
     setSelected(null);
     setRetrieval(null);
+    setCollab(null);
     setSettings(null);
     setModal(null);
     setConsent(false);
@@ -552,6 +598,12 @@ export default function Workspace() {
     if (!user) {
       setMobilePanel(true);
       notify('Sign in to search your private memory.');
+      return;
+    }
+    if (model === 'collaborate') {
+      // Nothing is sent here: the composer discloses the run and asks for consent first.
+      goCollab({ collab: 'compose', task: question.trim() });
+      setQuestion('');
       return;
     }
     if (model !== 'search') {
@@ -637,20 +689,22 @@ export default function Workspace() {
   const selectedId = selected?.id ?? retrieval?.citations[0]?.id ?? null;
   const activeRegion = selected?.region ?? region;
   const topicLabel = untagged ? 'Untagged memories' : tag ? `#${tag}` : '';
-  const topicView = Boolean(region && !tag && !untagged && !selected && !retrieval);
+  const topicView = Boolean(region && !tag && !untagged && !selected && !retrieval && !collab);
   const hasProvider = settings?.providers.some((p) => p.configured);
   const place = currentPlace(trail);
   const backTo = previousPlace(trail);
   const showingResults = Boolean(retrieval && !selected);
-  const level = showingResults
-    ? null
-    : depth({
-        kind: selected ? 'memory' : topicLabel ? 'topic' : region ? 'region' : 'whole',
-        region,
-        tag,
-        untagged,
-        topicPosition,
-      });
+  const showingCollab = Boolean(collab && !selected);
+  const level =
+    showingResults || showingCollab
+      ? null
+      : depth({
+          kind: selected ? 'memory' : topicLabel ? 'topic' : region ? 'region' : 'whole',
+          region,
+          tag,
+          untagged,
+          topicPosition,
+        });
   const lobeName = region ? REGION_INFO[region].name : '';
   const emptyLobe =
     topicView &&
@@ -661,16 +715,23 @@ export default function Workspace() {
     !graph.nodes.length;
   // The panel holds memories and results, so those always reveal it; lobes and topics are
   // also visible on the canvas and respect the reader's choice to hide it.
-  const panelCollapsed = panelHidden && Boolean(user) && authLoaded && !selected && !retrieval;
+  const panelCollapsed =
+    panelHidden && Boolean(user) && authLoaded && !selected && !retrieval && !collab;
   const announcement = selected
     ? `Memory opened: ${selected.title}`
-    : showingResults
-      ? `${retrieval!.citations.length} retrieved ${retrieval!.citations.length === 1 ? 'source' : 'sources'}`
-      : topicLabel
-        ? `Topic ${topicLabel}, ${total} ${total === 1 ? 'memory' : 'memories'}`
-        : region
-          ? `${lobeName} lobe, ${graph.counts[region] || 0} ${(graph.counts[region] || 0) === 1 ? 'memory' : 'memories'}`
-          : 'Whole brain';
+    : showingCollab
+      ? collab!.collab === 'run'
+        ? `Collaboration opened: ${collab!.task}`
+        : collab!.collab === 'history'
+          ? 'Saved collaborations'
+          : 'New collaboration'
+      : showingResults
+        ? `${retrieval!.citations.length} retrieved ${retrieval!.citations.length === 1 ? 'source' : 'sources'}`
+        : topicLabel
+          ? `Topic ${topicLabel}, ${total} ${total === 1 ? 'memory' : 'memories'}`
+          : region
+            ? `${lobeName} lobe, ${graph.counts[region] || 0} ${(graph.counts[region] || 0) === 1 ? 'memory' : 'memories'}`
+            : 'Whole brain';
   function togglePanel() {
     const next = !panelHidden;
     setPanelHidden(next);
@@ -678,6 +739,7 @@ export default function Workspace() {
   }
   function closeResults() {
     setRetrieval(null);
+    setCollab(null);
     record(context());
   }
   const shortcuts = useRef<(event: KeyboardEvent) => void>(() => undefined);
@@ -726,8 +788,8 @@ export default function Workspace() {
 
   return (
     <div
-      className={`app-shell ${immersive ? 'immersive' : ''} ${mobileNav ? 'nav-open' : ''} ${mobilePanel ? 'panel-open' : ''} ${panelCollapsed ? 'panel-collapsed' : ''} ${sheetTall || !user ? 'sheet-tall' : ''} ${selected || retrieval ? 'has-context' : ''}`}
-      data-place={showingResults ? 'results' : place.kind}
+      className={`app-shell ${immersive ? 'immersive' : ''} ${mobileNav ? 'nav-open' : ''} ${mobilePanel ? 'panel-open' : ''} ${panelCollapsed ? 'panel-collapsed' : ''} ${sheetTall || !user ? 'sheet-tall' : ''} ${selected || retrieval || collab ? 'has-context' : ''} ${showingCollab ? 'has-collab' : ''}`}
+      data-place={showingCollab ? 'collaboration' : showingResults ? 'results' : place.kind}
       data-reduced-motion={reducedMotion ? 'true' : undefined}
     >
       <header className="topbar">
@@ -802,6 +864,13 @@ export default function Workspace() {
             <BookOpen size={18} />
             <span>All memories</span>
             <span className="nav-count">{graph.total}</span>
+          </button>
+          <button
+            className={`nav-item ${showingCollab ? 'active' : ''}`}
+            onClick={() => goCollab({ collab: 'history' })}
+          >
+            <Waypoints size={17} />
+            <span>Collaborations</span>
           </button>
           <button
             className="nav-item"
@@ -1094,6 +1163,12 @@ export default function Workspace() {
                 <span aria-current="page">Results</span>
               </>
             )}
+            {showingCollab && (
+              <>
+                <ChevronRight size={12} />
+                <span aria-current="page">Collaboration</span>
+              </>
+            )}
           </nav>
           <div className="view-status">
             {graphLoading && ready && (
@@ -1124,6 +1199,8 @@ export default function Workspace() {
                   , level {level.level} of {level.of}
                 </span>
               </>
+            ) : showingCollab ? (
+              'COLLABORATION'
             ) : (
               'SEARCH RESULTS'
             )}
@@ -1131,20 +1208,24 @@ export default function Workspace() {
           <h1>
             {selected
               ? 'A memory in context'
-              : showingResults
-                ? 'Retrieved sources'
-                : topicLabel || (region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas')}
+              : showingCollab
+                ? 'Two models, one task'
+                : showingResults
+                  ? 'Retrieved sources'
+                  : topicLabel || (region ? `${REGION_INFO[region].name} cortex` : 'Memory atlas')}
           </h1>
           <p>
             {selected
               ? 'Selected original + confirmed neighbours'
-              : showingResults
-                ? `${retrieval!.citations.length} ${retrieval!.citations.length === 1 ? 'passage' : 'passages'} matched your question`
-                : topicLabel
-                  ? 'Individual records · grouped by explicit tags'
-                  : region
-                    ? 'Explore the topics and projects in this lobe.'
-                    : 'A living archive. An anatomical canvas.'}
+              : showingCollab
+                ? 'Stages, model outputs and sources are in the panel.'
+                : showingResults
+                  ? `${retrieval!.citations.length} ${retrieval!.citations.length === 1 ? 'passage' : 'passages'} matched your question`
+                  : topicLabel
+                    ? 'Individual records · grouped by explicit tags'
+                    : region
+                      ? 'Explore the topics and projects in this lobe.'
+                      : 'A living archive. An anatomical canvas.'}
           </p>
         </div>
         <p className="sr-only" aria-live="polite" data-testid="place-announcement">
@@ -1221,7 +1302,7 @@ export default function Workspace() {
                 aria-label={panelCollapsed ? 'Show context panel' : 'Hide context panel'}
                 title={panelCollapsed ? 'Show context panel' : 'Hide context panel'}
                 aria-pressed={!panelCollapsed}
-                disabled={Boolean(selected || retrieval)}
+                disabled={Boolean(selected || retrieval || collab)}
                 onClick={togglePanel}
               >
                 {panelCollapsed ? <PanelRightOpen size={16} /> : <PanelRightClose size={16} />}
@@ -1264,7 +1345,11 @@ export default function Workspace() {
                   aria-keyshortcuts="/"
                   aria-label="Ask your memory"
                   placeholder={
-                    user ? 'What would you like to remember?' : 'Your memory starts with a thought…'
+                    !user
+                      ? 'Your memory starts with a thought…'
+                      : model === 'collaborate'
+                        ? 'Give GPT and Claude a task…'
+                        : 'What would you like to remember?'
                   }
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
@@ -1309,6 +1394,7 @@ export default function Workspace() {
                   {settings?.providers.every((p) => p.configured) && (
                     <option value="compare">Compare + synthesise</option>
                   )}
+                  {user && <option value="collaborate">Collaborate · GPT + Claude</option>}
                 </select>
                 <span>
                   {busy ? (
@@ -1321,7 +1407,9 @@ export default function Workspace() {
                       <ShieldCheck size={11} />
                       {model === 'search'
                         ? 'Local retrieval · no AI transmission'
-                        : 'Permission requested before sending'}
+                        : model === 'collaborate'
+                          ? 'Opens a task composer · nothing is sent yet'
+                          : 'Permission requested before sending'}
                     </>
                   )}
                 </span>
@@ -1393,6 +1481,35 @@ export default function Workspace() {
               onNavigate={(id, v, passage) => void openMemory(id, v, passage)}
               onChanged={refresh}
               onError={notify}
+            />
+          </SectionBoundary>
+        ) : collab ? (
+          <SectionBoundary name="Collaboration" resetKey={collab} onDismiss={closeResults}>
+            <CollaborationPanel
+              place={collab}
+              settings={settings}
+              scope={
+                questionFilters
+                  ? {
+                      region: region || '',
+                      q: query,
+                      source,
+                      tag,
+                      from,
+                      to,
+                      untagged: untagged ? '1' : '',
+                    }
+                  : {}
+              }
+              scopeLabel={questionFilters ? 'the selected library scope' : 'your workspace'}
+              onGo={goCollab}
+              onClose={closeResults}
+              onOpenCitation={(c) => void openMemory(c.id, c.version, c.chunkId)}
+              onOpenMemory={(id) => void openMemory(id)}
+              onFocusSource={(c) => {
+                const node = graph.nodes.find((n) => n.id === c.id);
+                if (node) move({ type: 'memory', position: node.position });
+              }}
             />
           </SectionBoundary>
         ) : retrieval ? (
@@ -1659,13 +1776,15 @@ export default function Workspace() {
         contextLabel={
           selected
             ? 'Memory'
-            : retrieval
-              ? 'Results'
-              : topicLabel
-                ? 'Topic'
-                : region
-                  ? 'Lobe'
-                  : 'Overview'
+            : collab
+              ? 'Collaborate'
+              : retrieval
+                ? 'Results'
+                : topicLabel
+                  ? 'Topic'
+                  : region
+                    ? 'Lobe'
+                    : 'Overview'
         }
         onAtlas={() => {
           setMobileNav(false);

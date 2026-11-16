@@ -12,6 +12,10 @@ export type DatabaseStage =
   | 'request';
 
 const reasons: Record<string, string> = {
+  DB_MIGRATION_AUTH_REQUIRED: 'Managed migrations require explicit echo-dev authorization',
+  DB_MIGRATION_TARGET_INVALID:
+    'Migration connection is not an unambiguous authorized development target',
+  DB_MIGRATION_IDENTITY_REJECTED: 'Development database identity could not be verified',
   DB_URL_MISSING: 'DATABASE_URL is missing in a managed runtime',
   DB_URL_INVALID: 'DATABASE_URL is not a valid PostgreSQL connection URL',
   DB_URL_PLACEHOLDER: 'DATABASE_URL contains a recognised placeholder',

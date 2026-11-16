@@ -35,7 +35,7 @@ test('security migration protects all tables despite unsafe defaults and column 
     const tables = await db.query<{ relname: string; relrowsecurity: boolean }>(
       "SELECT relname,relrowsecurity FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind='r' AND relname <> 'unrelated_data'",
     );
-    assert.equal(tables.rows.length, 22);
+    assert.equal(tables.rows.length, 26);
     assert.ok(tables.rows.every((t) => t.relrowsecurity));
     for (const role of ['anon', 'authenticated', 'service_role'])
       for (const t of tables.rows) {
@@ -69,7 +69,7 @@ test('security migration protects all tables despite unsafe defaults and column 
     );
     await apply(db);
     assert.equal((await db.query('SELECT * FROM users')).rows.length, 1);
-    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 3);
+    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 4);
     const f = await db.query<{ prosecdef: boolean; proconfig: string[] }>(
       "SELECT prosecdef,proconfig FROM pg_proc WHERE proname='invalidate_memory_intelligence'",
     );
@@ -141,11 +141,52 @@ test('security migration strips grants from any extra role authenticator can rea
       CREATE ROLE authenticator NOINHERIT LOGIN; CREATE ROLE side_door;
       GRANT anon,authenticated,service_role,side_door TO authenticator;`);
     await apply(db, async (tx) => {
-      await tx.exec('GRANT SELECT ON users TO side_door; GRANT SELECT(email) ON users TO side_door');
+      await tx.exec(
+        'GRANT SELECT ON users TO side_door; GRANT SELECT(email) ON users TO side_door',
+      );
     });
     await db.exec('SET ROLE authenticator; SET ROLE side_door');
     await assert.rejects(db.query('SELECT email FROM users'), { code: '42501' });
     await db.exec('RESET ROLE');
+  } finally {
+    await db.close();
+  }
+});
+
+test('004 fails closed on inherited API access and rolls back only the new migration, preserving existing data', async () => {
+  const db = await fixture();
+  try {
+    for (const version of MIGRATIONS.slice(0, 3))
+      await db.exec(await readFile(`db/migrations/${version}.sql`, 'utf8'));
+    await db.exec(
+      "INSERT INTO users(id,email,name,password_hash) VALUES('00000000-0000-0000-0000-000000000002','preserve@example.test','Preserve','unused'); CREATE ROLE inherited_api_reader; GRANT inherited_api_reader TO anon;",
+    );
+    const sql = await readFile('db/migrations/004_collaboration.sql', 'utf8');
+    const securityStart = sql.indexOf('DO $security$');
+    await assert.rejects(
+      db.transaction(async (tx) => {
+        await tx.exec(sql.slice(0, securityStart));
+        await tx.exec('GRANT SELECT(question) ON collaboration_turns TO inherited_api_reader');
+        await tx.exec(sql.slice(securityStart));
+      }),
+      /effective privileges remain/,
+    );
+    assert.equal(
+      (
+        await db.query<{ table_name: string | null }>(
+          "SELECT to_regclass('collaboration_threads') AS table_name",
+        )
+      ).rows[0].table_name,
+      null,
+    );
+    assert.equal((await db.query('SELECT * FROM users')).rows.length, 1);
+    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 3);
+    await db.exec('REVOKE inherited_api_reader FROM anon');
+    await apply(db);
+    await db.exec('SET ROLE service_role');
+    await assert.rejects(db.query('SELECT * FROM collaboration_turns'), { code: '42501' });
+    await db.exec('RESET ROLE');
+    assert.equal((await db.query('SELECT * FROM users')).rows.length, 1);
   } finally {
     await db.close();
   }

@@ -7,6 +7,8 @@ export type ModelOutput = {
   text: string;
   inputTokens: number;
   outputTokens: number;
+  /** False when the provider omitted usage; zero is not a measured charge. */
+  usageKnown?: boolean;
 };
 const openaiKey = () => process.env.ECHO_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
 const anthropicKey = () => process.env.ECHO_ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY;
@@ -281,5 +283,8 @@ export async function callProvider(
     text,
     inputTokens: Number(payload.usage?.input_tokens || 0),
     outputTokens: Number(payload.usage?.output_tokens || 0),
+    usageKnown:
+      Number.isSafeInteger(payload.usage?.input_tokens) &&
+      Number.isSafeInteger(payload.usage?.output_tokens),
   };
 }
