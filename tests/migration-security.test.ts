@@ -35,7 +35,7 @@ test('security migration protects all tables despite unsafe defaults and column 
     const tables = await db.query<{ relname: string; relrowsecurity: boolean }>(
       "SELECT relname,relrowsecurity FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind='r' AND relname <> 'unrelated_data'",
     );
-    assert.equal(tables.rows.length, 26);
+    assert.equal(tables.rows.length, 27);
     assert.ok(tables.rows.every((t) => t.relrowsecurity));
     for (const role of ['anon', 'authenticated', 'service_role'])
       for (const t of tables.rows) {
@@ -69,7 +69,7 @@ test('security migration protects all tables despite unsafe defaults and column 
     );
     await apply(db);
     assert.equal((await db.query('SELECT * FROM users')).rows.length, 1);
-    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 4);
+    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 5);
     const f = await db.query<{ prosecdef: boolean; proconfig: string[] }>(
       "SELECT prosecdef,proconfig FROM pg_proc WHERE proname='invalidate_memory_intelligence'",
     );
@@ -187,6 +187,38 @@ test('004 fails closed on inherited API access and rolls back only the new migra
     await assert.rejects(db.query('SELECT * FROM collaboration_turns'), { code: '42501' });
     await db.exec('RESET ROLE');
     assert.equal((await db.query('SELECT * FROM users')).rows.length, 1);
+  } finally {
+    await db.close();
+  }
+});
+
+test('meeting migration fails atomically when an inherited reader retains default access', async () => {
+  const db = await fixture();
+  try {
+    await db.transaction(async (tx) => {
+      await tx.exec(
+        'CREATE TABLE schema_migrations(version text PRIMARY KEY, applied_at timestamptz DEFAULT now())',
+      );
+      for (const version of MIGRATIONS.slice(0, -1))
+        await tx.exec(await readFile(`db/migrations/${version}.sql`, 'utf8'));
+    });
+    await db.exec(
+      'CREATE ROLE meeting_reader; GRANT meeting_reader TO anon; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO meeting_reader',
+    );
+    await assert.rejects(apply(db), /effective privileges remain/);
+    assert.equal(
+      (
+        await db.query<{ v: string | null }>(
+          "SELECT to_regclass('public.meeting_transcriptions')::text v",
+        )
+      ).rows[0].v,
+      null,
+    );
+    assert.equal((await db.query('SELECT * FROM schema_migrations')).rows.length, 4);
+    assert.equal(
+      (await db.query("SELECT 1 FROM pg_tables WHERE tablename='memory_nodes'")).rows.length,
+      1,
+    );
   } finally {
     await db.close();
   }

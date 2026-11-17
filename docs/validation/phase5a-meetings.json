@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-17",
+  "base": "b75191ff68499c111600591b782eacfb8453598a",
+  "branch": "feat/phase5a-meeting-transcription",
+  "unit_integration": {
+    "passed": 128,
+    "failed": 0,
+    "skipped": 0,
+    "postgres": "17.10",
+    "pgvector": "0.8.2",
+    "database": "disposable loopback Docker"
+  },
+  "browser": {
+    "existing_initial": {
+      "passed": 30,
+      "failed": 2
+    },
+    "focused_existing_rerun": {
+      "passed": 2,
+      "failed": 0
+    },
+    "meetings_final": {
+      "passed": 1,
+      "failed": 0
+    },
+    "distinct_scenarios_with_passing_results": 33,
+    "single_run_clean": false,
+    "providers": "mocked only"
+  },
+  "typecheck": "passed",
+  "serial_build": "passed",
+  "standalone_smoke_checks": 4,
+  "anatomy": "passed: 20484 vertices, 40960 triangles",
+  "hosted_database_access": false,
+  "hosted_migration": false,
+  "live_provider_requests": 0,
+  "release_gate": "Migration 005 and deployment require separate approval"
+}

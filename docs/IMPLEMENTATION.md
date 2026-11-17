@@ -1,5 +1,13 @@
 # Implementation checkpoint — 31 October 2026
 
+Latest local update — 17 November 2026: [Phase 5A meeting transcription](PHASE5A_MEETINGS.md)
+adds consented short PCM WAV uploads, server-side format/duration validation, a durable
+workspace-scoped attempt ledger, uncertain-outcome recovery and Temporal transcript memories.
+The user reports Phase 4 Preview and migrations 001–004 are already accepted; older NO-GO
+entries below are historical. This task has not independently inspected hosted data.
+Migration 005 is local-only and requires separate approval. No live provider calls or hosted
+changes were made. Longer/compressed recordings and live account/accuracy testing remain open.
+
 Latest local update — 16 November 2026: [exact Session-pooler guard candidate](SESSION_POOLER_GUARD_REVIEW.md)
 adds the approved echo-dev Session hostname/login/port pair while preserving direct
 support, verified TLS and same-transaction cluster checks. All 123 tests passed

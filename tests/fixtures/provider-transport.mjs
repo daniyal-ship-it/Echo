@@ -31,6 +31,13 @@ if (process.env.ECHO_MOCK_PROVIDER_TRANSPORT === 'isolated-browser-tests') {
       return fetchReal(input, init);
     if (url.pathname.startsWith('/v1/models/'))
       return Response.json({ id: decodeURIComponent(url.pathname.split('/').at(-1)) });
+    if (url.pathname === '/v1/audio/transcriptions') {
+      if (!(init.body instanceof FormData) || init.body.get('model') !== 'gpt-transcribe')
+        throw new Error('Invalid mock audio request');
+      return Response.json({
+        text: 'MOCK TRANSCRIPTION: The meeting agreed to review the iridescent notebook on Friday.',
+      });
+    }
     const data = JSON.parse(String(init.body));
     if (url.pathname === '/v1/embeddings')
       return Response.json({
