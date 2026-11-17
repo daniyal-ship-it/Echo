@@ -4465,3 +4465,58 @@ body {
 [data-reduced-motion='true'] .collab-history-row {
   transition: none;
 }
+
+.meeting-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 32px 20px 80px;
+  line-height: 1.65;
+}
+.meeting-page h1,
+.meeting-page h2 {
+  margin: 20px 0 12px;
+}
+.meeting-page p {
+  margin: 16px 0;
+}
+.meeting-page form,
+.meeting-page section {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.meeting-page label {
+  display: grid;
+  gap: 8px;
+}
+.meeting-page input:not([type='checkbox']) {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #5b7592;
+  background: #101925;
+  color: #e0e9f4;
+}
+.meeting-page .meeting-consent {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+.meeting-page .meeting-consent input {
+  flex: 0 0 auto;
+  width: auto;
+  margin-top: 7px;
+}
+.meeting-page [role='alert'] {
+  color: #ffb6ba;
+}
+.meeting-page a {
+  text-decoration: underline;
+}
+
+.meeting-page h1 {
+  font-size: 2rem;
+}
+.meeting-page button {
+  min-height: 44px;
+}

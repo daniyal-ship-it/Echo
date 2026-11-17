@@ -883,6 +883,10 @@ export default function Workspace() {
             <Upload size={17} />
             <span>Import history</span>
           </button>
+          <a className="nav-item" href="/meetings">
+            <Upload size={17} />
+            <span>Meetings · upload audio</span>
+          </a>
         </nav>
         <div className="sidebar-section">
           <div className="section-label">

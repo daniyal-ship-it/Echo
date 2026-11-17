@@ -744,6 +744,8 @@ async function handleRequest(
         analyses,
         passages,
         intelligenceJobs,
+        meetingTranscriptions,
+        meetingAuditEvents,
       ] = await Promise.all([
         db.query('SELECT * FROM memory_nodes WHERE workspace_id=$1', [workspace]),
         db.query('SELECT * FROM memory_versions WHERE workspace_id=$1', [workspace]),
@@ -758,6 +760,11 @@ async function handleRequest(
         ),
         db.query(
           'SELECT id,memory_id,source_version,config,status,total_chunks,embedded,analysed,error,created_at FROM intelligence_jobs WHERE workspace_id=$1',
+          [workspace],
+        ),
+        db.query('SELECT * FROM meeting_transcriptions WHERE workspace_id=$1', [workspace]),
+        db.query(
+          "SELECT * FROM audit_events WHERE workspace_id=$1 AND action LIKE 'meeting.transcription.%'",
           [workspace],
         ),
       ]);
@@ -776,6 +783,8 @@ async function handleRequest(
             analyses,
             passages,
             intelligenceJobs,
+            meetingTranscriptions,
+            meetingAuditEvents,
           },
           null,
           2,

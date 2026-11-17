@@ -1,3 +1,4 @@
+import { meetingSuite } from './fixtures/meeting-suite';
 import { testMigrationGuardPostgres } from './fixtures/migration-guard-postgres';
 import { verifyDevelopmentIdentity } from '../lib/migration-target';
 import { readFile } from 'node:fs/promises';
@@ -74,7 +75,7 @@ test(
       const [{ count }] = await db.query<{ count: number }>(
         "SELECT count(*)::int AS count FROM pg_class WHERE relnamespace='public'::regnamespace AND relkind='r' AND relrowsecurity",
       );
-      assert.equal(count, 26);
+      assert.equal(count, 27);
       const owner = uuid(),
         workspace = uuid();
       await db.query('INSERT INTO users(id,email,name,password_hash) VALUES($1,$2,$3,$4)', [
@@ -173,7 +174,7 @@ test(
       }>(`SELECT has_table_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER,MAINTAIN')
       OR has_any_column_privilege(r.oid,c.oid,'SELECT,INSERT,UPDATE,REFERENCES') AS unsafe
       FROM pg_roles r CROSS JOIN pg_class c WHERE r.rolname IN ('anon','authenticated','service_role','authenticator') AND c.relnamespace='public'::regnamespace AND c.relkind='r'`);
-      assert.equal(privileges.length, 104);
+      assert.equal(privileges.length, 108);
       assert.ok(privileges.every((p) => !p.unsafe));
       for (const [name, run] of Object.entries(scenarios))
         await t.test(`real PostgreSQL collaboration: ${name}`, () => run(db!));
@@ -198,6 +199,23 @@ test(
         'SELECT count(*)::int AS count FROM collaboration_calls',
       );
       assert.equal(afterReopen.count, beforeReopen.count);
+      await t.test(
+        'real PostgreSQL meeting persistence and billing ledger',
+        async (meetingTest) => {
+          await meetingSuite(meetingTest, db!);
+        },
+      );
+      const durable = await db.query(
+        'SELECT workspace_id,fingerprint,status,memory_id FROM meeting_transcriptions ORDER BY id',
+      );
+      await db.close();
+      db = await createDatabase();
+      assert.deepEqual(
+        await db.query(
+          'SELECT workspace_id,fingerprint,status,memory_id FROM meeting_transcriptions ORDER BY id',
+        ),
+        durable,
+      );
       await testMigrationGuardPostgres(t, db);
       await t.test(
         'Session-pooler policy with the real driver and test-only identity responses',

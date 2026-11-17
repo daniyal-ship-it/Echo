@@ -1,5 +1,22 @@
 # ECHO requirement ledger
 
+Latest update — 17 November 2026: [Phase 5.1 review fixes](PHASE51_REVIEW.md)
+passed **130 unit/integration tests (zero skips)** and **all 32 browser tests in one clean run**.
+TypeScript, serial production build, four standalone smoke checks and anatomy verification passed.
+Consent/dispatch-intent auditing, bounded authorization-rejection retries, best-effort save-failure
+handling, WAV metadata, diagnostics, export/retention and fixture reuse are covered. Migration 005
+is unchanged and remains unapplied by this task. All providers were mocked; no hosted DB access,
+deployment or Production changes. See [validation evidence](validation/phase51-review.json).
+The old report's 33 browser scenarios double-counted Meetings; the correct total is 32.
+
+Latest local update — 17 November 2026: [Phase 5A meeting transcription](PHASE5A_MEETINGS.md)
+adds consented short PCM WAV uploads, server-side format/duration validation, a durable
+workspace-scoped attempt ledger, uncertain-outcome recovery and Temporal transcript memories.
+The user reports Phase 4 Preview and migrations 001–004 are already accepted; older NO-GO
+entries below are historical. This task has not independently inspected hosted data.
+Migration 005 is local-only and requires separate approval. No live provider calls or hosted
+changes were made. Longer/compressed recordings and live account/accuracy testing remain open.
+
 Latest local update — 14 November 2026: [Phase 4A + 4B integration](PHASE4_INTEGRATION.md)
 is complete on `integration/phase4a-4b`. The strict v1 adapter reconciles all seven
 UX contract questions; consent, staged peer review/synthesis, history, scoped

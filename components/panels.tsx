@@ -602,6 +602,12 @@ export function MemoryPanel({
           {memory.source}
         </div>
         <h2>{memory.title}</h2>
+        {memory.source === 'meeting-audio' && (
+          <p>
+            Machine-transcribed audio · may contain errors. Raw audio was not retained; speaker
+            identities and recording date are not inferred.
+          </p>
+        )}
         {memory.is_demo && <span className="demo-badge">Demonstration data</span>}
         <time>
           {new Date(memory.source_at || memory.created_at).toLocaleDateString(undefined, {
@@ -1043,9 +1049,9 @@ export function SettingsDialog({
       <div className="settings-section">
         <h3>Integration availability</h3>
         <p className="muted">
-          Historical ChatGPT, Claude and Markdown imports are available. Live voice, meeting
-          transcription, Google Calendar, Gmail, Drive and Notion OAuth are not implemented in this
-          release.
+          Historical ChatGPT, Claude and Markdown imports are available. Meetings supports short
+          PCM WAV transcription with explicit consent. Live voice, longer recordings, Google
+          Calendar, Gmail, Drive and Notion OAuth are not implemented in this release.
         </p>
       </div>
     </Modal>
