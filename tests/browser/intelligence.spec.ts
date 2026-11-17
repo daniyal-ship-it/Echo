@@ -1,3 +1,4 @@
+import { transcriptionAccount } from '../fixtures/transcription-account';
 import { test, expect } from '@playwright/test';
 
 test('MOCK providers: imported original → generated summary → hybrid answer → cited passage → new session', async ({
@@ -6,17 +7,8 @@ test('MOCK providers: imported original → generated summary → hybrid answer 
   test.setTimeout(120_000);
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  const email = `intelligence-${Date.now()}@example.test`,
-    password = 'Isolated mocked pipeline password 42',
-    headers = { origin: 'http://127.0.0.1:3100' };
-  expect(
-    (
-      await page.request.post('/api/auth/register', {
-        headers,
-        data: { email, password, name: 'MOCK intelligence review' },
-      })
-    ).status(),
-  ).toBe(201);
+  const { email, password } = await transcriptionAccount(page.request);
+  const headers = { origin: 'http://127.0.0.1:3100' };
   const archive = [
     {
       id: 'mock-vault-conversation',

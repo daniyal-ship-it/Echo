@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-17",
+  "reviewed_base": "1d1805c86d0b31e587ff99f9734e623e2061bd49",
+  "node": "24.19.0",
+  "tests": {
+    "passed": 130,
+    "failed": 0,
+    "skipped": 0,
+    "postgres": "17.10",
+    "pgvector": "0.8.2",
+    "provider_transport": "mocked"
+  },
+  "browser": {
+    "passed": 32,
+    "failed": 0,
+    "single_clean_run": true,
+    "retries": 0,
+    "production_auth_limits_changed": false
+  },
+  "typecheck": "passed",
+  "serial_build": "passed",
+  "standalone_smoke_checks": 4,
+  "anatomy": "passed",
+  "original_commit_reproduction": {
+    "passed": 128,
+    "skipped": 0,
+    "note": "Cannot attribute independent 127 count without command/manifest."
+  },
+  "migration_005_sha256": "a60bc17f3f15c5b19853f9f0997fa1db2475f65ed261fb09622d86d06d026aff",
+  "migration_005_changed": false,
+  "hosted_sql": false,
+  "live_provider_calls": 0,
+  "deployment": false,
+  "log_sha256": {
+    "tests.log": "4abe50c7d64ffceba79d3d7138b4794752acca68fd86ec8476620ab5e8f1cfd6",
+    "browser-clean.log": "c283a3999f52ec9fd11af93b38e136cb68e43e80ded7930bca0a370216ee984e",
+    "typecheck-final.log": "840e5e0e118e53d26981f8b5ce014c8e4df7fd4418571f072cc6320edc826849",
+    "build-final.log": "663a2115aa91a8640a1eb0b7ae14abe3be3c1bbab4b5e1814627498af53a8e1d",
+    "smoke-final.log": "996b36321b5582525b2435a54e7c391b41027454f9f89c8e047a50f77d3bb7cd"
+  }
+}

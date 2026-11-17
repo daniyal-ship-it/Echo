@@ -1,7 +1,7 @@
 import { HttpError } from './security';
 export const MAX_AUDIO_BYTES = 3 * 1024 * 1024;
 export const MAX_AUDIO_SECONDS = 90;
-// Deliberately narrow initial format: canonical PCM WAV, no compressed duration claims.
+// PCM WAV only. Known metadata chunks are bounded, ignored and stripped before dispatch.
 export function validateMeetingAudio(bytes: Uint8Array) {
   const b = Buffer.from(bytes);
   if (b.length > MAX_AUDIO_BYTES) throw new HttpError(413, 'Recording exceeds 3 MiB.');
@@ -39,7 +39,11 @@ export function validateMeetingAudio(bytes: Uint8Array) {
       if (seenData || !format || length % 2) throw new HttpError(415, 'Invalid WAV audio.');
       seenData = true;
       size = length;
-    } else throw new HttpError(415, 'Export a standard WAV without extra metadata chunks.');
+    } else if (!['LIST', 'JUNK'].includes(type))
+      throw new HttpError(
+        415,
+        'Unsupported WAV chunk. Export PCM WAV with LIST/JUNK metadata only.',
+      );
     offset = end + (length % 2);
     if (offset > b.length) throw new HttpError(415, 'Invalid WAV padding.');
   }
@@ -47,6 +51,33 @@ export function validateMeetingAudio(bytes: Uint8Array) {
   if (!format || !seenData || seconds < 0.1 || seconds > MAX_AUDIO_SECONDS)
     throw new HttpError(413, 'Recording must be between 0.1 and 90 seconds.');
   return seconds;
+}
+/** Strip metadata; send only verified PCM samples with a canonical header. */
+export function canonicalMeetingAudio(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  validateMeetingAudio(bytes);
+  const b = Buffer.from(bytes);
+  let samples = Buffer.alloc(0);
+  for (let offset = 12; offset < b.length;) {
+    const length = b.readUInt32LE(offset + 4);
+    if (b.toString('ascii', offset, offset + 4) === 'data')
+      samples = b.subarray(offset + 8, offset + 8 + length);
+    offset += 8 + length + (length % 2);
+  }
+  const out = Buffer.alloc(44 + samples.length);
+  out.write('RIFF');
+  out.writeUInt32LE(out.length - 8, 4);
+  out.write('WAVEfmt ', 8);
+  out.writeUInt32LE(16, 16);
+  out.writeUInt16LE(1, 20);
+  out.writeUInt16LE(1, 22);
+  out.writeUInt32LE(16000, 24);
+  out.writeUInt32LE(32000, 28);
+  out.writeUInt16LE(2, 32);
+  out.writeUInt16LE(16, 34);
+  out.write('data', 36);
+  out.writeUInt32LE(samples.length, 40);
+  samples.copy(out, 44);
+  return new Uint8Array(out);
 }
 export async function boundedBody(
   request: Request | Response,

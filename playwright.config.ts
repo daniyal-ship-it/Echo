@@ -1,4 +1,5 @@
 import { defineConfig } from '@playwright/test';
+process.env.ECHO_BROWSER_RUN_ID ||= `${Date.now()}-${process.pid}`;
 export default defineConfig({
   testDir: './tests/browser',
   fullyParallel: false,

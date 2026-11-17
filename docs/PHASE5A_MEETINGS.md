@@ -1,5 +1,8 @@
 # Phase 5A — meeting transcription review handoff
 
+This describes the original Phase 5A checkpoint. [Phase 5.1](PHASE51_REVIEW.md) supersedes
+the retry, consent-audit, WAV metadata, retention and validation details below.
+
 ## Scope and architecture
 
 Branch: `feat/phase5a-meeting-transcription`, based on `b75191f` from the shared feature branch.

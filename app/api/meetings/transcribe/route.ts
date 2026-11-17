@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { assertOrigin, findSession, HttpError, rateLimit, SESSION_COOKIE } from '@/lib/security';
+import {
+  assertOrigin,
+  findSession,
+  HttpError,
+  rateLimit,
+  SESSION_COOKIE,
+  uuid,
+} from '@/lib/security';
 import { boundedBody, MAX_AUDIO_BYTES } from '@/lib/meeting-audio';
 import { meetingStatus, transcribeMeeting } from '@/lib/meetings';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 async function handle(request: NextRequest, write: boolean) {
+  const diagnosticId = uuid();
   try {
     if (write) assertOrigin(request);
     const db = await getDb();
@@ -47,8 +55,16 @@ async function handle(request: NextRequest, write: boolean) {
       { headers: { 'Cache-Control': 'no-store' } },
     );
   } catch (error) {
+    console.warn(
+      JSON.stringify({
+        event: 'meeting_request_failed',
+        diagnosticId,
+        status: error instanceof HttpError ? error.status : 500,
+      }),
+    );
     return NextResponse.json(
       {
+        diagnosticId,
         error:
           error instanceof HttpError
             ? error.message

@@ -11,10 +11,6 @@
     "database": "disposable loopback Docker"
   },
   "browser": {
-    "existing_initial": {
-      "passed": 30,
-      "failed": 2
-    },
     "focused_existing_rerun": {
       "passed": 2,
       "failed": 0
@@ -23,9 +19,13 @@
       "passed": 1,
       "failed": 0
     },
-    "distinct_scenarios_with_passing_results": 33,
+    "distinct_scenarios_with_passing_results": 32,
     "single_run_clean": false,
-    "providers": "mocked only"
+    "providers": "mocked only",
+    "combined_initial": {
+      "passed": 30,
+      "failed": 2
+    }
   },
   "typecheck": "passed",
   "serial_build": "passed",
@@ -34,5 +34,6 @@
   "hosted_database_access": false,
   "hosted_migration": false,
   "live_provider_requests": 0,
-  "release_gate": "Migration 005 and deployment require separate approval"
+  "release_gate": "Migration 005 and deployment require separate approval",
+  "correction": "Meetings was already included in the combined run; the previously reported 33 double-counted its focused rerun."
 }

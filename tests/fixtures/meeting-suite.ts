@@ -42,6 +42,7 @@ export async function meetingSuite(t: TestContext, db: Database) {
       });
     }
     if (mode === 'network') throw new Error('PRIVATE PROVIDER ERROR');
+    if (mode === '401') return new Response('PRIVATE AUTH ERROR', { status: 401 });
     if (mode === '429') return new Response('PRIVATE BODY', { status: 429 });
     if (mode === 'malformed') return Response.json({ notText: true });
     return Response.json({ text: 'MOCK transcript: iridescent notebook meeting on Friday.' });
@@ -56,6 +57,33 @@ export async function meetingSuite(t: TestContext, db: Database) {
       first?.memoryId,
     );
     assert.equal(calls, 1);
+    const consent = await db.query<{ action: string; resource_id: string; created_at: unknown }>(
+      "SELECT action,resource_id,created_at FROM audit_events WHERE workspace_id=$1 AND action LIKE 'meeting.transcription.%'",
+      [w],
+    );
+    assert.deepEqual(consent.map((e) => e.action).sort(), [
+      'meeting.transcription.consent',
+      'meeting.transcription.dispatch_intent',
+    ]);
+    for (const event of consent) {
+      assert.ok(event.created_at);
+      const resource = JSON.parse(event.resource_id);
+      assert.equal(resource.attemptId, first!.attemptId);
+      assert.equal(resource.transcriptionId, first!.transcriptionId);
+      assert.equal(resource.policyVersion, 'meeting-transcription-v1');
+      assert.equal(resource.provider, 'openai');
+      assert.equal(resource.purpose, 'audio-transcription');
+      assert.doesNotMatch(event.resource_id, /MOCK transcript|Team|TEST-NOT-A-KEY/);
+    }
+    assert.equal(
+      (
+        await db.query(
+          "SELECT * FROM audit_events WHERE workspace_id=$1 AND action LIKE 'meeting.transcription.%'",
+          [other],
+        )
+      ).length,
+      0,
+    );
     const memory = await memoryDetail(db, w, first!.memoryId!);
     assert.equal(memory.region, 'temporal');
     assert.equal(memory.source, 'meeting-audio');
@@ -110,6 +138,43 @@ export async function meetingSuite(t: TestContext, db: Database) {
     await transcribeMeeting(db, w, exhaustedAudio, 'No third', second!.attemptId);
     assert.equal(calls, countAfterTwo);
     assert.equal(second!.attempts, 2);
+    const acks = await db.query<{ resource_id: string }>(
+      "SELECT resource_id FROM audit_events WHERE workspace_id=$1 AND action='meeting.transcription.retry_duplicate_charge_acknowledged'",
+      [w],
+    );
+    assert.ok(acks.some((e) => JSON.parse(e.resource_id).attemptId === recovered!.attemptId));
+    mode = '401';
+    const authAudio = wav(1, 8);
+    const denied = await transcribeMeeting(db, w, authAudio, 'Rejected credential');
+    const deniedAgain = await transcribeMeeting(
+      db,
+      w,
+      authAudio,
+      'Rejected again',
+      denied!.attemptId,
+    );
+    assert.equal(deniedAgain!.canRetry, true);
+    assert.equal(deniedAgain!.authorizationRejected, true);
+    process.env.ECHO_OPENAI_API_KEY = 'TEST-CORRECTED-NOT-A-KEY';
+    mode = 'ok';
+    const fixedKey = await transcribeMeeting(
+      db,
+      w,
+      authAudio,
+      'Corrected access',
+      deniedAgain!.attemptId,
+    );
+    assert.equal(fixedKey!.status, 'completed');
+    assert.equal(fixedKey!.attempts, 3);
+    mode = '401';
+    const cappedAudio = wav(1, 9);
+    let capped = await transcribeMeeting(db, w, cappedAudio, 'Bounded auth retries');
+    for (let i = 0; i < 3; i++)
+      capped = await transcribeMeeting(db, w, cappedAudio, 'Explicit retry', capped!.attemptId);
+    assert.equal(capped!.canRetry, false);
+    const dispatchCap = calls;
+    await transcribeMeeting(db, w, cappedAudio, 'No fifth', capped!.attemptId);
+    assert.equal(calls, dispatchCap);
     // Simulate an interrupted worker. Recovery is explicit; stale completion cannot overwrite it.
     mode = 'hold';
     const lateAudio = wav(1, 6);

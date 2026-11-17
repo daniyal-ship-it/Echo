@@ -1,5 +1,14 @@
 # Validation record — 1 November 2026
 
+Latest update — 17 November 2026: [Phase 5.1 review fixes](PHASE51_REVIEW.md)
+passed **130 unit/integration tests (zero skips)** and **all 32 browser tests in one clean run**.
+TypeScript, serial production build, four standalone smoke checks and anatomy verification passed.
+Consent/dispatch-intent auditing, bounded authorization-rejection retries, best-effort save-failure
+handling, WAV metadata, diagnostics, export/retention and fixture reuse are covered. Migration 005
+is unchanged and remains unapplied by this task. All providers were mocked; no hosted DB access,
+deployment or Production changes. See [validation evidence](validation/phase51-review.json).
+The old report's 33 browser scenarios double-counted Meetings; the correct total is 32.
+
 Latest local update — 17 November 2026: [Phase 5A meetings](PHASE5A_MEETINGS.md)
 passed **128 unit/integration checks, zero skips**, including real disposable PostgreSQL
 17.10 / pgvector 0.8.2, effective API-role ACL checks, inherited-grant rollback and durable
@@ -7,13 +16,13 @@ transcription-attempt persistence. TypeScript, serial production build, four sta
 smoke checks and anatomical source verification passed. All transcription responses were
 mocked; no live provider calls or hosted database connections occurred.
 
-Browser validation: the 32 existing scenarios initially returned 30 passes and two failures.
+Browser validation: the 32 combined scenarios initially returned 30 passes and two failures.
 WebGL-disabled trail navigation timed out during a source-edit/hot-reload window; it passed
 unchanged in a fresh run. The second-workspace scenario got 401 rather than 404 after its
 unchecked registration (consistent with the suite's shared registration quota); it passed
-with a fresh fixture. Both reruns passed together. The new Meetings scenario passed separately
+with a fresh fixture. Both reruns passed together. Meetings, already included in that run, also passed separately
 with invalid audio, consent, mock transcription, duplicate suppression, transcript inspection,
-mobile overflow and logout/login persistence. **33 distinct browser scenarios have passing
+mobile overflow and logout/login persistence. **32 distinct browser scenarios have passing
 results across these runs, not a clean single-run suite.** Authentication limits were unchanged.
 Initial new-test Buffer and Next route-announcer selector issues were corrected.
 

@@ -6,6 +6,8 @@ type Status = {
   status: string;
   attemptId: string;
   attempts: number;
+  canRetry: boolean;
+  authorizationRejected: boolean;
   memoryId: string | null;
   removed: boolean;
   model: string;
@@ -49,12 +51,23 @@ export default function MeetingUpload() {
         },
         ...(!check ? { body: bytes } : {}),
       });
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          `Server returned an unreadable response (HTTP ${response.status}). Check saved status before retrying; charges may apply.`,
+        );
+      }
+
       if (!response.ok)
         throw new Error(
           response.status === 401
             ? 'Your session expired. Return to ECHO and sign in.'
-            : data.error || 'Request failed.',
+            : (data.error || 'Request failed.') +
+                (typeof data.diagnosticId === 'string' && /^[a-f0-9-]{36}$/.test(data.diagnosticId)
+                  ? ` Reference: ${data.diagnosticId}`
+                  : ''),
         );
       if (
         data &&
@@ -72,7 +85,7 @@ export default function MeetingUpload() {
           );
         const memory = await saved.json();
         setTranscript(typeof memory.content === 'string' ? memory.content : '');
-      }
+      } else setTranscript('');
       if (check && !data)
         setError('No saved attempt exists for this recording. You can consent and submit it.');
     } catch (e) {
@@ -93,8 +106,9 @@ export default function MeetingUpload() {
       <h1>Meetings</h1>
       <p>Turn a short recording into a searchable memory in your Temporal lobe.</p>
       <p>
-        PCM WAV only: 16 kHz, mono, 16-bit; 0.1–90 seconds; maximum 3 MiB. Export a standard WAV
-        without metadata chunks. Longer or compressed recordings are not supported in this release.
+        PCM WAV only: 16 kHz, mono, 16-bit; 0.1–90 seconds; maximum 3 MiB. Standard PCM WAV with
+        optional LIST/JUNK metadata is accepted; metadata is removed before provider dispatch.
+        Longer or compressed recordings are not supported in this release.
       </p>
       <form onSubmit={submit} aria-busy={busy}>
         <label>
@@ -199,7 +213,14 @@ export default function MeetingUpload() {
               connection fails. Check status again before retrying.
             </p>
           )}
-          {['failed', 'uncertain'].includes(status.status) && status.attempts < 2 && (
+          {status.authorizationRejected && (
+            <p>
+              The provider rejected authorization before a model run. Ask the account owner to
+              correct provider access before retrying. No automatic retry occurs; provider billing
+              remains authoritative.
+            </p>
+          )}
+          {['failed', 'uncertain'].includes(status.status) && status.canRetry && (
             <>
               <label className="meeting-consent">
                 <input
@@ -216,14 +237,14 @@ export default function MeetingUpload() {
                 disabled={!ack || !consent || busy}
                 onClick={() => void run(true)}
               >
-                Retry transcription once
+                Retry transcription
               </button>
             </>
           )}
-          {status.attempts >= 2 && status.status !== 'completed' && (
+          {!status.canRetry && ['failed', 'uncertain'].includes(status.status) && (
             <p>
-              The two-attempt safety limit has been reached. No more provider requests will be made
-              for these exact audio bytes.
+              The bounded attempt limit has been reached (two potentially billable attempts, at most
+              four dispatches). No more provider requests will be made for these exact audio bytes.
             </p>
           )}
         </section>
@@ -231,7 +252,8 @@ export default function MeetingUpload() {
       {fingerprint && (
         <p className="fine-print">
           Re-selecting identical audio in this workspace reuses its saved attempt. The recording
-          itself is not stored.
+          itself is not stored. Its fingerprint and attempt/audit metadata remain until workspace
+          deletion, even if you delete the transcript; they are included in your workspace export.
         </p>
       )}
     </main>
